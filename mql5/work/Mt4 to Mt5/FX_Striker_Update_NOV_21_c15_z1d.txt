@@ -1,0 +1,63 @@
+﻿
+Here is the specifications of this job, While testing to ensure that the new parameters work if you spot out something that you think may need to be adjusted please let
+me know. I will also send the previous specifications including videos and screenshots of what I am looking to see at the end of the projec
+
+1. Covert all code to MT5
+- The FX Striker Code that will be sent in a MT4 version including the pivot code that is the take profit values inside of the code
+
+- Below will be the additions to this code I will like to have placed in to buffer out low probability trades
+(ALL OF THESE SETTINGS I WOULD LIKE TO BE TRUE OR FALSE PARAMETERS FOR BACKTESTING)
+
+- IF YOU DECIDE TO FULLY REWRITE THE CODE PLEASE MAKE SURE THAT ALL PREVIOUS PARAMETERS SETTINGS ARE INCLUDED IN THE CODE 
+this includes: pivot lines and values (screenshot will be sent to you) 
+
+The parameters that would needed to be added:
+
+2. 50 DAY MOVING AVERAGE BUFFER FOR CANCELLATION AND ADDING ON TO TRADES (Please allow me to adjust this number in the settings Im either going to use 50 or 55)
+
+- When price is above the 50 MA then the expert advisor should only enter BUY trades, When price is below the 50 MA then the expert advisor should only look for SELL trade 
+(This needs to be placed as an parameter set to true or false so I can turn it on or off)
+
+3. 50 DAY MOVING AVERAGE ENTRIES DURING RETRACEMENTS 
+
+BUY SCENARIO 
+
+- When price is above the 50 day MA and the market retraces down and hits the moving average price for that timeframe (60 min chart) a buy trade needs to be entered using the same lot sizes
+and take profit settings as the strategy as long as no current trade has been triggered by the expert advisor. 
+
+(This needs to be done by having a pending buy price entered after the trend change has happened, and the order needs to be adjusted at the open of the next candle as the 50 MA price changes) *Needs to be set as a true/flase statement  
+
+MA retracement buy trade needs to be cancelled when the expert advisor triggers a buy trade based on original rules 
+
+SELL SCENARIO 
+
+- When price is below the 50 day MA and the market retraces up and hits the moving average price for that timeframe (60 min chart) a sell trade needs to be entered using the same lot sizes and take profit strategy
+as the strategy as long as no current trade has been triggered by the expert advisor. 
+
+(This needs to be done by having a pending sell price entered after the trend change has happened, and the order needs to be adjusted at the open of the next candle as the 50 MA price changes) *Needs to be set as a true/flase statement  
+
+MA retracement buy trade needs to be cancelled when the expert advisor triggers a buy trade based on original rules 
+
+
+4. CONSOLIDATION TRACKING AND CANCELLATION OF ENTRIES (SQUEEZE INDICATOR)
+
+*I will send over the TTM Squeeze Indicator that is in the freelance code, I will also send the source code that is on tradingview, I will be using this to cancel trades within a squeeze or consolidation 
+
+If a buy or sell trade rules are satisfied but the TTM squeeze has 5 or more bars (5 hours) in the consolidation signal (no trend) then the trade should
+ be automatically cancelled.
+
+
+5. EMAIL/SMS ALERT OF ENTRY/EXIT OF TRADES
+
+There needs to be a parameter that sends a SMS message to your phone or email displaying the entry, stop loss and take profit values 
+
+
+Deliverables
+
+- Quick Backtesting results of US30* I will send a set file that I use now 
+
+-Updated Source Code MT5
+
+-Description of findings during optimizations that will help for future optimizations   
+
+

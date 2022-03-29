@@ -1,0 +1,112 @@
+﻿
+Here is the specifications of this job, I will also send other optimized reports that I have done previously
+in order increase the performance of this expert advisor. During your backtesting please find optimized set files that out perform 
+the reports that I send you in the four categories that are in the delverables.  
+
+FX Striker 
+* Simple moving average crossover trading system that uses dynamic support and resistance as take profit targets
+
+
+Style of Trading 
+* Intra-day and mild swing trading
+
+
+Entry Strategy Buy
+* Fast moving average crosses over slow moving average, entry will be open at the close of the candlestick 
+
+
+Entry Strategy Sell
+* Slow moving average crosses over fast moving average, entry will open at the close of the candlestick
+
+
+Dynamic Support & Resistance 
+* Indicator that measures the daily range of the market and projects new resistance (buy targets) and supports (sell targets). I will use those supports and resistance as buy/sell targets when an entry is triggered. NOTE* Take profit targets will be set based on the day that the trade was entered. 
+
+
+Stop Loss 
+* Fixed stop loss based on backtesting 
+
+
+Risk/Reward Cutoff
+* Add an option where the trade will be cancelled if the risk vs reward value is less than a 1:1
+
+
+Take Profit Strategy 1 (Buy/Sell)
+* Once triggered in 1 trade is entered buy/sell take profit 1 is the resistance/support (First red or green line past the pivot line which would be the purple line 
+
+
+Take Profit Strategy 2 (Buy/Sell) 
+* Once triggered in 2 trades are entered with one trade having a take profit of support/resistance 1 and the second trade is the resistance/support 2 (Second red or green line past the pivot line which would be the purple line)
+
+
+Take Profit Strategy 3 (Buy/Sell)
+* 3 Trades will be created when buy/sell are triggered the first trade take profit is support/resistance 1, the second trade take profit is support/resistance 2 and the third trade take profit is support/resistance 3
+
+
+
+
+Trail Stops
+
+Strategy 1 Trail 
+* Should only be moved to break even after 50% of take profit 1 position has been hit (need to be option to adjust in settings)
+
+
+Strategy 2 Trail 
+* 2 trades are entered with take profits at support/resistance 1 & 2, after take profit 1 hit, then the stop loss of the second trade need to move to breakeven 
+
+Strategy 3 Trail 
+* 3 trades are entered with take profits at support/resistance 1,2 & 3 after take profit is hit, then the stop loss of the 2nd and 3rd trade move to breakeven, after take profit 2 is hit 
+the stop loss for the third trade needs to be move to the value  of take profit 1. (Also you would need to make a setting where the stop loss would need to move to the value of support or resistance 2 
+after it has reached a certain % difference between the price of take profit 2 and take profit 3. (Example if that percentage is set to 50% then once price has moved 50% of the distance between take profit 2 and 3 then
+the stop loss needs to be moved to the price of support/resistance 2.
+
+
+Entry Lot Size
+* Each trade 1,2 or 3 needs to have a individual lot size and take profit location that can be adjusted in the setting 
+
+(Example) 
+1st trade Lot Size = 0.01
+1st trade Take profit = Resistance/Support 1 
+
+2nd trade Lot Size = 0.02
+2nd trade Take Profit = Resistance/Support 2 
+
+3rd trade Lot Size = 0.07
+3rd trade Take Profit = Resistance/Support 3 
+
+PIVOT POINT INDICATOR
+- In the expert advisor code the pivots_point indicator needs to be place inside the expert advisor to automatically have the indicator display and give the take profit points for each day (support 1,2 & 3 the daily pivot and resistance 1,2 &3)
+the support/resistance/pivots prices need to be displayed on the chart in the center of the line created
+
+-In the parameter settings I would need to be able to change the colors of the support/resistance/pivot lines as well as changes the font color 
+
+AUTOMATIC CANCELLATION OF SIGNAL
+
+(Buy Cancellation)
+Buy trade can be open if price be at least below second resistance. 
+
+(Sell Cancellation)
+Sell trade can be open if price be at least above second support. 
+
+
+
+Deliverables
+
+-Backtesting results of NAS100 and US30 
+
+-Optimization results of EURUSD 
+
+-Updated Source Code
+
+-Description of findings during optimizations that will help for future optimizations   
+
+
+During Optimizations I would like to send me set files that fit these parameters
+
+- Less than 15% Maximal drawdown
+
+- Profit Factor of 1.5 or more
+
+- Expected Payout above $60 per trade or more 
+
+- Profit Trade Percentage Above 55%

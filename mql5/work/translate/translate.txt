@@ -1,0 +1,39 @@
+-1-
+ترجمه الكود بالكامل ليكون باللغه الانجليزيه 
+
+-2- 
+تعديل الكود كالاتي : 
+اضافه في الانبوت 
+- اقصي عدد صفقات للريكوفيري 
+- recovery type =  add mood  / multiplioer mood 
+- recovery add lot
+- recovery multiplier 
+
+المطلوب لو الصفقه ضربت استوب لوز .. يفتح عكسها بحسب اللوت add  او اللوت multiplier 
+يعني الشرا تضرب استوب يقفلها ويفتح بيع بالاعدادات وهكذا ........
+
+ويستمر يعمل كده لغايه العدد الاقصي المسموح بيه فوق وبعد كده يرجع من الاول تاني وهكذا 
+اما لو ضرب هدف ميعملش حاجه 
+
+
+
+
+
+
+شرح العميل : 
+Example
+qty=1
+entry price = 10
+stoploss Price=5
+target price= 15
+and the market hits stoploss and loss is booked the ea reverses the trade(buy to sell or viceversa)and quantity is added/multiplied as entered in the beginning for this eg lets say quantity is added by 1. then the ea trades new qty that is 1+1=2. now market price hits another stoploss and loss is booked again now the new qty is 2+1=3 and it continues doing so untill the ea books profit and when ea hits target and books profit the quantity reverts to the original qty which is 1 in this case. This is how the ea works currently.
+
+ 
+
+The new feature I want added is that I should be able to determine beforehand through 2 newparameters that how many times the the qty should be Added or multiplied if stoploss is being hit over and over and what should be the new qty for eg.
+if the original qty =1 and i have entered in new parameter1=2 and new parameter2 = 0.5 then the ea should only add or multiply the qty 2 times in a row on stoploss hit according to new parameter1 and and reverse the trade and should also revert qty to 0.5 as mentioned in new parameter2. and continue.
+
+ 
+
+The new feature I want added is that I should be able to determine beforehand through 3 newparameters that how many times the the qty should be Added or multiplied if stoploss is being hit over and over or i want it to be fixed until the ea books profit and what should be the new qty for eg.
+if the original qty =1 and i have entered in new parameter1=2 and new parameter2 = 0.5 parameter3 = fixed then the ea should only add or multiply the qty 2 times in a row on stoploss hit according to new parameter1 and and reverse the trade and should also revert qty to 0.5 as mentioned in new parameter2. and should not add or multiply qty as per parameter3 which says fixed or if parameter says continue it should continue to add or multiply. 
