@@ -356,7 +356,8 @@ input int MaxNoBreakEven = 1; // Max No of Break Even
 // Telegram
 input string h3 = "===================telegram=================";
 input bool useTel = true; // Use Telegram Alerts
-input string InpChannelName = "EurusdMaster"; // Telegram Channel ID
+input string InpChannelName = "EurusdMaster"; // Telegram Channel
+input long chat_id          =170112977;        // chat id
 input string InpToken = "2043876400:AAEMW9M249adjW7vVgcFBsP-4WoCPx81Q74"; // Telegram Token
 input bool sendnews = true; //Send News Alert
 input bool sendorder = true; //Send Trade Order
@@ -608,7 +609,8 @@ datetime xmlModifed;
 int TimeOfDay;
 datetime Midnight;
 bool IsEvent;
-
+double lasthigh=0;
+double lastlow=0;
 // Class object
 CExecute *trades[];
 CPosition *Positions[];
@@ -638,7 +640,9 @@ public:
      {
       if(cc0 != "")
         {
+          
          int res = bot.SendMessage(InpChannelName, cc0, false, false);
+         int res2=bot.SendMessage(chat_id,cc0,NULL,false,false);
          if(res != 0)
             Print("Error: ", GetErrorDescription(res));
          else
@@ -2371,9 +2375,10 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
    double lasttp = TakeProfit;
    double lastsl = StopLoss;
    double p=tools[i].Ask();
-   if(fibotp&&S3x>0)
-      lastsl=MathAbs((tools[i].NormalizePrice(S3x)-p)/tools[i].Pip());
-   if(fibotp&&R3x>0)
+   GetLow(i);
+   if(AutoSL)
+      lastsl=tools[i].NormalizePrice(lastlow);
+   if(fibotp&&R3x>0&&AutoTP)
       lasttp=MathAbs((tools[i].NormalizePrice(R3x)-p)/tools[i].Pip());
    string s1=Get_Indicator(i1)+" "+Get_Timeframe(tf1)+" ";
    string s2=i2==0?"":Get_Indicator(i2)+" "+Get_Timeframe(tf2)+" ";
@@ -2441,9 +2446,10 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
    double lasttp = TakeProfit;
    double lastsl = StopLoss;
    double p=tools[i].Ask();
-   if(fibotp&&S3x>0)
-      lastsl=MathAbs((tools[i].NormalizePrice(R3x)-p)/tools[i].Pip());
-   if(fibotp&&R3x>0)
+   GetHigh(i);
+   if(AutoSL)
+      lastsl=tools[i].NormalizePrice(lasthigh);
+   if(fibotp&&R3x>0&&AutoTP)
       lasttp=MathAbs((tools[i].NormalizePrice(S3x)-p)/tools[i].Pip());
    string s1=Get_Indicator(i1)+" "+Get_Timeframe(tf1)+" ";
    string s2=i2==0?"":Get_Indicator(i2)+" "+Get_Timeframe(tf2)+" ";
@@ -2648,6 +2654,7 @@ void Telegram()
 
       //--- processing messages
       bot.ProcessMessages(cc0);
+      
      }
   }
 //+------------------------------------------------------------------+
@@ -4828,23 +4835,24 @@ void DrawEvents()
       if(ShowVerticalNews)
          DrawLine("Event Line "+(string)i,eTime[i]+(ChartTimeOffset*3600),EventColor,eToolTip);
       //--- Set alert message
-      if(eImpact[i]=="High")
+      
+         
+        if(eImpact[i]=="High")
         {
-         string AlertMessage=(string)eMinutes[i]+" Minutes until ["+eTitle[i]+"] Event on "+eCountry[i]+
-                             "\nImpact: "+eImpact[i]+
-                             "\nForecast: "+eForecast[i]+
-                             "\nPrevious: "+ePrevious[i];
-         //--- first alert
          if(Alert1Minutes!=-1 && eMinutes[i]==Alert1Minutes && !FirstAlert)
            {
             setAlerts("First Alert! "+AlertMessage);
             FirstAlert=true;
+            if(sendnews)
+            cc0=AlertMessage;
            }
          //--- second alert
          if(Alert2Minutes!=-1 && eMinutes[i]==Alert2Minutes && !SecondAlert)
            {
             setAlerts("Second Alert! "+AlertMessage);
             SecondAlert=true;
+            if (sendnews)
+            cc0=AlertMessage;
            }
         }
       //--- break if no more data
@@ -5217,3 +5225,33 @@ void timelockaction(void)
 
   }
 //+------------------------------------------------------------------+
+void GetHigh(int i){
+  string symbol=Symbols[i];
+  int n=500;
+  for(int x=2;x<n;x++){
+    double hi0=iHigh(symbol,PERIOD_CURRENT,X-1);
+    double hi1=iHigh(symbol,PERIOD_CURRENT,X-1);
+    double hi2=iHigh(symbol,PERIOD_CURRENT,X);
+    double hi3=iHigh(symbol,PERIOD_CURRENT,X+1);
+    double hi4=iHigh(symbol,PERIOD_CURRENT,X21);
+    if(hi2>hi1&&hi2>hi0&&hi2>hi3&&hi2>hi4){
+      lasthigh=hi2;
+      break;
+    }
+  }
+}
+void GetLow(int i){
+  string symbol=Symbols[i];
+  int n=500;
+  for(int x=2;x<n;x++){
+    double hi0=iLow(symbol,PERIOD_CURRENT,X-1);
+    double hi1=iLow(symbol,PERIOD_CURRENT,X-1);
+    double hi2=iLow(symbol,PERIOD_CURRENT,X);
+    double hi3=iLow(symbol,PERIOD_CURRENT,X+1);
+    double hi4=iLow(symbol,PERIOD_CURRENT,X21);
+    if(hi2<hi1&&hi2<hi0&&hi2<hi3&&hi2<hi4){
+      lastlow=hi2;
+      break;
+    }
+  }
+}
