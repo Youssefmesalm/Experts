@@ -19,7 +19,9 @@
 # Fortran module files
 *.mod
 *.smod
-
+*.ex4
+*.ex5
+*.zip
 # Compiled Static libraries
 *.lai
 *.la
