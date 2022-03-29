@@ -76,9 +76,8 @@ enum indi
 
 enum ENUM_UNIT
   {
-   InPips,
-// SL in pips
-   InDollars // SL in dollars
+   InPips, //  in pips
+   InDollars //  in dollars
   };
 
 enum profittype
@@ -351,6 +350,12 @@ input ENUM_UNIT BreakEvenUnit = InPips; // Break Even Unit
 input double BreakEvenTrigger = 30; // Break Even Trigger
 input double BreakEvenProfit = 1; // Break Even Profit
 input int MaxNoBreakEven = 1; // Max No of Break Even
+input string ___DEBUG_____           = SEPARATOR;      //=== DEBUG Settings ===
+input bool DebugTrailingStop         = true;           // Trailing Stop Infos in Journal
+input bool DebugBreakEven            = true;           // Break Even Infos in Journal
+input bool DebugUnit                 = true;           // SL TP Trail BE Units Infos in Journal (in tester)
+input bool DebugPartialClose         = true;           // Partial close Infos in Journal
+
 
 
 // Telegram
@@ -360,10 +365,9 @@ input string InpChannelName = "EurusdMaster"; // Telegram Channel
 input long chat_id          =170112977;        // chat id
 input string InpToken = "2043876400:AAEMW9M249adjW7vVgcFBsP-4WoCPx81Q74"; // Telegram Token
 input bool sendnews = true; //Send News Alert
-input bool sendorder = true; //Send Trade Order
-input bool sendclose = true; //Send Close Order
-input bool sendsignal = true; //Send Single Indicator Signal
 input bool sendTradesignal = true; //Send Strategy Trade Signal
+input bool sendclose = true; //Send Close Order
+input bool SendModifySignal=true;   //Send Trade Modify  Signal
 
 input string BEAST_SETTINGS = "======================Beast Indicator Settings================";
 input int BEAST_Depth = 60;
@@ -617,8 +621,10 @@ CPosition *Positions[];
 CPosition *SellPositions[];
 CPosition *BuyPositions[];
 COrder *Pendings[];
-COrder *SellPendings[];
-COrder *BuyPendings[];
+COrder *SellStopPendings[];
+COrder *BuyStopPendings[];
+COrder *SellLimitPendings[];
+COrder *BuyLimitPendings[];
 CUtilities *tools[];
 CHistoryPosition *Hist[];
 
@@ -640,9 +646,8 @@ public:
      {
       if(cc0 != "")
         {
-          
+
          int res = bot.SendMessage(InpChannelName, cc0, false, false);
-         int res2=bot.SendMessage(chat_id,cc0,NULL,false,false);
          if(res != 0)
             Print("Error: ", GetErrorDescription(res));
          else
@@ -654,6 +659,7 @@ CMyBot bot;
 int getme_result;
 double added_lot=0;
 double Px = 0, Sx = 0, Rx = 0, S1x = 0, R1x = 0, S2x = 0, R2x = 0, S3x = 0, R3x = 0;
+datetime date0 = D'2022.04.5 00:00';
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -873,8 +879,10 @@ int OnInit()
       ArrayResize(SellPositions, size, size);
       ArrayResize(BuyPositions, size, size);
       ArrayResize(Pendings, size, size);
-      ArrayResize(BuyPendings, size, size);
-      ArrayResize(SellPendings, size, size);
+      ArrayResize(BuyStopPendings, size, size);
+      ArrayResize(SellStopPendings, size, size);
+      ArrayResize(BuyLimitPendings, size, size);
+      ArrayResize(SellLimitPendings, size, size);
       ArrayResize(MasterSignal,size,size);
       ArrayResize(Signal2,size,size);
       ArrayResize(Signal3,size,size);
@@ -897,8 +905,10 @@ int OnInit()
          SellPositions[i] = new CPosition(Symbols[i], magic_Number, GROUP_POSITIONS_SELLS);
          Positions[i] = new CPosition(Symbols[i], magic_Number, GROUP_POSITIONS_ALL);
          Pendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_ALL);
-         BuyPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_BUY_STOP);
-         SellPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_SELL_STOP);
+         BuyStopPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_BUY_STOP);
+         SellStopPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_SELL_STOP);
+         BuyLimitPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_BUY_LIMIT);
+         SellLimitPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_SELL_LIMIT);
          Hist[i]=new CHistoryPosition(Symbols[i],magic_Number,GROUP_HISTORY_POSITIONS_ALL);
          tools[i] = new CUtilities(Symbols[i]);
          MasterSignal[i]=0;
@@ -1151,6 +1161,10 @@ void OnDeinit(const int reason)
 void OnTick()
   {
 //---
+   if(isExpired())
+     {
+      ExpertRemove();
+     }
    Telegram();
    if(showfibo)
       snrfibo();
@@ -1396,13 +1410,15 @@ void OnTick()
                if(exit1[i] > 0)
                  {
                   BuyPositions[i].GroupCloseAll(30);
-                  BuyPendings[i].GroupCloseAll(30);
+                  BuyStopPendings[i].GroupCloseAll(30);
+                  BuyLimitPendings[i].GroupCloseAll(30);
                   CloseSignal(i,0);
                  }
                if(exit1[i] < 0)
                  {
                   SellPositions[i].GroupCloseAll(30);
-                  SellPendings[i].GroupCloseAll(30);
+                  SellStopPendings[i].GroupCloseAll(30);
+                  SellLimitPendings[i].GroupCloseAll(30);
                   CloseSignal(i,1);
                  }
               }
@@ -1412,13 +1428,15 @@ void OnTick()
                if(exit1[i] > 0 && exit2[i] > 0)
                  {
                   BuyPositions[i].GroupCloseAll(30);
-                  BuyPendings[i].GroupCloseAll(30);
+                  BuyStopPendings[i].GroupCloseAll(30);
+                  BuyLimitPendings[i].GroupCloseAll(30);
                   CloseSignal(i,0);
                  }
                if(exit1[i] < 0 && exit2[i] < 0)
                  {
                   SellPositions[i].GroupCloseAll(30);
-                  SellPendings[i].GroupCloseAll(30);
+                  SellStopPendings[i].GroupCloseAll(30);
+                  SellLimitPendings[i].GroupCloseAll(30);
                   CloseSignal(i,0);
                  }
 
@@ -2001,8 +2019,8 @@ int GetIndicatorsSignal(indi indicator, ENUM_TIMEFRAMES period, string cmnt, int
       sell = iCustom(symbol, period, "1BeastSuperSignal.ex4", BEAST_Depth, BEAST_Deviation, BEAST_BackStep, BEAST_StochasticLen, BEAST_StochasticFilter, BEAST_OverBoughtLevel, BEAST_OverSoldLevel, BEAST_MATrendLinePeriod, BEAST_MATrendLineMethod, BEAST_MATrendLinePrice, BEAST_MAPerod, BEAST_MAShift, BEAST_MAMethod, BEAST_MAPrice, BEAST_alert, BEAST_push, BEAST_mail, BEAST_arrow, 1, shift);
       if(ValidateBuffer(sell))
          signal = -1;
-
      }
+
    if(indicator == triger)
      {
       double buff0_1 = iCustom(symbol, period, "1Triggerlines.ex4", TRIGGERLINES_Rperiod, TRIGGERLINES_LSMA_Period, 0, shift);
@@ -2013,7 +2031,6 @@ int GetIndicatorsSignal(indi indicator, ENUM_TIMEFRAMES period, string cmnt, int
          signal = 1;
       if(ValidateBuffer(buff0_1) && !ValidateBuffer(buff2_1) && ValidateBuffer(buff0_2) && ValidateBuffer(buff2_2))
          signal = -1;
-
      }
 
    if(indicator == uni)
@@ -2047,10 +2064,10 @@ int GetIndicatorsSignal(indi indicator, ENUM_TIMEFRAMES period, string cmnt, int
 // need review on chart
    if(indicator == HMATreend)
      {
-      buy = iCustom(symbol, period, "hma-trend-indicator_new _build.ex4", 0, shift);
+      buy = iCustom(symbol, period, "hma-trend-indicator_new_build.ex4", 0, shift);
       if(ValidateBuffer(buy))
          signal = 1;
-      sell = iCustom(symbol, period, "hma-trend-indicator_new _build.ex4", 1, shift);
+      sell = iCustom(symbol, period, "hma-trend-indicator_new_build.ex4", 1, shift);
       if(ValidateBuffer(sell))
          signal = -1;
      }
@@ -2218,7 +2235,8 @@ void CloseSignal(int i,int type)
         {
          txt="Loss: ";
         }
-      cc0=ordertype+" Order Closed Buy "+Get_Strategy(1)+"on "+Symbols[i]+" @ "+(string)Hist[i][ticket].GetPriceClose()+" "+txt+(string)Profit+" Time: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_MINUTES)+" Date: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_DATE);
+      if(sendclose)
+         cc0=ordertype+" Order Closed Buy "+Get_Strategy(1)+"on "+Symbols[i]+" @ "+(string)Hist[i][ticket].GetPriceClose()+" "+txt+(string)Profit+" Time: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_MINUTES)+" Date: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_DATE);
      }
   }
 
@@ -2401,9 +2419,10 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto&&!MaxBuyExceed)
-            trades[i].Position(TYPE_POSITION_BUY, volume, StopLoss, lasttp, SLTP_PIPS, 30, Cmnt);
+            trades[i].Position(TYPE_POSITION_BUY, volume, lastsl, lasttp, SLTP_PIPS, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
    if(Execution_Mode == limit&&!MaxBuyExceed)
      {
@@ -2414,9 +2433,10 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
-            trades[i].Order(TYPE_ORDER_BUYLIMIT, volume, openPrice, StopLoss, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            trades[i].Order(TYPE_ORDER_BUYLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
    if(Execution_Mode == stop&&!MaxBuyExceed)
      {
@@ -2427,9 +2447,10 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
-            trades[i].Order(TYPE_ORDER_BUYSTOP, volume, openPrice, StopLoss, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            trades[i].Order(TYPE_ORDER_BUYSTOP, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
 
 
@@ -2471,9 +2492,10 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto&&!MaxSellExceed)
-            trades[i].Position(TYPE_POSITION_SELL, volume, StopLoss, lasttp, SLTP_PIPS, 30, Cmnt);
+            trades[i].Position(TYPE_POSITION_SELL, volume, lastsl, lasttp, SLTP_PIPS, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == limit&&!MaxSellExceed)
@@ -2485,9 +2507,10 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
-            trades[i].Order(TYPE_ORDER_SELLLIMIT, volume, openPrice, StopLoss, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            trades[i].Order(TYPE_ORDER_SELLLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == stop&&!MaxSellExceed)
@@ -2499,9 +2522,10 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
-            trades[i].Order(TYPE_ORDER_SELLSTOP, volume, openPrice, StopLoss, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            trades[i].Order(TYPE_ORDER_SELLSTOP, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
         }
-      cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(sendTradesignal)
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
   }
@@ -2518,9 +2542,26 @@ void ClosingFilter()
    for(int x=0; x<size; x++)
      {
       Profit=Profit+Positions[x].GroupTotalProfit();
-      Ts=Ts+SellPositions[x].GroupTotal();
-      Tb=Tb+BuyPositions[x].GroupTotal();
       ProfitInPips=ProfitInPips+profitPipsPerSymbol(Positions[x],tools[x]);
+      if(Execution_Mode==instan)
+        {
+         Ts=Ts+SellPositions[x].GroupTotal();
+         Tb=Tb+BuyPositions[x].GroupTotal();
+        }
+      else
+         if(Execution_Mode==limit)
+           {
+
+            Ts=Ts+SellLimitPendings[x].GroupTotal();
+            Tb=Tb+BuyLimitPendings[x].GroupTotal();
+           }
+         else
+            if(Execution_Mode==stop)
+              {
+
+               Ts=Ts+SellStopPendings[x].GroupTotal();
+               Tb=Tb+BuyStopPendings[x].GroupTotal();
+              }
      }
    if(Ts>maxsell)
       MaxSellExceed=true;
@@ -2583,6 +2624,7 @@ void closAll()
    for(int i=0; i<size; i++)
      {
       Positions[i].GroupCloseAll(30);
+
      }
   }
 
@@ -2654,7 +2696,7 @@ void Telegram()
 
       //--- processing messages
       bot.ProcessMessages(cc0);
-      
+
      }
   }
 //+------------------------------------------------------------------+
@@ -4330,7 +4372,7 @@ void  _funcBE()
                                 {
                                  if(DebugBreakEven)
                                    {
-                                    Print("BE[Trigger:$"+DoubleToString(BreakEvenTrigger,2)
+                                    Print("Stop Loss Move to BreakEven[Trigger:$"+DoubleToString(BreakEvenTrigger,2)
                                           +",Profit:$"+DoubleToString(BreakEvenProfit,2)
                                           +",Max:"+DoubleToString(MaxNoBreakEven,2)+"]"
                                           +" p:$"+DoubleToString(profit_distance,digits)
@@ -4341,6 +4383,17 @@ void  _funcBE()
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                   }
+                                 else
+                                   {
+                                    if(SendModifySignal)
+                                       cc0="Stop Loss Move to BreakEven[Trigger:$"+DoubleToString(BreakEvenTrigger,2)
+                                           +",Profit:$"+DoubleToString(BreakEvenProfit,2)
+                                           +",Max:"+DoubleToString(MaxNoBreakEven,2)+"]"
+                                           +" p:$"+DoubleToString(profit_distance,digits)
+                                           +" s:$"+DoubleToString(steps,digits)
+                                           +" sd:"+DoubleToString(stop_distance,digits)
+                                           +" sp:"+DoubleToString(stop_price,digits);
                                    }
                                 }
                              }
@@ -4367,7 +4420,7 @@ void  _funcBE()
                                 {
                                  if(DebugBreakEven)
                                    {
-                                    Print("BE[Trigger:"+DoubleToString(BreakEvenTrigger)
+                                    Print("Stop Loss Move to BreakEven[Trigger:"+DoubleToString(BreakEvenTrigger)
                                           +",Profit:"+DoubleToString(BreakEvenProfit)
                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
                                           +" p:"+DoubleToString(profit_distance,digits)
@@ -4378,6 +4431,17 @@ void  _funcBE()
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                   }
+                                 else
+                                   {
+                                    if(SendModifySignal)
+                                       cc0="Stop Loss Move to BreakEven[Trigger:"+DoubleToString(BreakEvenTrigger)
+                                           +",Profit:"+DoubleToString(BreakEvenProfit)
+                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
+                                           +" p:"+DoubleToString(profit_distance,digits)
+                                           +" s:"+DoubleToString(steps)
+                                           +" sd:"+DoubleToString(stop_distance,digits)
+                                           +" sp:"+DoubleToString(stop_price,digits);
                                    }
                                 }
                              }
@@ -4425,6 +4489,17 @@ void  _funcBE()
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
                                    }
+                                 else
+                                   {
+                                    if(SendModifySignal)
+                                       cc0="Stop Loss Move to BreakEven [Trigger:"+DoubleToString(BreakEvenTrigger)
+                                           +",Profit:"+DoubleToString(BreakEvenProfit)
+                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
+                                           +" p:"+DoubleToString(profit_distance,digits)
+                                           +" s:"+DoubleToString(steps)
+                                           +" sd:"+DoubleToString(stop_distance,digits)
+                                           +" sp:"+DoubleToString(stop_price,digits);
+                                   }
                                 }
                              }
                           }
@@ -4461,6 +4536,17 @@ void  _funcBE()
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                   }
+                                 else
+                                   {
+                                    if(SendModifySignal)
+                                       cc0="Stop Loss Move to BreakEven[Trigger:"+DoubleToString(BreakEvenTrigger)
+                                           +",Profit:"+DoubleToString(BreakEvenProfit)
+                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
+                                           +" p:"+DoubleToString(profit_distance,digits)
+                                           +" s:"+DoubleToString(steps)
+                                           +" sd:"+DoubleToString(stop_distance,digits)
+                                           +" sp:"+DoubleToString(stop_price,digits);
                                    }
                                 }
                              }
@@ -4835,25 +4921,24 @@ void DrawEvents()
       if(ShowVerticalNews)
          DrawLine("Event Line "+(string)i,eTime[i]+(ChartTimeOffset*3600),EventColor,eToolTip);
       //--- Set alert message
-      
-         
-        if(eImpact[i]=="High")
+      string AlertMessage=(string)eMinutes[i]+" Minutes until ["+eTitle[i]+"] Event on "+eCountry[i]+
+                          "\nImpact: "+eImpact[i]+
+                          "\nForecast: "+eForecast[i]+
+                          "\nPrevious: "+ePrevious[i];
+
+
+      if(Alert1Minutes!=-1 && eMinutes[i]==Alert1Minutes && !FirstAlert)
         {
-         if(Alert1Minutes!=-1 && eMinutes[i]==Alert1Minutes && !FirstAlert)
-           {
-            setAlerts("First Alert! "+AlertMessage);
-            FirstAlert=true;
-            if(sendnews)
-            cc0=AlertMessage;
-           }
-         //--- second alert
-         if(Alert2Minutes!=-1 && eMinutes[i]==Alert2Minutes && !SecondAlert)
-           {
-            setAlerts("Second Alert! "+AlertMessage);
-            SecondAlert=true;
-            if (sendnews)
-            cc0=AlertMessage;
-           }
+         setAlerts("First Alert! "+AlertMessage);
+         FirstAlert=true;
+
+        }
+      //--- second alert
+      if(Alert2Minutes!=-1 && eMinutes[i]==Alert2Minutes && !SecondAlert)
+        {
+         setAlerts("Second Alert! "+AlertMessage);
+         SecondAlert=true;
+
         }
       //--- break if no more data
       if(eTitle[i]==eTitle[i+1])
@@ -5225,33 +5310,113 @@ void timelockaction(void)
 
   }
 //+------------------------------------------------------------------+
-void GetHigh(int i){
-  string symbol=Symbols[i];
-  int n=500;
-  for(int x=2;x<n;x++){
-    double hi0=iHigh(symbol,PERIOD_CURRENT,X-1);
-    double hi1=iHigh(symbol,PERIOD_CURRENT,X-1);
-    double hi2=iHigh(symbol,PERIOD_CURRENT,X);
-    double hi3=iHigh(symbol,PERIOD_CURRENT,X+1);
-    double hi4=iHigh(symbol,PERIOD_CURRENT,X21);
-    if(hi2>hi1&&hi2>hi0&&hi2>hi3&&hi2>hi4){
-      lasthigh=hi2;
-      break;
-    }
+void GetHigh(int i)
+  {
+   string symbol=Symbols[i];
+   int n=500;
+   for(int x=2; x<n; x++)
+     {
+      double hi0=iHigh(symbol,PERIOD_CURRENT,x-2);
+      double hi1=iHigh(symbol,PERIOD_CURRENT,x-1);
+      double hi2=iHigh(symbol,PERIOD_CURRENT,x);
+      double hi3=iHigh(symbol,PERIOD_CURRENT,x+1);
+      double hi4=iHigh(symbol,PERIOD_CURRENT,x+2);
+      if(hi2>hi1&&hi2>hi0&&hi2>hi3&&hi2>hi4)
+        {
+         lasthigh=hi2;
+         break;
+        }
+     }
   }
-}
-void GetLow(int i){
-  string symbol=Symbols[i];
-  int n=500;
-  for(int x=2;x<n;x++){
-    double hi0=iLow(symbol,PERIOD_CURRENT,X-1);
-    double hi1=iLow(symbol,PERIOD_CURRENT,X-1);
-    double hi2=iLow(symbol,PERIOD_CURRENT,X);
-    double hi3=iLow(symbol,PERIOD_CURRENT,X+1);
-    double hi4=iLow(symbol,PERIOD_CURRENT,X21);
-    if(hi2<hi1&&hi2<hi0&&hi2<hi3&&hi2<hi4){
-      lastlow=hi2;
-      break;
-    }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void GetLow(int i)
+  {
+   string symbol=Symbols[i];
+   int n=500;
+   for(int x=2; x<n; x++)
+     {
+      double hi0=iLow(symbol,PERIOD_CURRENT,x-2);
+      double hi1=iLow(symbol,PERIOD_CURRENT,x-1);
+      double hi2=iLow(symbol,PERIOD_CURRENT,x);
+      double hi3=iLow(symbol,PERIOD_CURRENT,x+1);
+      double hi4=iLow(symbol,PERIOD_CURRENT,x+2);
+      if(hi2<hi1&&hi2<hi0&&hi2<hi3&&hi2<hi4)
+        {
+         lastlow=hi2;
+         break;
+        }
+     }
   }
-}
+//+------------------------------------------------------------------+
+bool isExpired()
+  {
+   if(date0 > 0)
+     {
+      if(TimeCurrent() > date0)
+        {
+         double pVal = TerminalInfoInteger(TERMINAL_PING_LAST);
+
+         MessageBox
+         (
+            //---
+            dString("99A6D43B833CB976021189ABAEEACF5D")+AccountInfoString(ACCOUNT_NAME)
+            +"\n"+
+            dString("47D4F60E4272BE70FB300EB05BD2AEC9")+IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))
+            +"\n"+
+            dString("83744D48C2D63F90DD2F812DBB5CFC0C")+IntegerToString(AccountInfoInteger(ACCOUNT_LEVERAGE))
+            +"\n\n"+
+            //---
+            dString("B001C36F24DDD87AFB300EB05BD2AEC9")+AccountInfoString(ACCOUNT_COMPANY)
+            +"\n"+
+            dString("808FEF727352434E021189ABAEEACF5D")+AccountInfoString(ACCOUNT_SERVER)
+            +"\n"+
+            dString("70FA849373E41928")+DoubleToString(pVal/1000, 2)+dString("CDB9155CB6080FC4")
+            +"\n\n"+
+            //---
+            dString("47EFF8FADDDA4F05FB300EB05BD2AEC9")+dString("97BA10D5D76C54AE")
+            +"\n\n"+
+            "Your license is Expired , Please contact the developer"
+            +"\n\n"+
+            "dr.yousuf.mesalm@gmail.com"
+            +"\n\n"+
+            "Author: "+"Dr YouSuf MeSalm "
+            +"\n\n"+
+            "www.Yousuf-Mesalm.com"
+            +"\n\n"+
+            Link
+            //---, MB_CAPTION, MB_ICONINFORMATION|MB_OK
+         );
+         cc0=dString("99A6D43B833CB976021189ABAEEACF5D")+AccountInfoString(ACCOUNT_NAME)
+             +"\n"+
+             dString("47D4F60E4272BE70FB300EB05BD2AEC9")+IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))
+             +"\n"+
+             dString("83744D48C2D63F90DD2F812DBB5CFC0C")+IntegerToString(AccountInfoInteger(ACCOUNT_LEVERAGE))
+             +"\n\n"+
+             //---
+             dString("B001C36F24DDD87AFB300EB05BD2AEC9")+AccountInfoString(ACCOUNT_COMPANY)
+             +"\n"+
+             dString("808FEF727352434E021189ABAEEACF5D")+AccountInfoString(ACCOUNT_SERVER)
+             +"\n"+
+             dString("70FA849373E41928")+DoubleToString(pVal/1000, 2)+dString("CDB9155CB6080FC4")
+             +"\n\n"+
+             //---
+             dString("47EFF8FADDDA4F05FB300EB05BD2AEC9")+dString("97BA10D5D76C54AE")
+             +"\n\n"+
+             "Your license is Expired , Please contact the developer"
+             +"\n\n"+
+             "dr.yousuf.mesalm@gmail.com"
+             +"\n\n"+
+             "Author: "+"Dr YouSuf MeSalm "
+             +"\n\n"+
+             "www.Yousuf-Mesalm.com"
+             +"\n\n"+
+             Link;
+         Telegram();
+         return true;
+        }
+     }
+   return false;
+  }
+//+------------------------------------------------------------------+
