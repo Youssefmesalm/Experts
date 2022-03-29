@@ -1,0 +1,5 @@
+
+#define CONTROL_WIDTH (100)
+#define CONTROL_HEIGHT (30)
+#define BACKGROUND C'0x19,0x37,0x53'
+#define BUTTON_GREEN C'0x8F,0xD6,0xA7'

@@ -1,0 +1,37 @@
+
+
+Accurate Indicators from Professionals:
+
+https://top-trading-indicators.com/pro
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+MetaTrader 4 Setup:
+
+1. Open your MetaTrader 4
+2. Click File » Open Data Folder
+3. Open MQL4 folder
+4. Insert your indicators (ex4 or mq4) files into MQL4/Indicators folder
+5. Restart your MetaTrader 4
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+MetaTrader 5 Setup:
+
+1. Open your MetaTrader 5
+2. Click File » Open Data Folder
+3. Open MQL5 folder
+4. Insert your indicators (ex5 or mq5) files into MQL5/Indicators folder
+5. Restart your MetaTrader 5
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+This free indicator was downloaded from:
+
+https://top-trading-indicators.com
+

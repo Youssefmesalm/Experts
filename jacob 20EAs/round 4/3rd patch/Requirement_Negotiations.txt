@@ -1,0 +1,19 @@
+
+
+20 Eas to be corrected and.... "BULLFORYOU" files from this  page, the Eas only not the Indicators https://www.bullforyou.com/.
+
+Add "Minutes between orders" input line.
+
+Make Ea opening opposite order: if it was a buy it must open sell and viceversa.
+
+Make exact closing at TP/SL only.
+
+Each EA must open 1 order per time.
+
+Delete martingale.
+
+Add lot size input line.
+
+Delete Pop-up message alert.
+
+Other fixings can come along as the order is processed after the first part has been fixed.

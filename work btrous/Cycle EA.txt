@@ -1,0 +1,103 @@
+Range expert advisor shall be based on
+
+
+
+1.       Entry shall be based on any 2 indicator like MA, RSi and stochastic
+
+2.       Take entry (buy or sell) with a stop loss and TP
+
+3.       EA shall work in cycle... cycle mean Option 1: if hit TP than close cycle and start from beginning (for example if initial lot is 0.01 and hit TP than it will start from 0.01 again Option 2: if hit SL than close current trade with loss and open new trade in opposite direction with lot multiplier (previous lot will multiply with lot multiplier to calculate second lo, also have same SL and TP put in setting
+
+ Any further follow the same as mentioned option 1 and option 2 so on such as...
+
+1. 1st trade (Sell) 0.01 TP 300 SL 200 (if hit SL) than close 0.01 and open new trade in opposite direction
+
+2. 2nd trade - Buy (0.02 = 0.01 previous lot * 2.0 Lot multiplier) if hit SL -  close 0.02 and open new trade in opposite direction
+
+3. 3rd trade - Sell (0.04 = 0.02 previous lot * 2.0 Lot multiplier) if hit SL -  close 0.04 and open new trade in opposite direction
+
+4. 4th trade - Buy (0.08 = 0.04 previous lot * 2.0 Lot multiplier) if hit SL -  close 0.08 and open new trade in opposite direction
+
+
+
+
+and so on -----------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------- this process continue util any lot hit TP
+
+For example,
+
+5. 5th trade - Sell (0.16 = 0.08 previous lot * 2.0 Lot multiplier) if hit TP - than this cycle complete and start a new cycle from initial lot 0.01
+
+
+
+There should no delay in orders, what it mean if close first order when hit SL than immediate immediate open next order of cycle
+
+ 
+
+3.       Option in setting
+
+Strategy type = auto/Manual (Auto mean EA open trade when confirm by internal signal and Manual mean enter 1st trade of cycle manually where as further trade of cycle shall take EA itself
+
+Auto lot (Money Management) = True/false (True mean auto calculate initial lot (first lot) of trade where as others trade in cycle (2nd, 3rd, 4th.......) according to lot multipicator - if false than initial lot shall be fixed
+
+Auto lot size = 1000 (USD)
+
+Initial Lot size = 0.01 (first lot of cycle)
+
+Lot Multipier = 2.0 (this is factor which used to calculate 2nd, 3rd, 4th, 5th.......... lots ) 
+
+TP = 300 Points
+
+SL = 200
+
+Use trailing Stop = True/false
+
+Trail Stop loss = 300
+
+Trail Step = 100
+
+Maximum Order/Cycle  = 10 (number of orders for one cycle - if I put maximum order 15 than one cycle shall be 15order - once reached 15 orders of cycle than cycle completed and start new cycle from initial lot
+
+S2 indicator
+
+MA_setting
+
+S3 Indicator
+
+RSI Setting
+
+S4------------------------ Time filter
+
+Trade Start time = 10:00 (it mean new cycle will start after this time)
+
+Trade Stop Time = 23:00  (it mean new cycle will not start after this time)
+
+ Please remember only new cycle will open in this time limits - what I mean by this is that if any trade pending in cycle it should take any time but once a cycle complete it will not open new trade until  Trade Start time allow it.
+
+For example, keeping above time in mind - if first trade of cycle open a 20:00 hours (its ok because it is in time) - second trade of cycle open 21:45 hours ( its ok because it is in time also) - third trade open 22:40 hours  ( its ok because it is in time also) - now if third lot close 03:00 hours, it should take 4th trade because cycle trade should run 24 hours - but if hit 3rd trade hit TP at 03:00 hours than it should not start new cycle. New cycle shall be start after 10:00 hours. Once cycle open than time limit not apply... time limit apply only on new cycle only
+
+Magic Number = 121221
+
+ 
+
+4.       There shall be a simple dashboard showing only
+
+Buy lot : 0.00
+
+Sell lot : 0.00
+
+Buy profit : 00.00
+
+Sell Profit : 00.00
+
+Free margin
+
+5. Three button on dashboard 
+
+Close (click will close all order)
+
+New Cycle (If click it mean new cycle will not be open after completing current cycle)
+

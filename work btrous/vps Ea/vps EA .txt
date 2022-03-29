@@ -1,0 +1,51 @@
+We will need to keep track every time the indicator goes +1 or -1, because that is not tracked by the indicator itself, the indicator will show you when a number goes up by adding to the number already in place, example, if the indicator shows +13, then a -1 comes in, the indicator will show now +12, it went down one.
+
+So the EA need to track this and make sales or buy orders based on this, example:
+
+Lets say that we start with 0 at the beginning of the trading day, and the indicator is showing EURUSD 0, the a couple of minutes later it shows +1 so the EA will immediately buy EURUSD 0.01 ( fixed lot ), then the indicator shows another +1, then the indicator will buy another 0.01 and so on, but lets say later on the indicator starts to show -1, the indicator will then sell EURUSD 0.01 and so on
+
+All of the trades will be kept open, and I'm going to be using a hedge account so i can have both open long and short trades at the same time.
+
+here are the server details
+
+
+IP Address:
+45.77.56.249 
+Username:
+Administrator
+Password:
+7Kz@TbYQT@B*JAxp
+
+
+
+
+
+BY THE END OF THE DAY WHEN TRADING STOPS, WE WILL RESSET TO ZERO AND START FRESH THE NEXT DAY.
+
+SETTINGS I NEED FOR THE EA:
+
+Time of day to start trading, and time of day to stop trading, this means STOP trading NOT CLOSE trades, all open orders will be kept.
+Take profit and Stop loss based on ALL open positions.
+Select which pairs I want to trade at the same time and what fixed lot i want to use for each pair.
+I need a STOP NEW TRADES button so i can manually stop trading for whatever reason, BUT KEEP OPEN TRADES
+I will need a STOP AND CLOSE button to stop the EA and close everything manually.
+
+
+
+
+
+
+
+
+
+
+I want to be able to choose which currencies i want the EA to trade
+
+Have that on the settings
+
+The lots have to be fixed lots and i want to be able ot choose the lot size for every pair
+
+Rember we will track which PAIRS have the +1 or -1, just like you see on the right side of the chart
+
+
+The indicator already does the job, just need to track the +1 and -1 and trade accordingly
