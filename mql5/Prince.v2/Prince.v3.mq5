@@ -121,6 +121,7 @@ int OnInit()
   {
 //---
    bool found=false;
+   StartTime=TimeCurrent();
    int total=ArraySize(Pairs);
    if(Trade_Type==Selllimit)
      {
@@ -631,23 +632,29 @@ void ReSet()
    int total=Hist.GroupTotal();
    datetime time=0;
    long ticket=-1;
+   double profit=0;
+   double closeprice=0;
+   double tp=0,sl=0,openprice=0;
+   datetime timeClose=0;
    for(int i= 0; i<total; i++)
      {
-      datetime timeClose=Hist[i].GetTimeClose();
+      timeClose=Hist[i].GetTimeClose();
       if(timeClose>time)
         {
          time=timeClose;
          ticket=Hist[i].GetTicket();
+         profit=Hist[i].GetProfit();
+         closeprice=Hist[i].GetPriceClose();
+         tp=Hist[i].GetTakeProfit();
+         sl=Hist[i].GetStopLoss();
+         openprice=Hist[i].GetPriceOpen();
         }
      }
-   if(total>0&&time>lastorder_close&&size==0)
+   if(total>0&&time>lastorder_close&&size==0&&time!=0)
      {
-      lastorder_close=Hist[ticket].GetTimeClose();
-      double profit=Hist[ticket].GetProfit();
-      double closeprice=Hist[ticket].GetPriceClose();
-      double tp=Hist[ticket].GetTakeProfit();
-      double sl=Hist[ticket].GetStopLoss();
-      double openprice=Hist[ticket].GetPriceOpen();
+      lastorder_close=time;
+
+
       if(profit>0&&closeprice>=tp-2*tool.Pip()&&closeprice<=tp+2*tool.Pip())
         {
          closewithtp=true;
