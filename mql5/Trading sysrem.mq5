@@ -9,9 +9,9 @@
 
 #include <ChartObjects\ChartObjectsLines.mqh>
 #include <Indicators\Trend.mqh>
-#include  <MQL_Easy\Execute\Execute.mqh>
-#include  <MQL_Easy\Position\Position.mqh>
-#include  <MQL_Easy\HistoryPosition\HistoryPosition.mqh>
+#include  <YM\Execute\Execute.mqh>
+#include  <YM\Position\Position.mqh>
+#include  <YM\HistoryPosition\HistoryPosition.mqh>
 long input MagicNumber = 2020;
 double input Lot = 0.5;
 input bool Use_MM = true;
@@ -23,7 +23,7 @@ bool input Use_Trailing = true;
 bool input MovingClose = false;
 int input BreakEventPoint = 175;
 int input TrailingStopPoint = 400;
-double HedgeMultipiler = 2;
+input double HedgeMultipiler = 4;
 CUtilities tools;
 CExecute trade(Symbol(), MagicNumber);
 CPosition SellPos(Symbol(), MagicNumber, GROUP_POSITIONS_SELLS);
@@ -148,9 +148,10 @@ void OnTick()
         {
          MA3.Refresh(-1);
          MA7.Refresh(-1);
-         double up = tools.NormalizePrice(rational_Arr[upperIndex], ROUNDING_OFF);
+         double up = tools.NormalizePrice(rational_Arr[upperIndex+1], ROUNDING_OFF);
          double down = tools.NormalizePrice(rational_Arr[lowerIndex + 1 ], ROUNDING_OFF);
          double tp = MovingClose ? 0 : down + 30 * tools.Pip();
+         double sl= up + 100 * tools.Pip();
          if(SellHistorytotal > 0 && totalSell > 0)
            {
             if(!(SellHistory[SellHistorytotal - 1].GetPriceOpen() < rational_Arr[lowerIndex] && SellHistory[SellHistorytotal - 1].GetPriceOpen() > rational_Arr[lowerIndex + 1]))
@@ -167,7 +168,7 @@ void OnTick()
                           {
                            OrderNumber++;
                            string comment = (string)OrderNumber;
-                           trade.Position(TYPE_POSITION_SELL, lot, 0, tp, SLTP_PRICE, 30, comment);
+                           trade.Position(TYPE_POSITION_SELL, lot,0, tp, SLTP_PRICE, 30, comment);
                           }
                        }
                      else
@@ -211,8 +212,9 @@ void OnTick()
          MA3.Refresh(-1);
          MA7.Refresh(-1);
          double up = tools.NormalizePrice(rational_Arr[upperIndex - 1], ROUNDING_OFF);
-         double down = tools.NormalizePrice(rational_Arr[lowerIndex], ROUNDING_OFF);
+         double down = tools.NormalizePrice(rational_Arr[lowerIndex-1], ROUNDING_OFF);
          double tp = MovingClose ? 0 : up - 30 * tools.Pip();
+         double sl=down - 100 * tools.Pip();
          if(BuyHistorytotal > 0 && totalBuy > 0)
            {
             if(!(BuyHistory[BuyHistorytotal - 1].GetPriceOpen() > rational_Arr[upperIndex] && BuyHistory[BuyHistorytotal - 1].GetPriceOpen() < rational_Arr[upperIndex - 1]))
@@ -414,19 +416,18 @@ void CloseWithMoving()
            {
             if(BuyPos.SelectByIndex(i))
               {
-               if(BuyPos[i].GetProfit() > 0)
+
+               bool exist = false;
+               for(int x = 0; x < ArraySize(HedgeArray); x++)
                  {
-                  bool exist = false;
-                  for(int x = 0; x < ArraySize(HedgeArray); x++)
+                  if(HedgeArray[x] == BuyPos[i].GetComment())
                     {
-                     if(HedgeArray[x] == BuyPos[i].GetComment())
-                       {
-                        exist = true;
-                       }
+                     exist = true;
                     }
-                  if(!exist)
-                     BuyPos.Close();
                  }
+               if(!exist)
+                  BuyPos.Close();
+
               }
            }
         }
@@ -439,19 +440,18 @@ void CloseWithMoving()
            {
             if(SellPos.SelectByIndex(i))
               {
-               if(SellPos[i].GetProfit() > 0)
+
+               bool exist = false;
+               for(int x = 0; x < ArraySize(HedgeArray); x++)
                  {
-                  bool exist = false;
-                  for(int x = 0; x < ArraySize(HedgeArray); x++)
+                  if(HedgeArray[x] == SellPos[i].GetComment())
                     {
-                     if(HedgeArray[x] == SellPos[i].GetComment())
-                       {
-                        exist = true;
-                       }
+                     exist = true;
                     }
-                  if(!exist)
-                     SellPos.Close();
                  }
+               if(!exist)
+                  SellPos.Close();
+
               }
            }
         }
@@ -481,7 +481,7 @@ double LotsMM()
 //+------------------------------------------------------------------+
 bool Hedging()
   {
-   HedgeMultipiler = 2;
+  
    bool result = false;
    totalPos = Pos.GroupTotal();
    HedgeTotal = ArraySize(HedgeArray);
@@ -565,9 +565,9 @@ bool Hedging()
                              {
                               double LastLot = BuyPos[LastBuyTicket].GetVolume();
                               HedgeTicket = LastBuyTicket;
-                              HedgeLot = LastLot >= lot * 2 ? lot : tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
+                              HedgeLot = tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                               HedgeComment = BuyPos[LastBuyTicket].GetComment();
-                              trade.Position(TYPE_POSITION_SELL, HedgeLot, 0, 0, SLTP_PIPS, 30, HedgeComment);
+                              trade.Position(TYPE_POSITION_SELL, HedgeLot, 150, 0, SLTP_PIPS, 30, HedgeComment);
                               BuyPos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                               UpdatHedgeArray();
                               result = true;
@@ -634,9 +634,9 @@ bool Hedging()
                              {
                               double LastLot = SellPos[LastSellTicket].GetVolume();
                               HedgeTicket = LastSellTicket;
-                              HedgeLot = LastLot >= lot * 2 ? lot : tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
+                              HedgeLot =  tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                               HedgeComment = SellPos[LastSellTicket].GetComment();
-                              trade.Position(TYPE_POSITION_BUY, HedgeLot, 0, 0, SLTP_PRICE, 30, HedgeComment);
+                              trade.Position(TYPE_POSITION_BUY, HedgeLot, 150, 0, SLTP_PIPS, 30, HedgeComment);
                               SellPos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                               UpdatHedgeArray();
                               result = true;
@@ -660,7 +660,7 @@ bool Hedging()
                            HedgeTicket = Pos[i].GetTicket();
                            HedgeLot = tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                            HedgeComment = Pos[i].GetComment();
-                           trade.Position(TYPE_POSITION_SELL, HedgeLot, 0, 0, SLTP_PIPS, 30, HedgeComment);
+                           trade.Position(TYPE_POSITION_SELL, HedgeLot, 150, 0, SLTP_PIPS, 30, HedgeComment);
                            Pos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                            UpdatHedgeArray();
                            result = true;
@@ -678,7 +678,7 @@ bool Hedging()
                            HedgeTicket = Pos[i].GetTicket();
                            HedgeLot = tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                            HedgeComment = Pos[i].GetComment();;
-                           trade.Position(TYPE_POSITION_BUY, HedgeLot, 0, 0, SLTP_PRICE, 30, HedgeComment);
+                           trade.Position(TYPE_POSITION_BUY, HedgeLot, 150, 0, SLTP_PIPS, 30, HedgeComment);
                            Pos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                            UpdatHedgeArray();
                            result = true;
@@ -702,7 +702,7 @@ bool Hedging()
                         HedgeTicket = Pos[i].GetTicket();
                         HedgeLot = tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                         HedgeComment = Pos[i].GetComment();
-                        trade.Position(TYPE_POSITION_SELL, HedgeLot, 0, 0, SLTP_PIPS, 30, HedgeComment);
+                        trade.Position(TYPE_POSITION_SELL, HedgeLot, 30, 0, SLTP_PIPS, 30, HedgeComment);
                         Pos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                         UpdatHedgeArray();
                         result = true;
@@ -720,7 +720,7 @@ bool Hedging()
                         HedgeTicket = Pos[i].GetTicket();
                         HedgeLot = tools.NormalizeVolume(LastLot * HedgeMultipiler, ROUNDING_OFF);
                         HedgeComment = Pos[i].GetComment();;
-                        trade.Position(TYPE_POSITION_BUY, HedgeLot, 0, 0, SLTP_PRICE, 30, HedgeComment);
+                        trade.Position(TYPE_POSITION_BUY, HedgeLot, 30, 0, SLTP_PIPS, 30, HedgeComment);
                         Pos[HedgeTicket].Modify(0, 0, SLTP_PIPS);
                         UpdatHedgeArray();
                         result = true;
