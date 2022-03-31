@@ -540,21 +540,19 @@ void Closerder()
      {
       if(BuyReady&&CountPositionwithcomment(MagicNumber,"KEENE")==0)
         {
-         if(Y!=CountPosition(MagicNumber))
-           {
-            NewBuy=true;
-            BuyReady=false;
-            Y=CountPosition(MagicNumber);
-           }
+
+         NewBuy=true;
+         BuyReady=false;
+         Y=CountPosition(MagicNumber);
+
         }
       if(SellReady&&CountPositionwithcomment(MagicNumber,"KEENE")==0)
         {
-         if(Y!=CountPosition(MagicNumber))
-           {
-            NewSell=true;
-            SellReady=false;
-            Y=CountPosition(MagicNumber);
-           }
+
+         NewSell=true;
+         SellReady=false;
+         Y=CountPosition(MagicNumber);
+
         }
      }
 
@@ -607,21 +605,19 @@ void Closerder2()
      {
       if(BuyReady2&&CountPositionwithcomment(MagicNumber,"KEENE2")==0)
         {
-         if(Y!=CountPosition(MagicNumber))
-           {
-            NewBuy2=true;
-            BuyReady2=false;
-            Y=CountPosition(MagicNumber);
-           }
+
+         NewBuy2=true;
+         BuyReady2=false;
+         Y=CountPosition(MagicNumber);
+
         }
       if(SellReady2&&CountPositionwithcomment(MagicNumber,"KEENE2")==0)
         {
-         if(Y!=CountPosition(MagicNumber))
-           {
-            NewSell2=true;
-            SellReady2=false;
-            Y=CountPosition(MagicNumber);
-           }
+
+         NewSell2=true;
+         SellReady2=false;
+         Y=CountPosition(MagicNumber);
+
         }
      }
   }
@@ -664,14 +660,21 @@ void SetOrder()
          if(SymbolInfoDouble(_Symbol,SYMBOL_ASK)<=BEOPb+xpip_Positive*pips-BreakEven_To_Close_P1*pips && BEOPb!=0.0)
            {
             Y=CountPosition(MagicNumber);
+            int x=CountPosition1(MagicNumber);
+
             double p=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
             if(p>=BEOPb)
-            OpenBuy1(MagicNumber,Lots_Pending,p+TakeProfit1*pips,p-StopLoss1*pips,"KEENE");
-              else
-            OpenBuyStop(MagicNumber,Lots_Pending,BEOPb);
-
-
-            if(Y1!=CountPosition(MagicNumber))
+              {
+               OpenBuy1(MagicNumber,Lots_Pending,p+TakeProfit1*pips,p-StopLoss1*pips,"KEENE");
+              }
+            else
+               OpenBuyStop(MagicNumber,Lots_Pending,BEOPb);
+            if(x!=CountPosition1(MagicNumber))
+              {
+               BreakAgainM = true;
+               BreakAgainP = true;
+              }
+            if(Y1!=CountPosition(MagicNumber)||x!=CountPosition1(MagicNumber))
               {
                NewBuy=false;
                BEOPb=0;
@@ -684,13 +687,21 @@ void SetOrder()
         {
          if(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs-xpip_Positive*pips+BreakEven_To_Close_P1*pips && BEOPs!=0.0)
            {
+            int x=CountPosition1(MagicNumber);
             Y=CountPosition(MagicNumber);
             double p=SymbolInfoDouble(_Symbol,SYMBOL_BID);
             if(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs)
-                OpenSell1(MagicNumber,Lots_Pending,p-TakeProfit1*pips,p+StopLoss1*pips,"KEENE");
+              {
+               OpenSell1(MagicNumber,Lots_Pending,p-TakeProfit1*pips,p+StopLoss1*pips,"KEENE");
+              }
             else
-                OpenSellStop(MagicNumber,Lots_Pending,BEOPs);
-            if(Y1!=CountPosition(MagicNumber))
+               OpenSellStop(MagicNumber,Lots_Pending,BEOPs);
+            if(x!=CountPosition1(MagicNumber))
+              {
+               BreakAgainM = true;
+               BreakAgainP = true;
+              }
+            if(Y1!=CountPosition(MagicNumber)||x!=CountPosition1(MagicNumber))
               {
 
                BEOPs=0.0;
@@ -714,6 +725,7 @@ void SetOrder2()
          if(SymbolInfoDouble(_Symbol,SYMBOL_ASK)>=OPb2 && OPb2!=0.0)
            {
             Y=CountPosition(MagicNumber);
+
             OpenBuy1(MagicNumber,Lob2,TPb2,SLb2,"KEENE2");
 
             NewBuy2=false;
@@ -741,10 +753,19 @@ void SetOrder2()
          if(SymbolInfoDouble(_Symbol,SYMBOL_ASK)<=BEOPb2+xpip_Positive*pips-BreakEven_To_Close_P2*pips && BEOPb2!=0.0)
            {
             Y=CountPosition(MagicNumber);
-            double p=SymbolInfoDouble(_Symbol,SYMBOL_ASK)>BEOPb2?SymbolInfoDouble(_Symbol,SYMBOL_ASK):BEOPb2;
-            OpenBuyStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
+            int x=CountPosition1(MagicNumber);
 
+            double p=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
+            if(p>=BEOPb2)
+               OpenBuy1(MagicNumber,Lots_Pending,p+TakeProfit2*pips,p-StopLoss2*pips,"KEENE2");
+            else
+               OpenBuyStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
 
+            if(x!=CountPosition1(MagicNumber))
+              {
+               BreakAgainM = true;
+               BreakAgainP = true;
+              }
             if(Y1!=CountPosition(MagicNumber))
               {
                NewBuy2=false;
@@ -758,10 +779,19 @@ void SetOrder2()
         {
          if(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs2-xpip_Positive*pips+BreakEven_To_Close_P2*pips && BEOPs2!=0.0)
            {
-            Y=CountPosition(MagicNumber);
-            double p=SymbolInfoDouble(_Symbol,SYMBOL_BID)<BEOPs2?SymbolInfoDouble(_Symbol,SYMBOL_BID):BEOPs2;
+            int x=CountPosition1(MagicNumber);
 
-            OpenSellStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
+            Y=CountPosition(MagicNumber);
+            double p=SymbolInfoDouble(_Symbol,SYMBOL_BID);
+            if(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs2)
+               OpenSell1(MagicNumber,Lots_Pending,p-TakeProfit2*pips,p+StopLoss2*pips,"KEENE2");
+            else
+               OpenSellStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
+            if(x!=CountPosition1(MagicNumber))
+              {
+               BreakAgainM = true;
+               BreakAgainP = true;
+              }
             if(Y1!=CountPosition(MagicNumber))
               {
 
@@ -921,11 +951,46 @@ uint OpenSellStopStop(int magic,double lot,double Prix,double TP,double SL)
       Print(result.bid,result.ask,result.price);
 //--- return code of the trade server reply
    return result.retcode;
-  }  
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+uint OpenSellStopStop1(int magic,double lot,double Prix,double TP,double SL)
+  {
+//--- prépare la requête
+   MqlTradeRequest req= {};
+   req.action =TRADE_ACTION_PENDING;
+   req.symbol =_Symbol;
+   req.magic  = magic;
+   req.volume = lot;
+   req.type   = ORDER_TYPE_SELL_STOP;
+   req.price  = Prix;
+   if(TP==0)
+      req.tp = 0.0;
+   if(TP!=0)
+      req.tp = req.price-TP*pips;
+   if(SL==0)
+      req.sl     = 0.0;
+   if(SL!=0)
+      req.sl     = req.price+SL*pips;
+   req.comment ="KEENE";
+   MqlTradeResult result= {0};
+   if(IsFillingTypeAllowed(req.symbol,SYMBOL_FILLING_FOK))
+      req.type_filling = ORDER_FILLING_FOK;
+   else
+      if(IsFillingTypeAllowed(req.symbol,SYMBOL_FILLING_IOC))
+         req.type_filling = ORDER_FILLING_IOC;
+   OrderSend(req,result);
+//--- write the server reply to log
+   Print(__FUNCTION__,":",result.comment);
+   if(result.retcode==10016)
+      Print(result.bid,result.ask,result.price);
+//--- return code of the trade server reply
+   return result.retcode;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -1449,7 +1514,7 @@ void IsObjectExist()
 int CountPosition(int magic)
   {
    double x=0;
-   for(int i=OrdersTotal()-1; i>=0; i--)
+   for(int i=0; i<OrdersTotal(); i++)
      {
       ulong Ticket = OrderGetTicket(i);
       if(OrderGetInteger(ORDER_MAGIC) == magic)
@@ -1457,7 +1522,20 @@ int CountPosition(int magic)
      }
    return x;
   }
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int CountPosition1(int magic)
+  {
+   double x=0;
+   for(int i=0; i<PositionsTotal(); i++)
+     {
+      ulong Ticket = PositionGetTicket(i);
+      if(PositionGetInteger(POSITION_MAGIC) == magic)
+         x++;
+     }
+   return x;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
