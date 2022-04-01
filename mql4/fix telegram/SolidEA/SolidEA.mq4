@@ -89,7 +89,7 @@ enum profittype
 
 enum losstype
   {
-   InDollarsLoss = 0,// In sollars
+   InDollarsLoss = 0,// In Dollars
    InPercentLoss = 1, // In Percent
    InPipsLoss       =2,
   };
@@ -362,12 +362,14 @@ input bool DebugPartialClose         = true;           // Partial close Infos in
 input string h3 = "===================telegram=================";
 input bool useTel = true; // Use Telegram Alerts
 input string InpChannelName = "EurusdMaster"; // Telegram Channel
-input long chat_id          =170112977;        // chat id
 input string InpToken = "2043876400:AAEMW9M249adjW7vVgcFBsP-4WoCPx81Q74"; // Telegram Token
 input bool sendnews = true; //Send News Alert
 input bool sendTradesignal = true; //Send Strategy Trade Signal
+input bool sendIndicatorSignal= true; // Send indicator Trade Signal
+input bool SendOpen        =true; // Send open signal
 input bool sendclose = true; //Send Close Order
 input bool SendModifySignal=true;   //Send Trade Modify  Signal
+input bool sendsupportandResisitance=true; //Send  Support and Resistance Signal
 
 input string BEAST_SETTINGS = "======================Beast Indicator Settings================";
 input int BEAST_Depth = 60;
@@ -2225,18 +2227,21 @@ void CloseSignal(int i,int type)
    if(totalHistory>0&&time>lastorder_close)
      {
       double Profit=Hist[i][ticket].GetProfit();
+
       string txt="";
       lastorder_close=time;
+      double pips=MathAbs((Hist[i][ticket].GetPriceOpen()-Hist[i][ticket].GetPriceClose())/tools[i].Pip());
       if(Profit>=0)
         {
          txt="Profit: ";
+
         }
       else
         {
          txt="Loss: ";
         }
       if(sendclose)
-         cc0=ordertype+" Order Closed Buy "+Get_Strategy(1)+"on "+Symbols[i]+" @ "+(string)Hist[i][ticket].GetPriceClose()+" "+txt+(string)Profit+" Time: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_MINUTES)+" Date: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_DATE);
+         cc0=ordertype+" Order Closed Buy "+Get_Strategy(1)+" on "+Symbols[i]+" @ "+(string)Hist[i][ticket].GetPriceClose()+" "+txt+DoubleToString(Profit,2)+" Pips : "+DoubleToString(pips,2)+" Time: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_MINUTES)+" Date: "+ TimeToString(Hist[i][ticket].GetTimeClose(),TIME_DATE);
      }
   }
 
@@ -2419,10 +2424,20 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto&&!MaxBuyExceed)
+           {
             trades[i].Position(TYPE_POSITION_BUY, volume, lastsl, lasttp, SLTP_PIPS, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
         }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+        }
+      else
+         if(sendTradesignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
    if(Execution_Mode == limit&&!MaxBuyExceed)
      {
@@ -2433,10 +2448,21 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
+           {
             trades[i].Order(TYPE_ORDER_BUYLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
         }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+        }
+      else
+         if(sendTradesignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+
      }
    if(Execution_Mode == stop&&!MaxBuyExceed)
      {
@@ -2447,10 +2473,20 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
+           {
             trades[i].Order(TYPE_ORDER_BUYSTOP, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
         }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+        }
+      else
+         if(sendTradesignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
 
 
@@ -2492,10 +2528,20 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto&&!MaxSellExceed)
+           {
             trades[i].Position(TYPE_POSITION_SELL, volume, lastsl, lasttp, SLTP_PIPS, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
         }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+        }
+      else
+         if(sendTradesignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == limit&&!MaxSellExceed)
@@ -2507,7 +2553,16 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
+           {
             trades[i].Order(TYPE_ORDER_SELLLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+        }
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       if(sendTradesignal)
          cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
@@ -2522,7 +2577,16 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          volume=x==0?volume:volume+added_lot;
          lasttp =x==0?TakeProfit:lasttp+Multi_tp_Distance;
          if(usemode==Auto)
+           {
             trades[i].Order(TYPE_ORDER_SELLSTOP, volume, openPrice, lastsl, lasttp, SLTP_PIPS, 0, 30, Cmnt);
+            if(SendOpen)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+        }
+      if(Strategy==single)
+        {
+         if(sendIndicatorSignal)
+            cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       if(sendTradesignal)
          cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
@@ -4198,9 +4262,16 @@ void  checkTrail()
                                        +" sd:"+DoubleToString(stop_distance,digits)
                                        +" sp:"+DoubleToString(stop_price,digits));
                                 }
+                              double LastSl=OrderStopLoss();
                               if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                 {
                                  Print("Failed to modify trailing stop. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                }
+                              else
+                                {
+                                 if(SendModifySignal)
+                                    cc0="Trade Update Signal ,Buy "+OrderSymbol()+ " EA Trail stop loss to from "+DoubleToString(LastSl,Digits())
+                                        +" to :"+DoubleToString(stop_price,Digits)+" Date :"+TimeToString(TimeCurrent(),TIME_DATE)+" Time : "+ TimeToString(TimeCurrent(),TIME_MINUTES);
                                 }
                              }
                           }
@@ -4232,9 +4303,16 @@ void  checkTrail()
                                        +" sd:"+DoubleToString(stop_distance,digits)
                                        +" sp:"+DoubleToString(stop_price,digits));
                                 }
+                              double LastSl=OrderStopLoss();
                               if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                 {
                                  Print("Failed to modify trailing stop. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                }
+                              else
+                                {
+                                 if(SendModifySignal)
+                                    cc0="Trade Update Signal ,Buy "+OrderSymbol()+ " EA Trail stop loss to from "+DoubleToString(LastSl,Digits())
+                                        +" to :"+DoubleToString(stop_price,Digits)+" Date :"+TimeToString(TimeCurrent(),TIME_DATE)+" Time : "+ TimeToString(TimeCurrent(),TIME_MINUTES);
                                 }
                              }
                           }
@@ -4274,9 +4352,16 @@ void  checkTrail()
                                        +" sd:"+DoubleToString(stop_distance,digits)
                                        +" sp:"+DoubleToString(stop_price,digits));
                                 }
+                              double LastSl=OrderStopLoss();
                               if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                 {
                                  Print("Failed to modify trailing stop. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                }
+                              else
+                                {
+                                 if(SendModifySignal)
+                                    cc0="Trade Update Signal ,Sell "+OrderSymbol()+ " EA Trail stop loss to from "+DoubleToString(LastSl,Digits())
+                                        +" to :"+DoubleToString(stop_price,Digits)+" Date :"+TimeToString(TimeCurrent(),TIME_DATE)+" Time : "+ TimeToString(TimeCurrent(),TIME_MINUTES);
                                 }
                              }
                           }
@@ -4308,9 +4393,16 @@ void  checkTrail()
                                        +" sd:"+DoubleToString(stop_distance,digits)
                                        +" sp:"+DoubleToString(stop_price,digits));
                                 }
+                              double LastSl=OrderStopLoss();
                               if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                 {
                                  Print("Failed to modify trailing stop. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
+                                }
+                              else
+                                {
+                                 if(SendModifySignal)
+                                    cc0="Trade Update Signal ,Sell "+OrderSymbol()+ " EA Trail stop loss to from "+DoubleToString(LastSl,Digits())
+                                        +" to :"+DoubleToString(stop_price,Digits)+" Date :"+TimeToString(TimeCurrent(),TIME_DATE)+" Time : "+ TimeToString(TimeCurrent(),TIME_MINUTES);
                                 }
                              }
                           }
@@ -4380,6 +4472,7 @@ void  _funcBE()
                                           +" sd:"+DoubleToString(stop_distance,digits)
                                           +" sp:"+DoubleToString(stop_price,digits));
                                    }
+                                 double LastSl=OrderStopLoss();
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
@@ -4387,13 +4480,8 @@ void  _funcBE()
                                  else
                                    {
                                     if(SendModifySignal)
-                                       cc0="Stop Loss Move to BreakEven[Trigger:$"+DoubleToString(BreakEvenTrigger,2)
-                                           +",Profit:$"+DoubleToString(BreakEvenProfit,2)
-                                           +",Max:"+DoubleToString(MaxNoBreakEven,2)+"]"
-                                           +" p:$"+DoubleToString(profit_distance,digits)
-                                           +" s:$"+DoubleToString(steps,digits)
-                                           +" sd:"+DoubleToString(stop_distance,digits)
-                                           +" sp:"+DoubleToString(stop_price,digits);
+                                       cc0="Trade Update Signal ,Sell "+OrderSymbol()+ " Move Stop Loss  to BreakEven from "+DoubleToString(LastSl,Digits())
+                                           +" to :"+DoubleToString(stop_price,Digits);
                                    }
                                 }
                              }
@@ -4428,6 +4516,7 @@ void  _funcBE()
                                           +" sd:"+DoubleToString(stop_distance,digits)
                                           +" sp:"+DoubleToString(stop_price,digits));
                                    }
+                                 double LastSl=OrderStopLoss();
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
@@ -4435,13 +4524,9 @@ void  _funcBE()
                                  else
                                    {
                                     if(SendModifySignal)
-                                       cc0="Stop Loss Move to BreakEven[Trigger:"+DoubleToString(BreakEvenTrigger)
-                                           +",Profit:"+DoubleToString(BreakEvenProfit)
-                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
-                                           +" p:"+DoubleToString(profit_distance,digits)
-                                           +" s:"+DoubleToString(steps)
-                                           +" sd:"+DoubleToString(stop_distance,digits)
-                                           +" sp:"+DoubleToString(stop_price,digits);
+                                       cc0="Trade Update Signal ,Buy "+OrderSymbol()+ " Move Stop Loss  to BreakEven from "+DoubleToString(LastSl,Digits())
+                                           +" to :"+DoubleToString(stop_price,Digits);
+
                                    }
                                 }
                              }
@@ -4485,6 +4570,7 @@ void  _funcBE()
                                           +" sd:"+DoubleToString(stop_distance,digits)
                                           +" sp:"+DoubleToString(stop_price,digits));
                                    }
+                                 double LastSl=OrderStopLoss();
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
@@ -4492,13 +4578,8 @@ void  _funcBE()
                                  else
                                    {
                                     if(SendModifySignal)
-                                       cc0="Stop Loss Move to BreakEven [Trigger:"+DoubleToString(BreakEvenTrigger)
-                                           +",Profit:"+DoubleToString(BreakEvenProfit)
-                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
-                                           +" p:"+DoubleToString(profit_distance,digits)
-                                           +" s:"+DoubleToString(steps)
-                                           +" sd:"+DoubleToString(stop_distance,digits)
-                                           +" sp:"+DoubleToString(stop_price,digits);
+                                       cc0="Trade Update Signal ,Sell "+OrderSymbol()+ " Move Stop Loss  to BreakEven from "+DoubleToString(LastSl,Digits())
+                                           +" to :"+DoubleToString(stop_price,Digits);
                                    }
                                 }
                              }
@@ -4533,6 +4614,7 @@ void  _funcBE()
                                           +" sd:"+DoubleToString(stop_distance,digits)
                                           +" sp:"+DoubleToString(stop_price,digits));
                                    }
+                                 double LastSl=OrderStopLoss();
                                  if(!OrderModify(OrderTicket(),OrderOpenPrice(),stop_price,OrderTakeProfit(),0,clrGold))
                                    {
                                     Print("Failed to modify break even. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
@@ -4540,13 +4622,8 @@ void  _funcBE()
                                  else
                                    {
                                     if(SendModifySignal)
-                                       cc0="Stop Loss Move to BreakEven[Trigger:"+DoubleToString(BreakEvenTrigger)
-                                           +",Profit:"+DoubleToString(BreakEvenProfit)
-                                           +",Max:"+IntegerToString(MaxNoBreakEven)+"]"
-                                           +" p:"+DoubleToString(profit_distance,digits)
-                                           +" s:"+DoubleToString(steps)
-                                           +" sd:"+DoubleToString(stop_distance,digits)
-                                           +" sp:"+DoubleToString(stop_price,digits);
+                                       cc0="Trade Update Signal ,Sell "+OrderSymbol()+ " Move Stop Loss  to BreakEven from "+DoubleToString(LastSl,Digits())
+                                           +" to :"+DoubleToString(stop_price,Digits);
                                    }
                                 }
                              }
@@ -4622,11 +4699,17 @@ void CheckPartialClose()
                                           +" s:"+DoubleToString(steps,digits)
                                           +" l:"+DoubleToString(lots,lot_digits));
                                    }
+                                 if(sendclose)
+                                   {
+                                    double b=SymbolInfoDouble(OrderSymbol(),SYMBOL_BID);
+                                    cc0="Partial Close Alert, "+OrderSymbol()+" "+DoubleToString(lots,2)+" lot close @ "+DoubleToString(b,digits)+" Time  : "+TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+TimeToString(TimeCurrent(),TIME_DATE);
+                                   }
                                 }
                               else
                                 {
                                  Print("Failed to partial close. Order " + IntegerToString(OrderTicket()) + ", error: " + IntegerToString(GetLastError()));
                                 }
+
                              }
                           }
                        }
@@ -4661,6 +4744,11 @@ void CheckPartialClose()
                                           +" p:"+DoubleToString(profit_distance,digits)
                                           +" s:"+DoubleToString(steps,digits)
                                           +" l:"+DoubleToString(lots,lot_digits));
+                                   }
+                                 if(sendclose)
+                                   {
+                                    double b=SymbolInfoDouble(OrderSymbol(),SYMBOL_BID);
+                                    cc0="Partial Close Alert, "+OrderSymbol()+" "+DoubleToString(lots,2)+" lot close @ "+DoubleToString(b,digits)+" Time  : "+TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+TimeToString(TimeCurrent(),TIME_DATE);
                                    }
                                 }
                               else
@@ -4710,6 +4798,11 @@ void CheckPartialClose()
                                           +" s:"+DoubleToString(steps,digits)
                                           +" l:"+DoubleToString(lots,lot_digits));
                                    }
+                                 if(sendclose)
+                                   {
+                                    double b=SymbolInfoDouble(OrderSymbol(),SYMBOL_BID);
+                                    cc0="Partial Close Alert, "+OrderSymbol()+" "+DoubleToString(lots,2)+" lot close @ "+DoubleToString(b,digits)+" Time  : "+TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+TimeToString(TimeCurrent(),TIME_DATE);
+                                   }
                                 }
                               else
                                 {
@@ -4749,6 +4842,11 @@ void CheckPartialClose()
                                           +" p:"+DoubleToString(profit_distance,digits)
                                           +" s:"+DoubleToString(steps,digits)
                                           +" l:"+DoubleToString(lots,lot_digits));
+                                   }
+                                 if(sendclose)
+                                   {
+                                    double b=SymbolInfoDouble(OrderSymbol(),SYMBOL_BID);
+                                    cc0="Partial Close Alert, "+OrderSymbol()+" "+DoubleToString(lots,2)+" lot close @ "+DoubleToString(b,digits)+" Time  : "+TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+TimeToString(TimeCurrent(),TIME_DATE);
                                    }
                                 }
                               else
