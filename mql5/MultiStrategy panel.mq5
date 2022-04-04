@@ -42,6 +42,11 @@ enum TRADE_TYPE
    AUTO_TRADE = 0,
    SIGNALS_ONLY = 1,
   };
+enum indi_type
+  {
+   Default,
+   increase_Decrease,
+  };
 enum SL_TP
   {
    op1 = 0,
@@ -104,7 +109,7 @@ input string Prefix = ""; //Symbol Prefix
 input string Suffix = ""; //Symbol Suffix
 input string TradeSymbols = "AUDCHF;AUDJPY;AUDUSD;AUDCAD;CADJPY;CADCHF;CHFJPY;EURAUD;EURCAD;EURCHF;EURGBP;EURUSD;EURJPY;EURNZD;GBPAUD;GBPCAD;GBPCHF;GBPJPY;GBPUSD;GBPNZD;USDCHF;USDCAD;USDJPY;NZDCAD;NZDCHF;NZDJPY;NZDUSD;"; /*Symbol List (separated by " ; ")*/
 input string set1 = "==================Trading Settings ================";
-input TRADE_TYPE trade_type = AUTO_TRADE;
+input TRADE_TYPE trade_type = SIGNALS_ONLY;
 input TRADE_MODE TRADEMODE = SINGLE;
 input TRADE_PAIR TRADE_ON = MULTIPLE_PAIRS;
 input ORDERTYPE type = BOTH;
@@ -112,15 +117,10 @@ input SL_TP sltype = op1;
 input TP_TYPE tpType = PIPS;
 input double TAKEPROFIT = 100;
 input double tp1 = 0;
-input double RR1 =0;
 input double tp2 = 0;
-input double RR2 =0;
 input double tp3 = 0;
-input double RR3 =0;
 input double tp4 = 0;
-input double RR4 =0;
 input double tp5 = 0;
-input double RR5 =0;
 input double STOPLOSS = 100;
 input long magic_Number = 2020;
 input string comment ="FM Stallions";
@@ -172,18 +172,18 @@ input double sar_max = 0.2; // Maximum
 input string p01 = "<----------------->SINGLE MA<----------------->"; //******* SINGLE MA *********
 input bool useSingleMA = true; // Use single MA
 input ENUM_TIMEFRAMES MA1_tf = PERIOD_CURRENT; // Timeframe
-input int MA1_per = 200; // Period
+input int MA1_per = 50; // Period
 input ENUM_MA_METHOD MA1_method = MODE_SMA; // Method
 input ENUM_APPLIED_PRICE MA1_price = PRICE_CLOSE; // Applied price
 
 input string p02 = "<----------------->DOUBLE MA<----------------->"; //******** DOUBLE MA *********
 input bool useDoubleMA = true; // Use double MA
 input ENUM_TIMEFRAMES MA2_tf = PERIOD_CURRENT; // Fast MA Timeframe
-input int MA2_per = 50; // Fast MA Period
+input int MA2_per = 10; // Fast MA Period
 input ENUM_MA_METHOD MA2_method = MODE_SMA; // Fast MA Method
 input ENUM_APPLIED_PRICE MA2_price = PRICE_CLOSE; // Fast MA Applied price
 input ENUM_TIMEFRAMES MA3_tf = PERIOD_CURRENT; // Slow MA Timeframe
-input int MA3_per = 200; // Slow MA Period
+input int MA3_per = 20; // Slow MA Period
 input ENUM_MA_METHOD MA3_method = MODE_SMA; // Slow MA Method
 input ENUM_APPLIED_PRICE MA3_price = PRICE_CLOSE; // Slow MA Applied price
 
@@ -192,12 +192,6 @@ input bool useSuperTrend = true; // Use supertrend
 input ENUM_TIMEFRAMES st_tf = PERIOD_CURRENT; // Timeframe
 input int st_per = 10; // Period
 input double st_mult = 4.5; // Multiplier
-
-input string p04 = "<----------------->STO-RSI<----------------->"; //******** STO-RSI ********
-input bool useStoRSI = true; // Use sto-rsi
-input ENUM_TIMEFRAMES storsi_tf = PERIOD_CURRENT; // Timeframe
-input int storsi1_per = 14; // RSI Period
-input int storsi2_per = 20; // STO Period
 
 input string p05 = "<-----------------> STOCHASTIC<-----------------> "; //******** STOCHASTIC ********
 input bool useSto = true; // Use stochastic oscillator
@@ -208,43 +202,43 @@ input int sto_sper = 3; // STO Slow-Period
 
 input string p06 = "<-----------------> MACD <----------------->"; //******** MACD ********
 input bool useMacd = true; // Use MACD
+input indi_type MacdType=increase_Decrease;
 input ENUM_TIMEFRAMES mac_tf = PERIOD_CURRENT; // Timeframe
 input int mac_fper = 12; // Fast EMA
 input int mac_sper = 26; // Slow EMA
 input int mac_smper = 9; // SMA
-input double macd_level = 50; // level
+input double macd_level = 0; // level
 
 input string p07 = "<-----------------> ADX <----------------->"; //******** ADX ********
 input bool useAdx = true; // Use ADX
+input indi_type AdxType=increase_Decrease;
 input ENUM_TIMEFRAMES adx_tf = PERIOD_CURRENT; // Timeframe
 input int adx_per = 14; // Period
-input double adx_lev = 30; // Level
+input double adx_lev = 25; // Level
 
 input string p08 = "<-----------------> ATR <----------------->"; //******** ATR ********
 input bool useAtr = true; // Use ATR
+input indi_type AtrType=increase_Decrease;
 input ENUM_TIMEFRAMES atr_tf = PERIOD_CURRENT; // Timeframe
 input int atr_per = 14; // Period
 
 input string p09 = "<-----------------> RSI <----------------->"; //******** RSI ********
 input bool useRSI = true; // Use RSI
+input indi_type RsiType=Default;
 input ENUM_TIMEFRAMES rsi_tf = PERIOD_CURRENT; // Timeframe
 input int rsi_per = 14; // Period
 input double rsi_level = 50; // level
 
 input string p10 = "<-----------------> BOLLINGER <----------------->"; //******** BOLLINGER BAND ********
 input bool useBB = true; // Use Bollinger
+input indi_type BBType=Default;
 input ENUM_TIMEFRAMES bb_tf = PERIOD_CURRENT; // Timeframe
 input int BB_per = 28; // Period
 input double BB_dev = 2; // Deviation
 
-input string p11 = "<-----------------> BOLLINGER WIDTH <----------------->"; //******** BOLLINGER BAND WIDTH ********
-input bool useBBw = true; // Use Bollinger width
-input ENUM_TIMEFRAMES bbw_tf = PERIOD_CURRENT; // Timeframe
-input int BBw_per = 20; // Period
-input double BBw_dev = 2; // Deviation
-
 input string p12 = "<-----------------> ICHIMOKU <----------------->"; //******** ICHIMOKU ********
 input bool useIchi = true; // Use Ichimoku
+input indi_type IchType=increase_Decrease;
 input ENUM_TIMEFRAMES Ichi_tf = PERIOD_CURRENT; // Timeframe
 input int tekan = 9; // Tekan
 input int kijun = 26; // Kijun
@@ -593,14 +587,12 @@ int OnInit()
    ArrayResize(d_fma_handle, ArraySize(aSymbols));
    ArrayResize(d_sma_handle, ArraySize(aSymbols));
    ArrayResize(st_handle, ArraySize(aSymbols));
-   ArrayResize(storsi_handle, ArraySize(aSymbols));
    ArrayResize(sto_handle, ArraySize(aSymbols));
    ArrayResize(mac_handle, ArraySize(aSymbols));
    ArrayResize(adx_handle, ArraySize(aSymbols));
    ArrayResize(atr_handle, ArraySize(aSymbols));
    ArrayResize(rsi_handle, ArraySize(aSymbols));
    ArrayResize(bb_handle, ArraySize(aSymbols));
-   ArrayResize(bbw_handle, ArraySize(aSymbols));
    ArrayResize(Ichi_handle, ArraySize(aSymbols));
    ArrayResize(rsiDiv_handle, ArraySize(aSymbols));
    ArrayResize(time0, ArraySize(aSymbols));
@@ -616,127 +608,128 @@ int OnInit()
    ArrayResize(sellPartial,size,size);
 
 //--- InitFullSymbs
-   SetFull();
 
-//--- Check for Currency Pairs
-   for(int i = 0; i < ArraySize(UsedSymbols); i++)
-     {
-      //---
-      if(!SymbolFind(Prefix+UsedSymbols[i]+Suffix, true))
-        {
-         //---
-         if(LastReason == 0)
-           {
-            //---
-            string message = "All 28 currency pairs are not available !\nPerhaps the Prefix and/or Suffix were not set correctly.";
-            //---
-            MessageBox(message, MB_CAPTION, MB_OK|MB_ICONERROR);
-           }
-         //---
-         ObjectsDeleteAll(0, OBJPREFIX, -1, -1);
-         break;
-         return(INIT_FAILED);
-        }
-     }
 
    for(int i = 0; i < ArraySize(aSymbols); i++)
      {
-      s_ma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA1_tf, MA1_per, 0, MA1_method, MA1_price);
-      if(s_ma_handle[i] < 0)
+      if(useSingleMA)
         {
-         Print("The iMA object is not created: Error", GetLastError());
-         return(-1);
+         s_ma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA1_tf, MA1_per, 0, MA1_method, MA1_price);
+         if(s_ma_handle[i] < 0)
+           {
+            Print("The iMA object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      d_fma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA2_tf, MA2_per, 0, MA2_method, MA2_price);
-      if(d_fma_handle[i] < 0)
+      if(useDoubleMA)
         {
-         Print("The iMA object is not created: Error", GetLastError());
-         return(-1);
+         d_fma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA2_tf, MA2_per, 0, MA2_method, MA2_price);
+         if(d_fma_handle[i] < 0)
+           {
+            Print("The iMA object is not created: Error", GetLastError());
+            return(-1);
+           }
+         //---
+
+         d_sma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA3_tf, MA3_per, 0, MA3_method, MA3_price);
+         if(d_sma_handle[i] < 0)
+           {
+            Print("The iMA object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      d_sma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA3_tf, MA3_per, 0, MA3_method, MA3_price);
-      if(d_sma_handle[i] < 0)
+      if(useSuperTrend)
         {
-         Print("The iMA object is not created: Error", GetLastError());
-         return(-1);
+         st_handle[i] = iCustom(Prefix+aSymbols[i]+Suffix, st_tf, "supertrend", st_per, st_mult, false);
+         if(st_handle[i] < 0)
+           {
+            Print("The iCustom::Supertrend object is not created: Error", GetLastError());
+            return(-1);
+           }
+        }
+
+      //---
+      if(useSto)
+        {
+         sto_handle[i] = iStochastic(Prefix+aSymbols[i]+Suffix, sto_tf, sto_kper, sto_dper, sto_sper, MODE_SMA, STO_LOWHIGH);
+         if(sto_handle[i] < 0)
+           {
+            Print("The iStochastic object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      st_handle[i] = iCustom(Prefix+aSymbols[i]+Suffix, st_tf, "supertrend", st_per, st_mult, false);
-      if(st_handle[i] < 0)
+      if(useMacd)
         {
-         Print("The iCustom::Supertrend object is not created: Error", GetLastError());
-         return(-1);
+         mac_handle[i] = iMACD(Prefix+aSymbols[i]+Suffix, mac_tf, mac_fper, mac_sper, mac_smper, PRICE_CLOSE);
+         if(mac_handle[i] < 0)
+           {
+            Print("The iMACD object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      storsi_handle[i] = iRSI(Prefix+aSymbols[i]+Suffix, storsi_tf, int((storsi1_per+storsi2_per)/2), PRICE_CLOSE);
-      if(storsi_handle[i] < 0)
+      if(useAdx)
         {
-         Print("The iCustom::irsi object is not created: Error", GetLastError());
-         return(-1);
+         adx_handle[i] = iADX(Prefix+aSymbols[i]+Suffix, adx_tf, adx_per);
+         if(adx_handle[i] < 0)
+           {
+            Print("The iADX object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      sto_handle[i] = iStochastic(Prefix+aSymbols[i]+Suffix, sto_tf, sto_kper, sto_dper, sto_sper, MODE_SMA, STO_LOWHIGH);
-      if(sto_handle[i] < 0)
+      if(useAtr)
         {
-         Print("The iStochastic object is not created: Error", GetLastError());
-         return(-1);
+         atr_handle[i] = iADX(Prefix+aSymbols[i]+Suffix, atr_tf, atr_per);
+         if(atr_handle[i] < 0)
+           {
+            Print("The iATR object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      mac_handle[i] = iMACD(Prefix+aSymbols[i]+Suffix, mac_tf, mac_fper, mac_sper, mac_smper, PRICE_CLOSE);
-      if(mac_handle[i] < 0)
+      if(useRSI)
         {
-         Print("The iMACD object is not created: Error", GetLastError());
-         return(-1);
+         rsi_handle[i] = iRSI(Prefix+aSymbols[i]+Suffix, rsi_tf, rsi_per, PRICE_CLOSE);
+         if(rsi_handle[i] < 0)
+           {
+            Print("The iRSI object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      adx_handle[i] = iADX(Prefix+aSymbols[i]+Suffix, adx_tf, adx_per);
-      if(adx_handle[i] < 0)
+      if(useBB)
         {
-         Print("The iADX object is not created: Error", GetLastError());
-         return(-1);
+         bb_handle[i] = iBands(Prefix+aSymbols[i]+Suffix, bb_tf, BB_per, 0, BB_dev, PRICE_CLOSE);
+         if(bb_handle[i] < 0)
+           {
+            Print("The iBands object is not created: Error", GetLastError());
+            return(-1);
+           }
+        }
+
+      //---
+      if(useIchi)
+        {
+         Ichi_handle[i] = iIchimoku(Prefix+aSymbols[i]+Suffix, Ichi_tf, tekan, kijun, senkou);
+         if(Ichi_handle[i] < 0)
+           {
+            Print("The iIchimoku object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       //---
-      atr_handle[i] = iADX(Prefix+aSymbols[i]+Suffix, atr_tf, atr_per);
-      if(atr_handle[i] < 0)
+      if(useSAR)
         {
-         Print("The iATR object is not created: Error", GetLastError());
-         return(-1);
-        }
-      //---
-      rsi_handle[i] = iRSI(Prefix+aSymbols[i]+Suffix, rsi_tf, rsi_per, PRICE_CLOSE);
-      if(rsi_handle[i] < 0)
-        {
-         Print("The iRSI object is not created: Error", GetLastError());
-         return(-1);
-        }
-      //---
-      bb_handle[i] = iBands(Prefix+aSymbols[i]+Suffix, bb_tf, BB_per, 0, BB_dev, PRICE_CLOSE);
-      if(bb_handle[i] < 0)
-        {
-         Print("The iBands object is not created: Error", GetLastError());
-         return(-1);
-        }
-      //---
-      bbw_handle[i] = iCustom(Prefix+aSymbols[i]+Suffix, bbw_tf, "bbandwidth", BB_per, 0, BB_dev);
-      if(bbw_handle[i] < 0)
-        {
-         Print("The Custom::iBands object is not created: Error", GetLastError());
-         return(-1);
-        }
-      //---
-      Ichi_handle[i] = iIchimoku(Prefix+aSymbols[i]+Suffix, Ichi_tf, tekan, kijun, senkou);
-      if(Ichi_handle[i] < 0)
-        {
-         Print("The iIchimoku object is not created: Error", GetLastError());
-         return(-1);
-        }
-      //---
-      sar_handle[i] = iSAR(Prefix+aSymbols[i]+Suffix, sar_tf, sar_step, sar_max);
-      if(sar_handle[i] < 0)
-        {
-         Print("The iSAR object is not created: Error", GetLastError());
-         return(-1);
+         sar_handle[i] = iSAR(Prefix+aSymbols[i]+Suffix, sar_tf, sar_step, sar_max);
+         if(sar_handle[i] < 0)
+           {
+            Print("The iSAR object is not created: Error", GetLastError());
+            return(-1);
+           }
         }
       string sym = Prefix+aSymbols[i]+Suffix;
       trades[i] = new CExecute(sym, magic_Number);
@@ -748,41 +741,6 @@ int OnInit()
       buyPartial[i]=0;
      }
 
-//--- CheckData
-   if(TerminalInfoInteger(TERMINAL_CONNECTED) && (LastReason == 0 || LastReason == REASON_PARAMETERS))
-     {
-      //---
-      ResetLastError();
-      //---
-      for(int i = 0; i < ArraySize(UsedSymbols); i++)
-        {
-         //---
-         double test = iHigh(Prefix+UsedSymbols[i]+Suffix, PERIOD_CURRENT, 0);
-         //---
-         if(test == 0)
-           {
-            //---
-            for(int a = 0; a < 10; a++)
-              {
-               //---
-               Comment("Loading Data...");
-               Sleep(1);
-               //---
-               double _High = iHigh(Prefix+UsedSymbols[i]+Suffix, PERIOD_CURRENT, 0);
-               double _Low = iLow(Prefix+UsedSymbols[i]+Suffix, PERIOD_CURRENT, 0);
-               double _Close = iClose(Prefix+UsedSymbols[i]+Suffix, PERIOD_CURRENT, 0);
-               //---
-               double _Bid = SymbolInfoDouble(Prefix+UsedSymbols[i]+Suffix, SYMBOL_BID);
-               double _Ask = SymbolInfoDouble(Prefix+UsedSymbols[i]+Suffix, SYMBOL_ASK);
-               //---
-               if(_High != 0 && _Low != 0 && _Close != 0 && _Bid != 0 && _Ask != 0)
-                  break;
-              }
-           }
-        }
-      //---
-      Comment("");
-     }
 
 //--- Init ChartSize
    Chart_XSize = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS);
@@ -955,29 +913,6 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-//---
-
-  }
-//+------------------------------------------------------------------+
-//| Timer function                                                   |
-//+------------------------------------------------------------------+
-void OnTimer()
-  {
-//----
-
-   if(ArraySize(aSymbols) > ArraySize(UsedSymbols))
-     {
-      //---
-      for(int i = 0; i < ArraySize(aSymbols); i++)
-         SpeedOmeter(Prefix+aSymbols[i]+Suffix);
-     }
-   else
-     {
-      //---
-      for(int i = 0; i < ArraySize(UsedSymbols); i++)
-         SpeedOmeter(Prefix+UsedSymbols[i]+Suffix);
-     }
-
 
 //---
    if(ShowTradePanel)
@@ -1050,6 +985,17 @@ void OnTimer()
      }
    else
       CreateMinWindow();
+//---
+   Trailing_P();
+  }
+//+------------------------------------------------------------------+
+//| Timer function                                                   |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+//----
+
+
 //----
   }
 //+------------------------------------------------------------------+
@@ -1477,18 +1423,19 @@ void ObjectsCreateAll()
    LabelCreate(0, OBJPREFIX+"Pairs", 0, _x1+Dpi(10), _y1+Dpi(30), CORNER_LEFT_UPPER, "Pairs", "Arial Black", 12, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    LabelCreate(0, OBJPREFIX+"1MA", 0, _x1+Dpi(100), _y1+Dpi(30), CORNER_LEFT_UPPER, "1 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    LabelCreate(0, OBJPREFIX+"2MA", 0, _x1+Dpi(150), _y1+Dpi(30), CORNER_LEFT_UPPER, "2 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"sto-rsi", 0, _x1+Dpi(200), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO-RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"sto", 0, _x1+Dpi(300), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"macd", 0, _x1+Dpi(350), _y1+Dpi(30), CORNER_LEFT_UPPER, "MACD", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"adx", 0, _x1+Dpi(400), _y1+Dpi(30), CORNER_LEFT_UPPER, "ADX", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"atr", 0, _x1+Dpi(450), _y1+Dpi(30), CORNER_LEFT_UPPER, "ATR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"rsi", 0, _x1+Dpi(500), _y1+Dpi(30), CORNER_LEFT_UPPER, "RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"bb", 0, _x1+Dpi(550), _y1+Dpi(30), CORNER_LEFT_UPPER, "BB", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"ichi", 0, _x1+Dpi(600), _y1+Dpi(30), CORNER_LEFT_UPPER, "ICHI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"str", 0, _x1+Dpi(650), _y1+Dpi(30), CORNER_LEFT_UPPER, "STR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(700), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(770), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(820), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"sto", 0, _x1+Dpi(200), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"macd", 0, _x1+Dpi(250), _y1+Dpi(30), CORNER_LEFT_UPPER, "MACD", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"adx", 0, _x1+Dpi(300), _y1+Dpi(30), CORNER_LEFT_UPPER, "ADX", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"atr", 0, _x1+Dpi(350), _y1+Dpi(30), CORNER_LEFT_UPPER, "ATR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"rsi", 0, _x1+Dpi(400), _y1+Dpi(30), CORNER_LEFT_UPPER, "RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"bb", 0, _x1+Dpi(450), _y1+Dpi(30), CORNER_LEFT_UPPER, "BB", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"ichi", 0, _x1+Dpi(500), _y1+Dpi(30), CORNER_LEFT_UPPER, "ICHI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"str", 0, _x1+Dpi(550), _y1+Dpi(30), CORNER_LEFT_UPPER, "STR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(600), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(670), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(720), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(820), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+
    LabelCreate(0, OBJPREFIX+"sl", 0, _x1+Dpi(920), _y1+Dpi(30), CORNER_LEFT_UPPER, "SL", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    LabelCreate(0, OBJPREFIX+"tp", 0, _x1+Dpi(980), _y1+Dpi(30), CORNER_LEFT_UPPER, "TP", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
 
@@ -1582,36 +1529,11 @@ void CreateSymbGUI(int i, int Y)
         }
 
 //--
-   if(sig_STORSI(i) == 1)
-     {
-      if(useStoRSI)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"sto-rsi"+" - "+_Symb, 0, _x1+Dpi(240), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_STORSI(i) == -1)
-        {
-         if(useStoRSI)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"sto-rsi"+" - "+_Symb, 0, _x1+Dpi(240), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
-
-        }
-      else
-        {
-         if(useStoRSI)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"sto-rsi"+" - "+_Symb, 0, _x1+Dpi(240), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-
-        }
-
-
-//--
    if(sig_STO(i) == 1)
      {
       if(useSto)
          countb++;
-      LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1619,14 +1541,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSto)
             counts++;
-         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useSto)
             countf++;
-         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 
@@ -1636,7 +1558,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useMacd)
          countb++;
-      LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1644,14 +1566,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useMacd)
             counts++;
-         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useMacd)
             countf++;
-         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 
@@ -1660,7 +1582,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useAdx)
          countb++;
-      LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1668,14 +1590,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useAdx)
             counts++;
-         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useAdx)
             countf++;
-         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 
@@ -1684,7 +1606,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useAtr)
          countb++;
-      LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1692,14 +1614,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useAtr)
             counts++;
-         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useAtr)
             countf++;
-         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 
@@ -1708,7 +1630,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useRSI)
          countb++;
-      LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
 
      }
    else
@@ -1716,14 +1638,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useRSI)
             counts++;
-         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useRSI)
             countf++;
-         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 
@@ -1732,7 +1654,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useBB)
          countb++;
-      LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1740,43 +1662,22 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useBB)
             counts++;
-         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useBB)
             countf++;
-         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
-//--
-   if(sig_BBw(i) == 1)
-     {
-      if(useBBw)
-         countb++;
-
-     }
-   else
-      if(sig_BBw(i) == -1)
-        {
-         if(useBBw)
-            counts++;
-
-        }
-      else
-        {
-         if(useBBw)
-            countf++;
-
-        }
-
 //--
    if(sig_ICHI(i) == 1)
      {
       if(useIchi)
          countb++;
-      LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1784,14 +1685,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useIchi)
             counts++;
-         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useIchi)
             countf++;
-         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
         }
 //--
@@ -1799,7 +1700,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useSuperTrend)
          countb++;
-      LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(675), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1807,14 +1708,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSuperTrend)
             counts++;
-         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(675), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useSuperTrend)
             countf++;
-         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(675), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
         }
 
 //--
@@ -1822,7 +1723,7 @@ void CreateSymbGUI(int i, int Y)
      {
       if(useSAR)
          countb++;
-      LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(725), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+      LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
      }
    else
@@ -1830,14 +1731,14 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSAR)
             counts++;
-         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(725), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
         }
       else
         {
          if(useSAR)
             countf++;
-         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(725), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
         }
 
    double perc_b = (countb/(countb+countf+counts))*100;
@@ -1845,17 +1746,17 @@ void CreateSymbGUI(int i, int Y)
 //--
    if(perc_b > perc_s)
      {
-      LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(800), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
+      LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
 
      }
    else
       if(perc_b < perc_s)
         {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(800), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
+         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
         }
       else
         {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(800), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
         }
    bool buy = false;
@@ -1864,14 +1765,15 @@ void CreateSymbGUI(int i, int Y)
    if(perc_b == 100)
      {
       buy = true;
-      ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(880), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-
+      ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(720), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+      ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
      }
    else
       if(perc_s == 100)
         {
          sell = true;
-         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(880), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
+         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(720), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
+         ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
         }
       else
          if(perc_b > perc_s && perc_b < level_To_Close)
@@ -1881,6 +1783,8 @@ void CreateSymbGUI(int i, int Y)
                Positions[i].GroupCloseAll(30);
             ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
 
+            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(820), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+
            }
          else
             if(perc_b < perc_s && perc_s < level_To_Close)
@@ -1889,22 +1793,27 @@ void CreateSymbGUI(int i, int Y)
                if(closeWithPercentage)
                   Positions[i].GroupCloseAll(30);
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
+               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(820), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
 
               }
             else
               {
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
+               ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
+
               }
    CalcLot(i);
-
+   PartialClosing(BuyPositions[i],SellPositions[i],tools[i],buyPartial[i],sellPartial[i]);
    if(buy)
      {
       double temp[],
              temp1[];
       ArraySetAsSeries(temp, true);
-      if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-         return;
-      ArraySetAsSeries(temp1, true);
+      if(sltype == 1)
+         if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
+            return;
+      if(sltype == 2)
+         ArraySetAsSeries(temp1, true);
       if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
          return;
       double sl = 0;
@@ -1918,7 +1827,7 @@ void CreateSymbGUI(int i, int Y)
       double slpip = tools[i].Bid()-sl;
       if(tpType == RISK_REWARD)
         {
-         tp = tools[i].Bid()+TAKEPROFIT*slpip;
+         tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
         }
 
       if(trade_type == AUTO_TRADE)
@@ -1982,22 +1891,24 @@ void CreateSymbGUI(int i, int Y)
               }
            }
         }
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(940), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1000), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(950), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1020), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
-      cc0 = _Symb+" BUY SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
+      cc0 = _Symb+" BUY SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
      }
    if(sell)
      {
       double temp[],
              temp1[];
       ArraySetAsSeries(temp, true);
-      if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-         return;
+      if(sltype == 1)
+         if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
+            return;
       ArraySetAsSeries(temp1, true);
-      if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-         return;
+      if(sltype == 2)
+         if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
+            return;
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Bid()+STOPLOSS*tools[i].Pip();
@@ -2009,7 +1920,7 @@ void CreateSymbGUI(int i, int Y)
       double slpip = sl-tools[i].Bid();
       if(tpType == RISK_REWARD)
         {
-         tp = tools[i].Bid()-TAKEPROFIT*slpip;
+         tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
         }
 
       if(trade_type == AUTO_TRADE)
@@ -2073,9 +1984,9 @@ void CreateSymbGUI(int i, int Y)
               }
            }
         }
-      cc0 = _Symb+" SELL SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(940), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1000), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      cc0 = _Symb+" SELL SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
+      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(950), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1020), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
      }
@@ -2084,6 +1995,8 @@ void CreateSymbGUI(int i, int Y)
      {
       cc0 = " Close "+_Symb;
       ObjectDelete(0, OBJPREFIX+"sl"+" - "+_Symb);
+      ObjectDelete(0, OBJPREFIX+"tp"+" - "+_Symb);
+
       signal[i] = false;
      }
 //---
@@ -3276,10 +3189,20 @@ int sig_MACD(int index)
    ArraySetAsSeries(temp1, true);
    if(CopyBuffer(mac_handle[index], 0, 0, 10, temp1) <= 0)
       return res;
-   if(temp1[0] > macd_level && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
-      res = 1;
-   if(temp1[0] < macd_level && temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
-      res = -1;
+   if(MacdType==increase_Decrease)
+     {
+      if(temp1[0] > macd_level && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
+         res = 1;
+      if(temp1[0] < macd_level && temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
+         res = -1;
+     }
+   else
+     {
+      if(temp1[0] > macd_level)
+         res = 1;
+      if(temp1[0] < macd_level)
+         res = -1;
+     }
    return res;
   }
 
@@ -3301,10 +3224,20 @@ int sig_ADX(int index)
       return res;
    if(CopyBuffer(adx_handle[index], MAIN_LINE, 0, 10, temp3) <= 0)
       return res;
-   if(temp1[0] > temp2[0] && temp3[0] >= adx_lev && temp3[0] > temp3[1] && temp3[1] > temp3[2] && temp3[2] > temp3[3])
-      res = 1;
-   if(temp1[0] < temp2[0] && temp3[0] >= adx_lev && temp3[0] > temp3[1] && temp3[1] > temp3[2] && temp3[2] > temp3[3])
-      res = -1;
+   if(AdxType==increase_Decrease)
+     {
+      if(temp1[0] > temp2[0] && temp3[0] >= adx_lev && temp3[0] > temp3[1] && temp3[1] > temp3[2] && temp3[2] > temp3[3])
+         res = 1;
+      if(temp1[0] < temp2[0] && temp3[0] >= adx_lev && temp3[0] > temp3[1] && temp3[1] > temp3[2] && temp3[2] > temp3[3])
+         res = -1;
+     }
+   else
+     {
+      if(temp1[0] > temp2[0] && temp3[0] >= adx_lev)
+         res = 1;
+      if(temp1[0] < temp2[0] && temp3[0] >= adx_lev)
+         res = -1;
+     }
    return res;
   }
 
@@ -3318,10 +3251,20 @@ int sig_ATR(int index)
    ArraySetAsSeries(temp1, true);
    if(CopyBuffer(atr_handle[index], 0, 0, 10, temp1) <= 0)
       return res;
-   if(temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3] && sig_Supertrend(index) == 1)
-      res = 1;
-   if(temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3] && sig_Supertrend(index) == -1)
-      res = -1;
+   if(AtrType==increase_Decrease)
+     {
+      if(temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3] && sig_Supertrend(index) == 1)
+         res = 1;
+      if(temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3] && sig_Supertrend(index) == -1)
+         res = -1;
+     }
+   else
+     {
+      if(sig_Supertrend(index) == 1)
+         res = 1;
+      if(sig_Supertrend(index) == -1)
+         res = -1;
+     }
    return res;
   }
 
@@ -3331,14 +3274,31 @@ int sig_ATR(int index)
 int sig_BB(int index)
   {
    int res = 0;
-   double temp1[];
+   double temp1[],temp2[],temp3[];
    ArraySetAsSeries(temp1, true);
+   ArraySetAsSeries(temp2, true);
+   ArraySetAsSeries(temp3, true);
    if(CopyBuffer(bb_handle[index], 0, 0, 10, temp1) <= 0)
       return res;
-   if(temp1[0] < iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0) && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
-      res = 1;
-   if(temp1[0] > iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0) && temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
-      res = -1;
+   if(CopyBuffer(bb_handle[index], 1, 0, 10, temp2) <= 0)
+      return res;
+   if(CopyBuffer(bb_handle[index], 2, 0, 10, temp3) <= 0)
+      return res;
+   if(BBType==increase_Decrease)
+     {
+      if(temp1[0] < iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0) && temp2[0] > temp2[1] && temp2[1] > temp2[2] && temp2[2] > temp2[3])
+         res = 1;
+      if(temp1[0] > iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0) && temp3[0] > temp3[1] && temp3[1] > temp3[2] && temp3[2] > temp3[3])
+         res = -1;
+     }
+   else
+     {
+
+      if(temp1[0] < iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0))
+         res = 1;
+      if(temp1[0] > iClose(Prefix+aSymbols[index]+Suffix, bb_tf, 0))
+         res = -1;
+     }
    return res;
   }
 
@@ -3374,12 +3334,20 @@ int sig_ICHI(int index)
       return res;
    if(CopyBuffer(Ichi_handle[index], SENKOUSPANB_LINE, 0, 10, temp2) <= 0)
       return res;
-
-   if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) > MathMax(temp1[0], temp2[0]))
-      return 1;
-   if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) < MathMin(temp1[0], temp2[0]))
-      return -1;
-
+   if(IchType==increase_Decrease)
+     {
+      if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) > MathMax(temp1[0], temp2[0])&&temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
+         return 1;
+      if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) < MathMin(temp1[0], temp2[0])&&temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
+         return -1;
+     }
+   else
+     {
+      if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) > MathMax(temp1[0], temp2[0]))
+         return 1;
+      if(iClose(Prefix+aSymbols[index]+Suffix, Ichi_tf, 0) < MathMin(temp1[0], temp2[0]))
+         return -1;
+     }
    return res;
   }
 
@@ -3430,47 +3398,47 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
             double vol=buyPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               buyPos[x].ClosePartial(vol*(close_Precentage1/100),30);
+               buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage1/100)),30);
                b++;
               }
            }
-         if(close_level2>0&&close_Precentage2>0&&b==2)
+         if(close_level2>0&&close_Precentage2>0&&b==1)
            {
             double tp1x=openPrice+((close_level2/100)*(tpDistance));
             double vol=buyPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               buyPos[x].ClosePartial(vol*(close_Precentage2/100),30);
+               buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage2/100)),30);
                b++;
               }
            }
-         if(close_level3>0&&close_Precentage3>0&&b==3)
+         if(close_level3>0&&close_Precentage3>0&&b==2)
            {
             double tp1x=openPrice+((close_level3/100)*(tpDistance));
             double vol=buyPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               buyPos[x].ClosePartial(vol*(close_Precentage3/100),30);
+               buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage3/100)),30);
                b++;
               }
            }
-         if(close_level4>0&&close_Precentage4>0&&b==4)
+         if(close_level4>0&&close_Precentage4>0&&b==3)
            {
             double tp1x=openPrice+((close_level4/100)*(tpDistance));
             double vol=buyPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               buyPos[x].ClosePartial(vol*(close_Precentage4/100),30);
+               buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage4/100)),30);
                b++;
               }
            }
-         if(close_level5>0&&close_Precentage5>0&&b==5)
+         if(close_level5>0&&close_Precentage5>0&&b==4)
            {
             double tp1x=openPrice+((close_level5/100)*(tpDistance));
             double vol=buyPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               buyPos[x].ClosePartial(vol*(close_Precentage5/100),30);
+               buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage5/100)),30);
                b++;
               }
            }
@@ -3488,51 +3456,51 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
          double tpDistance=openPrice-tpx;
          if(close_level1>0&&close_Precentage1>0&&s==0)
            {
-            double tp1x=openPrice+((close_level1/100)*(tpDistance));
+            double tp1x=openPrice-((close_level1/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               sellPos[x].ClosePartial(vol*(close_Precentage1/100),30);
+               sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage1/100)),30);
                s++;
               }
            }
          if(close_level2>0&&close_Precentage2>0&&s==2)
            {
-            double tp1x=openPrice+((close_level2/100)*(tpDistance));
+            double tp1x=openPrice-((close_level2/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               sellPos[x].ClosePartial(vol*(close_Precentage2/100),30);
+               sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage2/100)),30);
                s++;
               }
            }
          if(close_level3>0&&close_Precentage3>0&&s==3)
            {
-            double tp1x=openPrice+((close_level3/100)*(tpDistance));
+            double tp1x=openPrice-((close_level3/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               sellPos[x].ClosePartial(vol*(close_Precentage3/100),30);
+               sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage3/100)),30);
                s++;
               }
            }
          if(close_level4>0&&close_Precentage4>0&&s==4)
            {
-            double tp1x=openPrice+((close_level4/100)*(tpDistance));
+            double tp1x=openPrice-((close_level4/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               sellPos[x].ClosePartial(vol*(close_Precentage4/100),30);
+               sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage4/100)),30);
                s++;
               }
            }
          if(close_level5>0&&close_Precentage5>0&&s==5)
            {
-            double tp1x=openPrice+((close_level5/100)*(tpDistance));
+            double tp1x=openPrice-((close_level5/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
             if(tool.Bid()>=tp1x)
               {
-               sellPos[x].ClosePartial(vol*(close_Precentage5/100),30);
+               sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage5/100)),30);
                s++;
               }
            }
@@ -3542,16 +3510,121 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
      }
   }
 //+------------------------------------------------------------------+
-void Trailing_P(){
-  if(use_precentage_trailing){
-    int buys=
-  if(tools.Bid() - BuyPos.GetPriceOpen() > tools.Pip() * TrailingStopPoint)
-    {
-      if(BuyPos.GetStopLoss() < tools.Bid() - tools.Pip() * TrailingStopPoint||BuyPos.GetStopLoss()==0)
-       {
-         double ModfiedSl = tools.Bid() - (tools.Pip() * TrailingStopPoint);
-         BuyPos.Modify(ModfiedSl, BuyPos.GetTakeProfit(), SLTP_PRICE);
-      }
-    }
+void Trailing_P()
+  {
+   if(use_precentage_trailing)
+     {
+      int size = ArraySize(aSymbols);
+      for(int i=0; i<size; i++)
+        {
+         int buys=BuyPositions[i].GroupTotal();
+         int sells=SellPositions[i].GroupTotal();
+         for(int x=0; x<buys; x++)
+           {
+            double tpx=BuyPositions[i][x].GetTakeProfit();
+            double price=BuyPositions[i][x].GetPriceOpen();
+            double distance = tpx-price;
+            double tp1x=0,tpx2=0,tpx3=0,tpx4=0,tpx5=0;
+            if(SL1>0&&profit_level1>0)
+              {
+               double p=tools[i].Bid()+(distance*(profit_level1/100));
+               double s=tools[i].Bid()+(distance*(SL1/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+                 {
+                  BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL2>0&&profit_level2>0)
+              {
+               double p=tools[i].Bid()+(distance*(profit_level2/100));
+               double s=tools[i].Bid()+(distance*(SL2/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+                 {
+                  BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL3>0&&profit_level3>0)
+              {
+               double p=tools[i].Bid()+(distance*(profit_level3/100));
+               double s=tools[i].Bid()+(distance*(SL3/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+                 {
+                  BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL4>0&&profit_level4>0)
+              {
+               double p=tools[i].Bid()+(distance*(profit_level4/100));
+               double s=tools[i].Bid()+(distance*(SL4/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+                 {
+                  BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL5>0&&profit_level5>0)
+              {
+               double p=tools[i].Bid()+(distance*(profit_level5/100));
+               double s=tools[i].Bid()+(distance*(SL5/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+                 {
+                  BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+           }
+
+         for(int x=0; x<sells; x++)
+           {
+            double tpx=SellPositions[i][x].GetTakeProfit();
+            double price=SellPositions[i][x].GetPriceOpen();
+            double distance = price-tpx;
+            if(SL1>0&&profit_level1>0)
+              {
+               double p=tools[i].Bid()-(distance*(profit_level1/100));
+               double s=tools[i].Bid()-(distance*(SL1/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+                 {
+                  SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL2>0&&profit_level2>0)
+              {
+               double p=tools[i].Bid()-(distance*(profit_level2/100));
+               double s=tools[i].Bid()-(distance*(SL2/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+                 {
+                  SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL3>0&&profit_level3>0)
+              {
+               double p=tools[i].Bid()-(distance*(profit_level3/100));
+               double s=tools[i].Bid()-(distance*(SL3/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+                 {
+                  SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL4>0&&profit_level4>0)
+              {
+               double p=tools[i].Bid()-(distance*(profit_level4/100));
+               double s=tools[i].Bid()-(distance*(SL4/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+                 {
+                  SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+            if(SL5>0&&profit_level5>0)
+              {
+               double p=tools[i].Bid()-(distance*(profit_level5/100));
+               double s=tools[i].Bid()-(distance*(SL5/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+                 {
+                  SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
+                 }
+              }
+           }
+
+        }
+     }
   }
-}
+//+------------------------------------------------------------------+
