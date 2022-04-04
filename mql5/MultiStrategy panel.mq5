@@ -143,7 +143,18 @@ input double close_level4    = 60;
 input double close_Precentage4=10;
 input double close_level5    = 80;
 input double close_Precentage5=10;
-
+input string set5  ="======================+Precentage trailinig =============";
+input bool use_precentage_trailing=false;
+input double SL1  =10;
+input double profit_level1=30;
+input double SL2 = 20;
+input double profit_level2=50;
+input double SL3 = 0;
+input double profit_level3= 0;
+input double SL4 = 0;
+input double profit_level4 = 0;
+input double SL5 = 0;
+input double profit_level5 =0;
 
 
 
@@ -3531,3 +3542,16 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
      }
   }
 //+------------------------------------------------------------------+
+void Trailing_P(){
+  if(use_precentage_trailing){
+    int buys=
+  if(tools.Bid() - BuyPos.GetPriceOpen() > tools.Pip() * TrailingStopPoint)
+    {
+      if(BuyPos.GetStopLoss() < tools.Bid() - tools.Pip() * TrailingStopPoint||BuyPos.GetStopLoss()==0)
+       {
+         double ModfiedSl = tools.Bid() - (tools.Pip() * TrailingStopPoint);
+         BuyPos.Modify(ModfiedSl, BuyPos.GetTakeProfit(), SLTP_PRICE);
+      }
+    }
+  }
+}
