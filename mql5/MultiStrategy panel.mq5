@@ -25,7 +25,7 @@
 #define ExpertName         "MultiStrategy Panel"
 #define OBJPREFIX          "YM - "
 //---
-#define CLIENT_BG_WIDTH    1050
+int CLIENT_BG_WIDTH  = 460;
 #define INDENT_TOP         15
 //---
 #define OPENPRICE          0
@@ -49,12 +49,9 @@ enum indi_type
   };
 enum SL_TP
   {
-   op1 = 0,
-// in pips
-   op2 = 1,
-// SAR
-   op3 = 2,
-// Supertrend
+   op1 = 0,// in pips
+   op2 = 1,// SAR
+   op3 = 2,// Supertrend
   };
 enum TP_TYPE
   {
@@ -103,7 +100,7 @@ enum LOT_TYPE
    RISK,
   };
 //--- User inputs
-input string Set= "                    < - - -  General  - - - >";
+input string Set= "                    <===================== General ==========================>";
 input ENUM_MODE SelectedMode = COMPACT; /*Dashboard (Size)*/
 input string Prefix = ""; //Symbol Prefix
 input string Suffix = ""; //Symbol Suffix
@@ -115,6 +112,8 @@ input TRADE_PAIR TRADE_ON = MULTIPLE_PAIRS;
 input ORDERTYPE type = BOTH;
 input SL_TP sltype = op1;
 input TP_TYPE tpType = PIPS;
+input int Max_Orders = 20;
+input int Max_Orders_symbols=1;
 input double TAKEPROFIT = 100;
 input double tp1 = 0;
 input double tp2 = 0;
@@ -612,6 +611,8 @@ int OnInit()
             Print("The iMA object is not created: Error", GetLastError());
             return(-1);
            }
+
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useDoubleMA)
@@ -622,6 +623,7 @@ int OnInit()
             Print("The iMA object is not created: Error", GetLastError());
             return(-1);
            }
+
          //---
 
          d_sma_handle[i] = iMA(Prefix+aSymbols[i]+Suffix, MA3_tf, MA3_per, 0, MA3_method, MA3_price);
@@ -630,9 +632,11 @@ int OnInit()
             Print("The iMA object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
+
         }
       //---
-      if(useSuperTrend||sltype==2)
+      if(useSuperTrend||sltype==2||useAtr)
         {
          st_handle[i] = iCustom(Prefix+aSymbols[i]+Suffix, st_tf, "supertrend", st_per, st_mult, false);
          if(st_handle[i] < 0)
@@ -640,6 +644,8 @@ int OnInit()
             Print("The iCustom::Supertrend object is not created: Error", GetLastError());
             return(-1);
            }
+         if(useSuperTrend)
+            CLIENT_BG_WIDTH+=50;
         }
 
       //---
@@ -651,6 +657,7 @@ int OnInit()
             Print("The iStochastic object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useMacd)
@@ -661,6 +668,7 @@ int OnInit()
             Print("The iMACD object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useAdx)
@@ -671,6 +679,7 @@ int OnInit()
             Print("The iADX object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useAtr)
@@ -681,6 +690,7 @@ int OnInit()
             Print("The iATR object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useRSI)
@@ -691,6 +701,7 @@ int OnInit()
             Print("The iRSI object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useBB)
@@ -701,6 +712,7 @@ int OnInit()
             Print("The iBands object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
 
       //---
@@ -712,6 +724,7 @@ int OnInit()
             Print("The iIchimoku object is not created: Error", GetLastError());
             return(-1);
            }
+         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useSAR||sltype==1)
@@ -722,6 +735,8 @@ int OnInit()
             Print("The iSAR object is not created: Error", GetLastError());
             return(-1);
            }
+         if(useSAR)
+            CLIENT_BG_WIDTH+=50;
         }
       string sym = Prefix+aSymbols[i]+Suffix;
       trades[i] = new CExecute(sym, magic_Number);
@@ -1467,7 +1482,7 @@ void ObjectsCreateAll()
    if(useSAR)
      {
       LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-      xxx+=70;
+      xxx+=50;
      }
    LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    xxx+=50;
@@ -1576,7 +1591,7 @@ void CreateSymbGUI(int i, int Y)
      }
 
 //--
-   if(useMacd)
+   if(useSto)
      {
       if(sig_STO(i) == 1)
         {
@@ -1818,27 +1833,28 @@ void CreateSymbGUI(int i, int Y)
                countf++;
             LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
            }
-      xx+=75;
+      xx+=50;
      }
 
    double perc_b = (countb/(countb+countf+counts))*100;
    double perc_s = (counts/(countb+countf+counts))*100;
 //--
+   xx+=10;
    if(perc_b > perc_s)
      {
       LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
-      xx+=20;
+      xx+=10;
      }
    else
       if(perc_b < perc_s)
         {
          LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
-         xx+=20;
+         xx+=10;
         }
       else
         {
          LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-         xx+=20;
+         xx+=10;
         }
 
    bool buy = false;
@@ -1849,7 +1865,7 @@ void CreateSymbGUI(int i, int Y)
       buy = true;
       ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
       ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-      xx+=100;
+      xx+=230;
      }
    else
       if(perc_s == 100)
@@ -1857,7 +1873,7 @@ void CreateSymbGUI(int i, int Y)
          sell = true;
          ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
          ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-         xx+=100;
+         xx+=230;
         }
       else
          if(perc_b > perc_s && perc_b < level_To_Close)
@@ -1866,9 +1882,9 @@ void CreateSymbGUI(int i, int Y)
             if(closeWithPercentage)
                Positions[i].GroupCloseAll(30);
             ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
-
-            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
             xx+=100;
+            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+            xx+=130;
            }
          else
             if(perc_b < perc_s && perc_s < level_To_Close)
@@ -1877,14 +1893,15 @@ void CreateSymbGUI(int i, int Y)
                if(closeWithPercentage)
                   Positions[i].GroupCloseAll(30);
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
-               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
                xx+=100;
+               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+               xx+=120;
               }
             else
               {
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
                ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-
+               xx+=230;
               }
    CalcLot(i);
    PartialClosing(BuyPositions[i],SellPositions[i],tools[i],buyPartial[i],sellPartial[i]);
@@ -1895,11 +1912,11 @@ void CreateSymbGUI(int i, int Y)
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
          if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-            MessageBox("error in geting SAR indicato data for sl");
+            Alert("error in geting SAR indicato data for sl");
       if(sltype == 2)
          ArraySetAsSeries(temp1, true);
       if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-         MessageBox("error in geting supertrend indicato data for sl");
+         Alert("error in geting supertrend indicato data for sl");
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Ask()-STOPLOSS*tools[i].Pip();
@@ -1914,7 +1931,7 @@ void CreateSymbGUI(int i, int Y)
          tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
         }
 
-      if(trade_type == AUTO_TRADE)
+      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
@@ -1996,7 +2013,7 @@ void CreateSymbGUI(int i, int Y)
            }
         }
       LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      xx+=70;
+      xx+=60;
       LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
@@ -2028,7 +2045,7 @@ void CreateSymbGUI(int i, int Y)
          tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
         }
 
-      if(trade_type == AUTO_TRADE)
+      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
@@ -2111,7 +2128,7 @@ void CreateSymbGUI(int i, int Y)
         }
       cc0 = _Symb+" SELL SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
       LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      xx+=50;
+      xx+=60;
       LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
@@ -2370,7 +2387,7 @@ void GetParam(string p)
          +"\n\n"+
          "Author: "+"Dr YouSuf MeSalm "
          +"\n\n"+
-         "www.YousufMesalm.com"
+         "www.Yousuf-Mesalm.com"
          +"\n\n"+
          Link
          //---, MB_CAPTION, MB_ICONINFORMATION|MB_OK
@@ -3412,7 +3429,7 @@ void CalcLot(int i)
    else
       if(LotType == LOT_PER)
         {
-         Lot = (AccountInfoDouble(ACCOUNT_BALANCE)/1000)*lot_Per;
+         Lot = tools[i].NormalizeVolume((AccountInfoDouble(ACCOUNT_BALANCE)/1000)*lot_Per);
         }
       else
         {
@@ -3443,6 +3460,7 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
               {
                buyPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage1/100)),30);
                b++;
+
               }
            }
          if(close_level2>0&&close_Precentage2>0&&b==1)
@@ -3501,47 +3519,47 @@ void PartialClosing(CPosition & buyPos,CPosition & sellPos,CUtilities & tool,int
            {
             double tp1x=openPrice-((close_level1/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
-            if(tool.Bid()>=tp1x)
+            if(tool.Bid()<=tp1x)
               {
                sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage1/100)),30);
                s++;
               }
            }
-         if(close_level2>0&&close_Precentage2>0&&s==2)
+         if(close_level2>0&&close_Precentage2>0&&s==1)
            {
             double tp1x=openPrice-((close_level2/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
-            if(tool.Bid()>=tp1x)
+            if(tool.Bid()<=tp1x)
               {
                sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage2/100)),30);
                s++;
               }
            }
-         if(close_level3>0&&close_Precentage3>0&&s==3)
+         if(close_level3>0&&close_Precentage3>0&&s==2)
            {
             double tp1x=openPrice-((close_level3/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
-            if(tool.Bid()>=tp1x)
+            if(tool.Bid()<=tp1x)
               {
                sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage3/100)),30);
                s++;
               }
            }
-         if(close_level4>0&&close_Precentage4>0&&s==4)
+         if(close_level4>0&&close_Precentage4>0&&s==3)
            {
             double tp1x=openPrice-((close_level4/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
-            if(tool.Bid()>=tp1x)
+            if(tool.Bid()<=tp1x)
               {
                sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage4/100)),30);
                s++;
               }
            }
-         if(close_level5>0&&close_Precentage5>0&&s==5)
+         if(close_level5>0&&close_Precentage5>0&&s==4)
            {
             double tp1x=openPrice-((close_level5/100)*(tpDistance));
             double vol=sellPos[x].GetVolume();
-            if(tool.Bid()>=tp1x)
+            if(tool.Bid()<=tp1x)
               {
                sellPos[x].ClosePartial(tool.NormalizeVolume(vol*(close_Precentage5/100)),30);
                s++;
@@ -3561,54 +3579,57 @@ void Trailing_P()
       for(int i=0; i<size; i++)
         {
          int buys=BuyPositions[i].GroupTotal();
+
          int sells=SellPositions[i].GroupTotal();
          for(int x=0; x<buys; x++)
            {
             double tpx=BuyPositions[i][x].GetTakeProfit();
             double price=BuyPositions[i][x].GetPriceOpen();
+            double sssl=SellPositions[i][x].GetStopLoss();
+
             double distance = tpx-price;
             double tp1x=0,tpx2=0,tpx3=0,tpx4=0,tpx5=0;
             if(SL1>0&&profit_level1>0)
               {
-               double p=tools[i].Bid()+(distance*(profit_level1/100));
-               double s=tools[i].Bid()+(distance*(SL1/100));
-               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+               double p=price+(distance*(profit_level1/100));
+               double s=price+(distance*(SL1/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()>s&&sssl<s)
                  {
                   BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL2>0&&profit_level2>0)
               {
-               double p=tools[i].Bid()+(distance*(profit_level2/100));
-               double s=tools[i].Bid()+(distance*(SL2/100));
-               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+               double p=price+(distance*(profit_level2/100));
+               double s=price+(distance*(SL2/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()>s&&sssl<s)
                  {
                   BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL3>0&&profit_level3>0)
               {
-               double p=tools[i].Bid()+(distance*(profit_level3/100));
-               double s=tools[i].Bid()+(distance*(SL3/100));
-               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+               double p=price+(distance*(profit_level3/100));
+               double s=price+(distance*(SL3/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()>s&&sssl<s)
                  {
                   BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL4>0&&profit_level4>0)
               {
-               double p=tools[i].Bid()+(distance*(profit_level4/100));
-               double s=tools[i].Bid()+(distance*(SL4/100));
-               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+               double p=price+(distance*(profit_level4/100));
+               double s=price+(distance*(SL4/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()>s&&sssl<s)
                  {
                   BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL5>0&&profit_level5>0)
               {
-               double p=tools[i].Bid()+(distance*(profit_level5/100));
-               double s=tools[i].Bid()+(distance*(SL5/100));
-               if(tools[i].Bid()>=p&&tools[i].Bid()<s)
+               double p=price+(distance*(profit_level5/100));
+               double s=price+(distance*(SL5/100));
+               if(tools[i].Bid()>=p&&tools[i].Bid()>s&&sssl>s)
                  {
                   BuyPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
@@ -3619,48 +3640,50 @@ void Trailing_P()
            {
             double tpx=SellPositions[i][x].GetTakeProfit();
             double price=SellPositions[i][x].GetPriceOpen();
+            double sssl=SellPositions[i][x].GetStopLoss();
             double distance = price-tpx;
             if(SL1>0&&profit_level1>0)
               {
-               double p=tools[i].Bid()-(distance*(profit_level1/100));
-               double s=tools[i].Bid()-(distance*(SL1/100));
-               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+               double p=price-(distance*(profit_level1/100));
+               double s=price-(distance*(SL1/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()<s&&sssl>s)
                  {
                   SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL2>0&&profit_level2>0)
               {
-               double p=tools[i].Bid()-(distance*(profit_level2/100));
-               double s=tools[i].Bid()-(distance*(SL2/100));
-               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+               double p=price-(distance*(profit_level2/100));
+               double s=price-(distance*(SL2/100));
+
+               if(tools[i].Bid()<=p&&tools[i].Bid()<s&&sssl>s)
                  {
                   SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL3>0&&profit_level3>0)
               {
-               double p=tools[i].Bid()-(distance*(profit_level3/100));
-               double s=tools[i].Bid()-(distance*(SL3/100));
-               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+               double p=price-(distance*(profit_level3/100));
+               double s=price-(distance*(SL3/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()<s&&sssl>s)
                  {
                   SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL4>0&&profit_level4>0)
               {
-               double p=tools[i].Bid()-(distance*(profit_level4/100));
-               double s=tools[i].Bid()-(distance*(SL4/100));
-               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+               double p=price-(distance*(profit_level4/100));
+               double s=price-(distance*(SL4/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()<s&&sssl>s)
                  {
                   SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
               }
             if(SL5>0&&profit_level5>0)
               {
-               double p=tools[i].Bid()-(distance*(profit_level5/100));
-               double s=tools[i].Bid()-(distance*(SL5/100));
-               if(tools[i].Bid()<=p&&tools[i].Bid()>s)
+               double p=price-(distance*(profit_level5/100));
+               double s=price-(distance*(SL5/100));
+               if(tools[i].Bid()<=p&&tools[i].Bid()<s&&sssl>s)
                  {
                   SellPositions[i][x].Modify(s,tpx,SLTP_PRICE);
                  }
