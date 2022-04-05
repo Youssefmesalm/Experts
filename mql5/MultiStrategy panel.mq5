@@ -513,14 +513,6 @@ int OnInit()
 
      }
 
-//--- Check for Symbols (Analysis)
-   for(int i = 0; i < ArraySize(Symbols); i++)
-     {
-      //---
-      if(!SymbolFind(Prefix+Symbols[i]+Suffix, true))
-         if(SymbolFind(Prefix+Symbols[i]+Suffix, false))
-            SymbolSelect(Prefix+Symbols[i]+Suffix, true);
-     }
 
 //--- Input Symbols Changed
    if(sTradeSymbols != TradeSymbols || LastReason == 0)
@@ -640,7 +632,7 @@ int OnInit()
            }
         }
       //---
-      if(useSuperTrend)
+      if(useSuperTrend||sltype==2)
         {
          st_handle[i] = iCustom(Prefix+aSymbols[i]+Suffix, st_tf, "supertrend", st_per, st_mult, false);
          if(st_handle[i] < 0)
@@ -722,7 +714,7 @@ int OnInit()
            }
         }
       //---
-      if(useSAR)
+      if(useSAR||sltype==1)
         {
          sar_handle[i] = iSAR(Prefix+aSymbols[i]+Suffix, sar_tf, sar_step, sar_max);
          if(sar_handle[i] < 0)
@@ -1421,23 +1413,71 @@ void ObjectsCreateAll()
 
    LabelCreate(0, OBJPREFIX+"BALANCE«", 0, _x1+Dpi(300), _y1+Dpi(8), CORNER_LEFT_UPPER, Balance(), sFontType, 8, C'59, 41, 40', 0, ANCHOR_CENTER, false, false, true, 0, "Balance is :"+Balance());
    LabelCreate(0, OBJPREFIX+"Pairs", 0, _x1+Dpi(10), _y1+Dpi(30), CORNER_LEFT_UPPER, "Pairs", "Arial Black", 12, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"1MA", 0, _x1+Dpi(100), _y1+Dpi(30), CORNER_LEFT_UPPER, "1 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"2MA", 0, _x1+Dpi(150), _y1+Dpi(30), CORNER_LEFT_UPPER, "2 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"sto", 0, _x1+Dpi(200), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"macd", 0, _x1+Dpi(250), _y1+Dpi(30), CORNER_LEFT_UPPER, "MACD", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"adx", 0, _x1+Dpi(300), _y1+Dpi(30), CORNER_LEFT_UPPER, "ADX", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"atr", 0, _x1+Dpi(350), _y1+Dpi(30), CORNER_LEFT_UPPER, "ATR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"rsi", 0, _x1+Dpi(400), _y1+Dpi(30), CORNER_LEFT_UPPER, "RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"bb", 0, _x1+Dpi(450), _y1+Dpi(30), CORNER_LEFT_UPPER, "BB", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"ichi", 0, _x1+Dpi(500), _y1+Dpi(30), CORNER_LEFT_UPPER, "ICHI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"str", 0, _x1+Dpi(550), _y1+Dpi(30), CORNER_LEFT_UPPER, "STR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(600), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(670), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(720), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(820), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-
-   LabelCreate(0, OBJPREFIX+"sl", 0, _x1+Dpi(920), _y1+Dpi(30), CORNER_LEFT_UPPER, "SL", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   LabelCreate(0, OBJPREFIX+"tp", 0, _x1+Dpi(980), _y1+Dpi(30), CORNER_LEFT_UPPER, "TP", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   int xxx=100;
+   if(useSingleMA)
+     {
+      LabelCreate(0, OBJPREFIX+"1MA", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "1 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useDoubleMA)
+     {
+      LabelCreate(0, OBJPREFIX+"2MA", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "2 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useSto)
+     {
+      LabelCreate(0, OBJPREFIX+"sto", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useMacd)
+     {
+      LabelCreate(0, OBJPREFIX+"macd", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "MACD", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useAdx)
+     {
+      LabelCreate(0, OBJPREFIX+"adx", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ADX", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useAtr)
+     {
+      LabelCreate(0, OBJPREFIX+"atr", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ATR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useRSI)
+     {
+      LabelCreate(0, OBJPREFIX+"rsi", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useBB)
+     {
+      LabelCreate(0, OBJPREFIX+"bb", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "BB", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useIchi)
+     {
+      LabelCreate(0, OBJPREFIX+"ichi", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ICHI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useSuperTrend)
+     {
+      LabelCreate(0, OBJPREFIX+"str", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "STR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(useSAR)
+     {
+      LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=70;
+     }
+   LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   xxx+=50;
+   LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   xxx+=100;
+   LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   xxx+=100;
+   LabelCreate(0, OBJPREFIX+"sl", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SL", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   xxx+=60;
+   LabelCreate(0, OBJPREFIX+"tp", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "TP", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
 
 //--- SymbolsGUI
    int fr_y = _y1+Dpi(60);
@@ -1470,310 +1510,354 @@ void CreateSymbGUI(int i, int Y)
    double countb = 0,
           counts = 0,
           countf = 0;
-
+   int xx=10;
 //---
-   LabelCreate(0, OBJPREFIX+_Symb, 0, _x1+Dpi(10), Y, CORNER_LEFT_UPPER, StringSubstr(_Symb, StringLen(Prefix), 6)+":", sFontType, FONTSIZE, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, _Symb);
+   LabelCreate(0, OBJPREFIX+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, StringSubstr(_Symb, StringLen(Prefix), 6)+":", sFontType, FONTSIZE, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, _Symb);
+   xx+=115;
 //---
 //--
-   if(sig_SingleMA(i) == 1)
+   if(useSingleMA)
      {
-      if(useSingleMA)
-         countb++;
-      ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
-      LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(125), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_SingleMA(i) == -1)
+      if(sig_SingleMA(i) == 1)
         {
          if(useSingleMA)
-            counts++;
+            countb++;
          ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
-         LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(125), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
-
+         LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         xx+=50;
         }
       else
-        {
-         if(useSingleMA)
-            countf++;
-         ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
+         if(sig_SingleMA(i) == -1)
+           {
+            if(useSingleMA)
+               counts++;
+            ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
+            LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            xx+=50;
+           }
+         else
+           {
+            if(useSingleMA)
+               countf++;
+            ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
 
-         LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(125), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-
-        }
-//--
-   if(sig_DoubleMA(i) == 1)
-     {
-      if(useDoubleMA)
-         countb++;
-      ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-      LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(175), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
+            LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            xx+=50;
+           }
      }
-   else
-      if(sig_DoubleMA(i) == -1)
+//--
+   if(useDoubleMA)
+     {
+      if(sig_DoubleMA(i) == 1)
         {
          if(useDoubleMA)
-            counts++;
+            countb++;
          ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-         LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(175), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
-
+         LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         xx+=50;
         }
       else
-        {
-         if(useDoubleMA)
-            countf++;
-         ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-         LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(175), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-
-        }
+         if(sig_DoubleMA(i) == -1)
+           {
+            if(useDoubleMA)
+               counts++;
+            ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
+            LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            xx+=50;
+           }
+         else
+           {
+            if(useDoubleMA)
+               countf++;
+            ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
+            LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            xx+=50;
+           }
+     }
 
 //--
-   if(sig_STO(i) == 1)
+   if(useMacd)
      {
-      if(useSto)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_STO(i) == -1)
+      if(sig_STO(i) == 1)
         {
          if(useSto)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useSto)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(225), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_STO(i) == -1)
+           {
+            if(useSto)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
+           }
+         else
+           {
+            if(useSto)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
+           }
+      xx+=50;
+     }
 
 //--
-   if(sig_MACD(i) == 1)
+   if(useMacd)
      {
-      if(useMacd)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_MACD(i) == -1)
+      if(sig_MACD(i) == 1)
         {
          if(useMacd)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
+
       else
-        {
-         if(useMacd)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(275), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_MACD(i) == -1)
+           {
+            if(useMacd)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
+           }
+         else
+           {
+            if(useMacd)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
-//--
-   if(sig_ADX(i) == 1)
-     {
-      if(useAdx)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
+           }
+      xx+=50;
      }
-   else
-      if(sig_ADX(i) == -1)
+//--
+   if(useAdx)
+     {
+      if(sig_ADX(i) == 1)
         {
          if(useAdx)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useAdx)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(325), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_ADX(i) == -1)
+           {
+            if(useAdx)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
+           }
+         else
+           {
+            if(useAdx)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+
+           }
+      xx+=50;
+     }
 
 //--
-   if(sig_ATR(i) == 1)
+   if(useAtr)
      {
-      if(useAtr)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_ATR(i) == -1)
+      if(sig_ATR(i) == 1)
         {
          if(useAtr)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useAtr)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(375), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_ATR(i) == -1)
+           {
+            if(useAtr)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
+           }
+         else
+           {
+            if(useAtr)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+
+           }
+      xx+=50;
+     }
 
 //--
-   if(sig_RSI(i) == 1)
+   if(useRSI)
      {
-      if(useRSI)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
-
-     }
-   else
-      if(sig_RSI(i) == -1)
+      if(sig_RSI(i) == 1)
         {
          if(useRSI)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
 
         }
       else
-        {
-         if(useRSI)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(425), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_RSI(i) == -1)
+           {
+            if(useRSI)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
+           }
+         else
+           {
+            if(useRSI)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+           }
+      xx+=50;
+     }
 
 //--
-   if(sig_BB(i) == 1)
+   if(useBB)
      {
-      if(useBB)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
-     }
-   else
-      if(sig_BB(i) == -1)
+      if(sig_BB(i) == 1)
         {
          if(useBB)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useBB)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(475), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_BB(i) == -1)
+           {
+            if(useBB)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
-//--
-   if(sig_ICHI(i) == 1)
-     {
-      if(useIchi)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+           }
+         else
+           {
+            if(useBB)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
+           }
+      xx+=50;
      }
-   else
-      if(sig_ICHI(i) == -1)
+//--
+   if(useIchi)
+     {
+      if(sig_ICHI(i) == 1)
         {
          if(useIchi)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useIchi)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(525), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+         if(sig_ICHI(i) == -1)
+           {
+            if(useIchi)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-        }
-//--
-   if(sig_Supertrend(i) == 1)
-     {
-      if(useSuperTrend)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+           }
+         else
+           {
+            if(useIchi)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
+           }
+      xx+=50;
      }
-   else
-      if(sig_Supertrend(i) == -1)
+//--
+   if(useSuperTrend)
+     {
+      if(sig_Supertrend(i) == 1)
         {
          if(useSuperTrend)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useSuperTrend)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(575), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-        }
+         if(sig_Supertrend(i) == -1)
+           {
+            if(useSuperTrend)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
-//--
-   if(sig_SAR(i) == 1)
-     {
-      if(useSAR)
-         countb++;
-      LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-
+           }
+         else
+           {
+            if(useSuperTrend)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+           }
+      xx+=50;
      }
-   else
-      if(sig_SAR(i) == -1)
+//--
+   if(useSAR)
+     {
+      if(sig_SAR(i) == 1)
         {
          if(useSAR)
-            counts++;
-         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            countb++;
+         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
-        {
-         if(useSAR)
-            countf++;
-         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(625), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-        }
+         if(sig_SAR(i) == -1)
+           {
+            if(useSAR)
+               counts++;
+            LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+
+           }
+         else
+           {
+            if(useSAR)
+               countf++;
+            LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+           }
+      xx+=75;
+     }
 
    double perc_b = (countb/(countb+countf+counts))*100;
    double perc_s = (counts/(countb+countf+counts))*100;
 //--
    if(perc_b > perc_s)
      {
-      LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
-
+      LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
+      xx+=20;
      }
    else
       if(perc_b < perc_s)
         {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
+         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
+         xx+=20;
         }
       else
         {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(700), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-
+         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         xx+=20;
         }
+
    bool buy = false;
    bool sell = false;
    bool close = false;
    if(perc_b == 100)
      {
       buy = true;
-      ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(720), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+      ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
       ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
+      xx+=100;
      }
    else
       if(perc_s == 100)
         {
          sell = true;
-         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(720), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
+         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
          ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
+         xx+=100;
         }
       else
          if(perc_b > perc_s && perc_b < level_To_Close)
@@ -1783,8 +1867,8 @@ void CreateSymbGUI(int i, int Y)
                Positions[i].GroupCloseAll(30);
             ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
 
-            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(820), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-
+            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+            xx+=100;
            }
          else
             if(perc_b < perc_s && perc_s < level_To_Close)
@@ -1793,8 +1877,8 @@ void CreateSymbGUI(int i, int Y)
                if(closeWithPercentage)
                   Positions[i].GroupCloseAll(30);
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
-               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(820), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-
+               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+               xx+=100;
               }
             else
               {
@@ -1811,11 +1895,11 @@ void CreateSymbGUI(int i, int Y)
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
          if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-            return;
+            MessageBox("error in geting SAR indicato data for sl");
       if(sltype == 2)
          ArraySetAsSeries(temp1, true);
       if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-         return;
+         MessageBox("error in geting supertrend indicato data for sl");
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Ask()-STOPLOSS*tools[i].Pip();
@@ -1851,6 +1935,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()+tp1*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()+tp1*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
                         if(tp2 > 0)
@@ -1858,6 +1946,10 @@ void CreateSymbGUI(int i, int Y)
                            if(tpType == RISK_REWARD)
                              {
                               tp = tools[i].Bid()+tp2*slpip;
+                             }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()+tp2*tools[i].Pip();
                              }
                            trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
@@ -1867,6 +1959,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()+tp3*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()+tp3*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
                         if(tp4 > 0)
@@ -1874,6 +1970,10 @@ void CreateSymbGUI(int i, int Y)
                            if(tpType == RISK_REWARD)
                              {
                               tp = tools[i].Bid()+tp4*slpip;
+                             }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()+tp4*tools[i].Pip();
                              }
                            trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
@@ -1883,6 +1983,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()+tp5*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()+tp5*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
 
@@ -1891,8 +1995,9 @@ void CreateSymbGUI(int i, int Y)
               }
            }
         }
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(950), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1020), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      xx+=70;
+      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
       cc0 = _Symb+" BUY SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
@@ -1904,11 +2009,11 @@ void CreateSymbGUI(int i, int Y)
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
          if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-            return;
-      ArraySetAsSeries(temp1, true);
+            MessageBox("error in geting SAR indicato data for sl");
       if(sltype == 2)
-         if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-            return;
+         ArraySetAsSeries(temp1, true);
+      if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
+         MessageBox("error in geting supertrend indicato data for sl");
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Bid()+STOPLOSS*tools[i].Pip();
@@ -1944,6 +2049,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()-tp1*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()-tp1*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
                         if(tp2 > 0)
@@ -1951,6 +2060,10 @@ void CreateSymbGUI(int i, int Y)
                            if(tpType == RISK_REWARD)
                              {
                               tp = tools[i].Bid()-tp2*slpip;
+                             }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()-tp2*tools[i].Pip();
                              }
                            trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
@@ -1960,6 +2073,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()-tp3*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()-tp3*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
                         if(tp4 > 0)
@@ -1968,6 +2085,10 @@ void CreateSymbGUI(int i, int Y)
                              {
                               tp = tools[i].Bid()-tp4*slpip;
                              }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()-tp4*tools[i].Pip();
+                             }
                            trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
                         if(tp5 > 0)
@@ -1975,6 +2096,10 @@ void CreateSymbGUI(int i, int Y)
                            if(tpType == RISK_REWARD)
                              {
                               tp = tools[i].Bid()-tp5*slpip;
+                             }
+                           if(tpType == PIPS)
+                             {
+                              tp = tools[i].Bid()-tp5*tools[i].Pip();
                              }
                            trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                           }
@@ -1985,8 +2110,9 @@ void CreateSymbGUI(int i, int Y)
            }
         }
       cc0 = _Symb+" SELL SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(950), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(1020), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+      xx+=50;
+      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
 
       signal[i] = true;
      }
@@ -2432,92 +2558,9 @@ bool SymbolFind(const string _Symb, int mode)
    return(result);
   }
 
-//+------------------------------------------------------------------+
-//| Symbols                                                          |
-//+------------------------------------------------------------------+
-string Symbols[] =
-  {
-//---
-   "AUDCAD",
-   "AUDCHF",
-   "AUDJPY",
-   "AUDNZD",
-   "AUDUSD",
-//---
-   "CADCHF",
-   "CADJPY",
-   "CHFJPY",
-//---
-   "EURAUD",
-   "EURCAD",
-   "EURCHF",
-   "EURGBP",
-   "EURJPY",
-   "EURNZD",
-   "EURUSD",
-//---
-   "GBPAUD",
-   "GBPCAD",
-   "GBPCHF",
-   "GBPNZD",
-   "GBPUSD",
-   "GBPJPY",
-//---
-   "NZDCHF",
-   "NZDCAD",
-   "NZDJPY",
-   "NZDUSD",
-//---
-   "USDCAD",
-   "USDCHF",
-   "USDJPY"
-  };
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| SetFull                                                          |
-//+------------------------------------------------------------------+
-void SetFull()
-  {
-//---
-   ArrayResize(UsedSymbols, 28, 0);
-//---
-   UsedSymbols[0] = "AUDCAD";
-   UsedSymbols[1] = "AUDCHF";
-   UsedSymbols[2] = "AUDJPY";
-   UsedSymbols[3] = "AUDNZD";
-   UsedSymbols[4] = "AUDUSD";
-//---
-   UsedSymbols[5] = "CADCHF";
-   UsedSymbols[6] = "CADJPY";
-   UsedSymbols[7] = "CHFJPY";
-//---
-   UsedSymbols[8] = "EURAUD";
-   UsedSymbols[9] = "EURCAD";
-   UsedSymbols[10] = "EURCHF";
-   UsedSymbols[11] = "EURGBP";
-   UsedSymbols[12] = "EURJPY";
-   UsedSymbols[13] = "EURNZD";
-   UsedSymbols[14] = "EURUSD";
-//---
-   UsedSymbols[15] = "GBPAUD";
-   UsedSymbols[16] = "GBPCAD";
-   UsedSymbols[17] = "GBPCHF";
-//---
-   UsedSymbols[18] = "GBPNZD";
-   UsedSymbols[19] = "GBPUSD";
-   UsedSymbols[20] = "GBPJPY";
-//---
-   UsedSymbols[21] = "NZDCHF";
-   UsedSymbols[22] = "NZDCAD";
-   UsedSymbols[23] = "NZDJPY";
-   UsedSymbols[24] = "NZDUSD";
-//---
-   UsedSymbols[25] = "USDCAD";
-   UsedSymbols[26] = "USDCHF";
-   UsedSymbols[27] = "USDJPY";
-//---
-  }
+
 //+------------------------------------------------------------------+
 //| SetStatus                                                        |
 //+------------------------------------------------------------------+
