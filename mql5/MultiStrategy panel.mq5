@@ -126,11 +126,12 @@ input string comment ="FM Stallions";
 input string set2 = "=====================  RISK Management ===============";
 input LOT_TYPE LotType = RISK;
 input double Fixed_Lot = 0.1;
-input double Risk = 2; // RIAK PRECENTAGE
+input double Risk = 2; // RISK PRECENTAGE
 input double lot_Per = 1; // LOT PER 1000
 input string set3       ="======================Closing =====================";
 input bool  closeWithPercentage    = true;
 input double level_To_Close = 60; // Level to close
+input string set5  ="======================Partial close Settings =============";
 input bool  close_With_levels = true;
 input double close_level1    = 20;
 input double close_Precentage1=10;
@@ -142,7 +143,7 @@ input double close_level4    = 60;
 input double close_Precentage4=10;
 input double close_level5    = 80;
 input double close_Precentage5=10;
-input string set5  ="======================+Precentage trailinig =============";
+input string set6  ="======================+Precentage trailinig =============";
 input bool use_precentage_trailing=false;
 input double SL1  =10;
 input double profit_level1=30;
@@ -1903,7 +1904,7 @@ void CreateSymbGUI(int i, int Y)
                ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
                xx+=230;
               }
-   CalcLot(i);
+
    PartialClosing(BuyPositions[i],SellPositions[i],tools[i],buyPartial[i],sellPartial[i]);
    if(buy)
      {
@@ -1930,7 +1931,7 @@ void CreateSymbGUI(int i, int Y)
         {
          tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
         }
-
+      CalcLot(i,slpip/tools[i].Pip());
       if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
@@ -2044,7 +2045,7 @@ void CreateSymbGUI(int i, int Y)
         {
          tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
         }
-
+      CalcLot(i,slpip/tools[i].Pip());
       if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
@@ -3211,10 +3212,20 @@ int sig_RSI(int index)
    ArraySetAsSeries(temp1, true);
    if(CopyBuffer(rsi_handle[index], 0, 0, 10, temp1) <= 0)
       return res;
-   if(temp1[0] >= rsi_level && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
-      res = 1;
-   if(temp1[0] <= rsi_level && temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
-      res = -1;
+   if(useRSI==increase_Decrease)
+     {
+      if(temp1[0] >= rsi_level && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
+         res = 1;
+      if(temp1[0] <= rsi_level && temp1[0] < temp1[1] && temp1[1] < temp1[2] && temp1[2] < temp1[3])
+         res = -1;
+     }
+   else
+     {
+      if(temp1[0] >= rsi_level )
+         res = 1;
+      if(temp1[0] <= rsi_level )
+         res = -1;
+     }
    return res;
   }
 
@@ -3413,12 +3424,12 @@ int sig_ICHI(int index)
 
 
 //+------------------------------------------------------------------+
-void CalcLot(int i)
+void CalcLot(int i,double sls)
   {
 
    if(LotType == RISK)
      {
-      double sl = STOPLOSS;
+      double sl = sls;
 
       Lot = tools[i].NormalizeVolume((AccountInfoDouble(ACCOUNT_EQUITY)*Risk/1000)/sl);
       if(Lot < SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN))
