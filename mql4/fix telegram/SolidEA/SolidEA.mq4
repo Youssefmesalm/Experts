@@ -586,7 +586,7 @@ datetime startTime=0;
 datetime lastorder_close=0;
 string PriceRowLeftArr[]= {"Bid","Low","Open","Pivot"};
 string PriceRowRightArr[]= {"Ask","High","Open","Pivot"};
-double lastSupport,lastResistance;
+double lastSupport[],lastResistance[];
 //news
 //--- Vars and arrays
 string xmlFileName;
@@ -654,23 +654,23 @@ CMyBot bot;
 int getme_result;
 double added_lot=0;
 double Px = 0, Sx = 0, Rx = 0, S1x = 0, R1x = 0, S2x = 0, R2x = 0, S3x = 0, R3x = 0;
-datetime date0 = D'2022.04.06 00:00';
+datetime date0 = D'2022.04.16 00:00';
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-   //if(AccountNumber()!=MT4account)
-   //  {
-   //   Alert("This Account Not Allowed To use the Expert , Please Contact the Owner");
-   //   ExpertRemove();
-   //  }
-   //if(MyPass!=EAPass)
-   //  {
-   //   Alert("Wrong Password  , Please Try Again or Contact the Owner");
-   //   ExpertRemove();
-   //  }
+//if(AccountNumber()!=MT4account)
+//  {
+//   Alert("This Account Not Allowed To use the Expert , Please Contact the Owner");
+//   ExpertRemove();
+//  }
+//if(MyPass!=EAPass)
+//  {
+//   Alert("Wrong Password  , Please Try Again or Contact the Owner");
+//   ExpertRemove();
+//  }
    added_lot=SubLots-Lots;
 //--- check for DLL
    if(!TerminalInfoInteger(TERMINAL_DLLS_ALLOWED))
@@ -895,6 +895,8 @@ int OnInit()
       ArrayResize(exit1,size,size);
       ArrayResize(exit2,size,size);
       ArrayResize(Hist,size,size);
+      ArrayResize(lastSupport,size,size);
+      ArrayResize(lastResistance,size,size);
       for(int i = 0; i < size; i++)
         {
          Symbols[i] = Prefix+Symbols[i]+Suffix;
@@ -922,6 +924,8 @@ int OnInit()
          Signal4[i]=0;
          exit1[i]=0;
          exit2[i]=0;
+         lastResistance[i]=0;
+         lastSupport[i]=0;
         }
 
 
@@ -1163,6 +1167,7 @@ void OnTick()
    if(isExpired())
      {
       ExpertRemove();
+      return;
      }
    Telegram();
 
@@ -2394,7 +2399,8 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
    string s3=i3==0?"":Get_Indicator(i3)+" "+Get_Timeframe(tf3)+" ";
    string s4=i4==0?"":Get_Indicator(i4)+" "+Get_Timeframe(tf4)+" ";
    int n=0;
-   string c=commentselect == AutoComment?s1+s2+s3+s4: Cmnt;
+   string s=Strategy==single?"(SG)":Strategy==seperate?"(SEP)":"(JT)";
+   string c=commentselect == AutoComment?s1+s2+s3+s4+s: Cmnt;
    if(No_Trades_per_signal==0)
       n=1;
    else
@@ -2402,6 +2408,7 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
         {
          n=No_Trades_per_signal;
         }
+   bool open=false;
 
 // =====================================Buy =====================================
    if(Execution_Mode == instan)
@@ -2413,18 +2420,22 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          if(usemode==Auto&&!MaxBuyExceed)
            {
             trades[i].Position(TYPE_POSITION_BUY, volume, lastsl, lasttp, SLTP_PRICE, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen&&open)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       else
-         if(sendTradesignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Buy, " +s1+s2+s3+s4+" @ "+(string)tools[i].Ask()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
    if(Execution_Mode == limit&&!MaxBuyExceed)
      {
@@ -2437,18 +2448,22 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          if(usemode==Auto)
            {
             trades[i].Order(TYPE_ORDER_BUYLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PRICE, 0, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen&&open)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       else
-         if(sendTradesignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == stop&&!MaxBuyExceed)
@@ -2462,18 +2477,22 @@ void Buy(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEFR
          if(usemode==Auto)
            {
             trades[i].Order(TYPE_ORDER_BUYSTOP, volume, openPrice, lastsl, lasttp, SLTP_PRICE, 0, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen&&open)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       else
-         if(sendTradesignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", BuyStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
      }
 
 
@@ -2512,7 +2531,7 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          n=No_Trades_per_signal;
         }
    string c=commentselect == AutoComment?s1+s2+s3+s4: Cmnt;
-
+   bool open=false;
    if(Execution_Mode == instan)
      {
       for(int x=0; x<n; x++)
@@ -2522,24 +2541,27 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          if(usemode==Auto&&!MaxSellExceed)
            {
             trades[i].Position(TYPE_POSITION_SELL, volume, lastsl, lasttp, SLTP_PRICE, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+DoubleToString(tools[i].Bid(),(int)tools[i].Digits())+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
       else
-         if(sendTradesignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+(string)tools[i].Bid()+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+DoubleToString(tools[i].Bid(),(int)tools[i].Digits())+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+DoubleToString(tools[i].Bid(),(int)tools[i].Digits())+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == limit&&!MaxSellExceed)
      {
-      double openPrice = tools[i]
-                         .Ask()+orderdistance*tools[i].Pip();
+      double openPrice = tools[i].Ask()+orderdistance*tools[i].Pip();
 
       for(int x=0; x<n; x++)
         {
@@ -2548,15 +2570,19 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          if(usemode==Auto)
            {
             trades[i].Order(TYPE_ORDER_SELLLIMIT, volume, openPrice, lastsl, lasttp, SLTP_PRICE, 0, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
+      else
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
       if(sendTradesignal)
          cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
@@ -2573,15 +2599,19 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
          if(usemode==Auto)
            {
             trades[i].Order(TYPE_ORDER_SELLSTOP, volume, openPrice, lastsl, lasttp, SLTP_PRICE, 0, 30, c);
-            if(SendOpen)
-               cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+            open=true;
            }
         }
-      if(Strategy==single)
+      if(SendOpen)
         {
-         if(sendIndicatorSignal)
-            cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
+      else
+         if(Strategy==single)
+           {
+            if(sendIndicatorSignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+           }
       if(sendTradesignal)
          cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
@@ -4129,35 +4159,35 @@ void snrfibo(int i)
    S3x=S3;
    if(sendsupportandResisitance)
      {
-      if(tools[i].Bid()>R1&&tools[i].Bid()<R1+3*tools[i].Pip()&&tools[i].Bid()<R2&&lastResistance!=R1)
+      if(tools[i].Bid()>R1&&tools[i].Bid()<R1+3*tools[i].Pip()&&tools[i].Bid()<R2&&lastResistance[i]!=R1)
         {
-         lastResistance=R1;
+         lastResistance[i]=R1;
          cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R1,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
-      if(tools[i].Bid()>R2&&tools[i].Bid()<R2+3*tools[i].Pip()&&tools[i].Bid()<R3&&lastResistance!=R2)
+      if(tools[i].Bid()>R2&&tools[i].Bid()<R2+3*tools[i].Pip()&&tools[i].Bid()<R3&&lastResistance[i]!=R2)
         {
-         lastResistance=R2;
+         lastResistance[i]=R2;
          cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R2,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
-      if(tools[i].Bid()>=R3&&tools[i].Bid()<R3+3*tools[i].Pip()&&lastResistance!=R3)
+      if(tools[i].Bid()>=R3&&tools[i].Bid()<R3+3*tools[i].Pip()&&lastResistance[i]!=R3)
         {
-         lastResistance=R3;
+         lastResistance[i]=R3;
          cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R3,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
-      if(tools[i].Bid()<S1&&tools[i].Bid()>S1-3*tools[i].Pip()&&tools[i].Bid()>S2&&lastResistance!=S1)
+      if(tools[i].Bid()<S1&&tools[i].Bid()>S1-3*tools[i].Pip()&&tools[i].Bid()>S2&&lastResistance[i]!=S1)
         {
-         lastResistance=S1;
+         lastResistance[i]=S1;
          cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S1,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
-      if(tools[i].Bid()<S2&&tools[i].Bid()>S2-3*tools[i].Pip()&&tools[i].Bid()>S3&&lastResistance!=S2)
+      if(tools[i].Bid()<S2&&tools[i].Bid()>S2-3*tools[i].Pip()&&tools[i].Bid()>S3&&lastResistance[i]!=S2)
         {
-         lastResistance=S2;
+         lastResistance[i]=S2;
 
          cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S2,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
-      if(tools[i].Bid()<=S3&&tools[i].Bid()>R3-3*tools[i].Pip()&&lastResistance!=S3)
+      if(tools[i].Bid()<=S3&&tools[i].Bid()>R3-3*tools[i].Pip()&&lastResistance[i]!=S3)
         {
-         lastResistance=S3;
+         lastResistance[i]=S3;
          cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S3,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
      }
