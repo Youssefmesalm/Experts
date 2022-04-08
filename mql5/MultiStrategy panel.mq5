@@ -25,7 +25,7 @@
 #define ExpertName         "MultiStrategy Panel"
 #define OBJPREFIX          "YM - "
 //---
-int CLIENT_BG_WIDTH  = 460;
+int CLIENT_BG_WIDTH  = 450;
 #define INDENT_TOP         15
 //---
 #define OPENPRICE          0
@@ -36,6 +36,22 @@ int CLIENT_BG_WIDTH  = 460;
 #define KEY_UP             38
 #define KEY_DOWN           40
 
+#define AUD_BUFFER_INDEX 0
+#define CAD_BUFFER_INDEX 1
+#define CHF_BUFFER_INDEX 2
+#define EUR_BUFFER_INDEX 3
+#define GBP_BUFFER_INDEX 4
+#define JPY_BUFFER_INDEX 5
+#define NZD_BUFFER_INDEX 6
+#define USD_BUFFER_INDEX 7
+
+#define CURRENCIES_COUNT 8
+
+// Map symbols name to their indexes
+string g_symbols[CURRENCIES_COUNT] = {"AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "NZD", "USD"};
+
+// CSM indicator handle
+int g_handle = INVALID_HANDLE;
 //--- enumeration
 enum TRADE_TYPE
   {
@@ -155,7 +171,21 @@ input double SL4 = 0;
 input double profit_level4 = 0;
 input double SL5 = 0;
 input double profit_level5 =0;
-
+input string set7=      "=======================Filters=============================";
+input bool use_CMS_Filters=  true;  // Use CMS Filtering
+input string set8         = "======================CMS Indicator Settings ================";
+input ENUM_TIMEFRAMES period = PERIOD_CURRENT;// Period for CMS
+input int latency             = 0;// Latency (Refresh delay in seconds) 0 means every tick
+input int  log_level          = 3; // Log level (Trace = 0, Info = 1, Warning = 2, Error = 3, Critical = 4)
+input int  shift1              = 1;// Candles for calculation
+input int  shift0             = 0;// Candles shift from the beginning
+input bool use_MA             =false; // Use Moving Average smoothing
+input int MA_P                =0;// Moving Average Period for smoothing
+input int MA_M                =0;// Moving Average Method for smoothing (MODE_SMA = 0 (Simple averaging), MODE_EMA = 1 (Exponential averaging), MODE_SMMA = 2 (Smoothed averaging), MODE_LWMA = 3 (Linear-weighted averaging))
+input bool Auto_Suffix        =true ; // Auto detect symbols suffix ("Use suffix" should be disabled)
+input bool use_Suffix         =false; // Use suffix
+input int Algo_Type           =0;// CSM algorithm type (RSI = 0, CCI = 1, RVI = 2, MFI = 3, Stochastic = 4, DeMarket = 5, Momentum = 6)
+input string Algo_Params      ="";// CSM algorithm params (Empty string means default params)
 
 
 input string p00 = "<----------------->PRELIMINARIES<------------------->"; //******* PRELIMINARIES *******
@@ -415,7 +445,35 @@ int OnInit()
       //--- check token
       getme_result = bot.GetMe();
      }
+   if(use_CMS_Filters)
+     {
+      // Initializing of CMS indicator
+      g_handle = iCustom(
+                    NULL,       // Symbol for CMS
+                    period,  // Period for CMS
+                    "Market\\Currency Strength Meter Pro for EA MT5",     // Indicator path
+                    latency,          // Latency (Refresh delay in seconds) 0 means every tick
+                    log_level,          // Log level (Trace = 0, Info = 1, Warning = 2, Error = 3, Critical = 4)
+                    shift1,          // Candles for calculation
+                    shift0,          // Candles shift from the beginning
+                    use_MA,      // Use Moving Average smoothing
+                    MA_P,          // Moving Average Period for smoothing
+                    MA_M,          // Moving Average Method for smoothing (MODE_SMA = 0 (Simple averaging), MODE_EMA = 1 (Exponential averaging), MODE_SMMA = 2 (Smoothed averaging), MODE_LWMA = 3 (Linear-weighted averaging))
+                    Auto_Suffix,       // Auto detect symbols suffix ("Use suffix" should be disabled)
+                    use_Suffix,      // Use suffix
+                    Suffix,         // Symbols Suffix
+                    Algo_Type,          // CSM algorithm type (RSI = 0, CCI = 1, RVI = 2, MFI = 3, Stochastic = 4, DeMarket = 5, Momentum = 6)
+                    Algo_Params          // CSM algorithm params (Empty string means default params)
+                 );
 
+      // Checking that CSM indicator was initialised
+      if(g_handle == INVALID_HANDLE)
+        {
+         printf("Error creating CSM indicator");
+         return INIT_FAILED;
+        }
+
+     }
 //--- Disclaimer
    if(!GlobalVariableCheck(OBJPREFIX+"Disclaimer") || GlobalVariableGet(OBJPREFIX+"Disclaimer") != 1)
      {
@@ -613,7 +671,7 @@ int OnInit()
             return(-1);
            }
 
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useDoubleMA)
@@ -633,7 +691,7 @@ int OnInit()
             Print("The iMA object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
 
         }
       //---
@@ -645,8 +703,7 @@ int OnInit()
             Print("The iCustom::Supertrend object is not created: Error", GetLastError());
             return(-1);
            }
-         if(useSuperTrend)
-            CLIENT_BG_WIDTH+=50;
+
         }
 
       //---
@@ -658,7 +715,7 @@ int OnInit()
             Print("The iStochastic object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useMacd)
@@ -669,7 +726,7 @@ int OnInit()
             Print("The iMACD object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useAdx)
@@ -680,7 +737,7 @@ int OnInit()
             Print("The iADX object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useAtr)
@@ -691,7 +748,7 @@ int OnInit()
             Print("The iATR object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useRSI)
@@ -702,7 +759,7 @@ int OnInit()
             Print("The iRSI object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
+
         }
       //---
       if(useBB)
@@ -713,7 +770,6 @@ int OnInit()
             Print("The iBands object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
         }
 
       //---
@@ -725,7 +781,6 @@ int OnInit()
             Print("The iIchimoku object is not created: Error", GetLastError());
             return(-1);
            }
-         CLIENT_BG_WIDTH+=50;
         }
       //---
       if(useSAR||sltype==1)
@@ -736,8 +791,7 @@ int OnInit()
             Print("The iSAR object is not created: Error", GetLastError());
             return(-1);
            }
-         if(useSAR)
-            CLIENT_BG_WIDTH+=50;
+
         }
       string sym = Prefix+aSymbols[i]+Suffix;
       trades[i] = new CExecute(sym, magic_Number);
@@ -749,6 +803,69 @@ int OnInit()
       buyPartial[i]=0;
      }
 
+   if(useSingleMA)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useDoubleMA)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+
+     }
+//---
+   if(useSuperTrend||sltype==2||useAtr)
+     {
+
+      if(useSuperTrend)
+         CLIENT_BG_WIDTH+=50;
+     }
+
+//---
+   if(useSto)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useMacd)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useAdx)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useAtr)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useRSI)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+//---
+   if(useBB)
+     {
+
+      CLIENT_BG_WIDTH+=50;
+     }
+
+//---
+   if(useIchi)
+      CLIENT_BG_WIDTH+=50;
+
+   if(useSAR)
+      CLIENT_BG_WIDTH+=50;
 
 //--- Init ChartSize
    Chart_XSize = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS);
@@ -923,6 +1040,12 @@ void OnTick()
   {
 
 //---
+   double currenciesStrength[CURRENCIES_COUNT];
+   ArrayInitialize(currenciesStrength, 0);
+
+// Getting currencies strength for all 8 currencies to the currenciesStrength buffer
+   fetchCurrenciesStrength(currenciesStrength)
+
    if(ShowTradePanel)
      {
       //---
@@ -1522,6 +1645,7 @@ void CreateSymbGUI(int i, int Y)
   {
 //---
    string _Symb = Prefix+aSymbols[i]+Suffix;
+   string Base =SymbolInfoString(_Symb,SYMBOL_CURRENCY_BASE);
    color startcolor = FirstRun?clrNONE: COLOR_FONT;
    double countb = 0,
           counts = 0,
@@ -1912,12 +2036,12 @@ void CreateSymbGUI(int i, int Y)
              temp1[];
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
-         if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
+         if(CopyBuffer(sar_handle[i], 0, 0, 1, temp) <= 0)
             Alert("error in geting SAR indicato data for sl");
+      ArraySetAsSeries(temp1, true);
       if(sltype == 2)
-         ArraySetAsSeries(temp1, true);
-      if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-         Alert("error in geting supertrend indicato data for sl");
+         if(CopyBuffer(st_handle[i], 2, 0, 1, temp1) <= 0)
+            Alert("error in geting supertrend indicato data for sl");
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Ask()-STOPLOSS*tools[i].Pip();
@@ -2026,12 +2150,12 @@ void CreateSymbGUI(int i, int Y)
              temp1[];
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
-         if(CopyBuffer(sar_handle[i], 0, 0, 10, temp) <= 0)
-            MessageBox("error in geting SAR indicato data for sl");
+         if(CopyBuffer(sar_handle[i], 0, 0, 1, temp) <= 0)
+            MessageBox("error in geting SAR indicator data for sl");
+      ArraySetAsSeries(temp1, true);
       if(sltype == 2)
-         ArraySetAsSeries(temp1, true);
-      if(CopyBuffer(st_handle[i], 2, 0, 10, temp1) <= 0)
-         MessageBox("error in geting supertrend indicato data for sl");
+         if(CopyBuffer(st_handle[i], 2, 0, 1, temp1) <= 0)
+            MessageBox("error in geting supertrend indicator data for sl");
       double sl = 0;
       if(sltype == 0)
          sl = tools[i].Bid()+STOPLOSS*tools[i].Pip();
@@ -3212,7 +3336,7 @@ int sig_RSI(int index)
    ArraySetAsSeries(temp1, true);
    if(CopyBuffer(rsi_handle[index], 0, 0, 10, temp1) <= 0)
       return res;
-   if(useRSI==increase_Decrease)
+   if(RsiType==increase_Decrease)
      {
       if(temp1[0] >= rsi_level && temp1[0] > temp1[1] && temp1[1] > temp1[2] && temp1[2] > temp1[3])
          res = 1;
@@ -3221,9 +3345,9 @@ int sig_RSI(int index)
      }
    else
      {
-      if(temp1[0] >= rsi_level )
+      if(temp1[0] >= rsi_level)
          res = 1;
-      if(temp1[0] <= rsi_level )
+      if(temp1[0] <= rsi_level)
          res = -1;
      }
    return res;
