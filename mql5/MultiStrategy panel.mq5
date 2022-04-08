@@ -395,6 +395,7 @@ int s_ma_handle[], d_fma_handle[], d_sma_handle[], st_handle[], storsi_handle[],
 int Ichi_handle[], rsiDiv_handle[], sar_handle[];
 datetime time0[];
 int buyPartial[],sellPartial[];
+double currenciesStrength[CURRENCIES_COUNT];
 string cc0 = "";
 bool signal[];
 CExecute * trades[];
@@ -472,6 +473,7 @@ int OnInit()
          printf("Error creating CSM indicator");
          return INIT_FAILED;
         }
+      CLIENT_BG_WIDTH+=200;
 
      }
 //--- Disclaimer
@@ -1040,11 +1042,11 @@ void OnTick()
   {
 
 //---
-   double currenciesStrength[CURRENCIES_COUNT];
+
    ArrayInitialize(currenciesStrength, 0);
 
 // Getting currencies strength for all 8 currencies to the currenciesStrength buffer
-   fetchCurrenciesStrength(currenciesStrength)
+   fetchCurrenciesStrength(currenciesStrength);
 
    if(ShowTradePanel)
      {
@@ -1480,7 +1482,7 @@ string Balance()
 void ObjectsCreateAll()
   {
 //---
-   int fr_y2 = Dpi(100);
+   int fr_y2 = Dpi(50);
 //---
    for(int i = 0; i < ArraySize(aSymbols); i++)
      {
@@ -1495,8 +1497,8 @@ void ObjectsCreateAll()
          fr_y2 += Dpi(17);
      }
 //---
-   int x = (Dpi(10));
-   int y = (20);
+   int x = Dpi(10);
+   int y = Dpi(20);
 //---
    int height = fr_y2+Dpi(3);
 //---
@@ -1608,6 +1610,16 @@ void ObjectsCreateAll()
       LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
+
+   if(use_CMS_Filters)
+     {
+      LabelCreate(0, OBJPREFIX+"base", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Base", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+      LabelCreate(0, OBJPREFIX+"quote", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Quote", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+      LabelCreate(0, OBJPREFIX+"CMS-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "CMS Pairs", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=100;
+     }
    LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    xxx+=50;
    LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
@@ -1645,7 +1657,8 @@ void CreateSymbGUI(int i, int Y)
   {
 //---
    string _Symb = Prefix+aSymbols[i]+Suffix;
-   string Base =SymbolInfoString(_Symb,SYMBOL_CURRENCY_BASE);
+   string Base =SymbolInfoString(aSymbols[i],SYMBOL_CURRENCY_BASE);
+   string Quote = StringSubstr(aSymbols[i],3,3);
    color startcolor = FirstRun?clrNONE: COLOR_FONT;
    double countb = 0,
           counts = 0,
@@ -1959,12 +1972,53 @@ void CreateSymbGUI(int i, int Y)
             LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
            }
       xx+=50;
-     }
 
+     }
+   xx+=10;
+   if(use_CMS_Filters)
+     {
+      int siz=ArraySize(g_symbols);
+      double f1=0,f2=0;
+      for(int z=0; z<siz; z++)
+        {
+         color c=currenciesStrength[z]>=60?clrLimeGreen:currenciesStrength[z]<=40?clrRed:clrYellow;
+         if(g_symbols[z]==Base)
+           {
+            LabelCreate(0, OBJPREFIX+"base"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+            xx+=50;
+            f1=currenciesStrength[z];
+           }
+
+         if(g_symbols[z]==Quote)
+           {
+            LabelCreate(0, OBJPREFIX+"quote"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+            xx+=10;
+            f2=currenciesStrength[z];
+           }
+
+        }
+      if(f1>=60&&f2<=40)
+        {
+         ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+         xx+=140;
+        }
+      else
+         if(f2>=60&&f1<=40)
+           {
+            ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+            xx+=140;
+           }
+         else
+           {
+            ObjectDelete(0,OBJPREFIX+"CMS"+" - "+_Symb);
+            xx+=140;
+           }
+
+     }
    double perc_b = (countb/(countb+countf+counts))*100;
    double perc_s = (counts/(countb+countf+counts))*100;
 //--
-   xx+=10;
+
    if(perc_b > perc_s)
      {
       LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
@@ -1981,6 +2035,7 @@ void CreateSymbGUI(int i, int Y)
          LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
          xx+=10;
         }
+
 
    bool buy = false;
    bool sell = false;
@@ -3827,5 +3882,84 @@ void Trailing_P()
 
         }
      }
+  }
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool fetchCurrenciesStrength(double& currencyStrength[])
+  {
+   for(int index = 0; index < CURRENCIES_COUNT; ++index)
+     {
+      double strength[1] = { EMPTY_VALUE };
+      // Copying currency strength data from CMS indicator to strength buffer
+      if(CopyBuffer(g_handle, index, 0, 1, strength) != 1)
+        {
+         Print("CopyBuffer from CSM failed, no data");
+         return false;
+        }
+
+      if(MathAbs(strength[0] - EMPTY_VALUE) < 0.0001)
+        {
+         Print("Currency strength is not ready yet (downloading historical data..)");
+         return false;
+        }
+
+      currencyStrength[index] = strength[0];
+     }
+
+   return true;
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool buildSymbolName(string firstInstrumentName, string secondInstrumentName, string suffix, string& symbolName)
+  {
+   string outTmp;
+   symbolName = firstInstrumentName + secondInstrumentName + suffix;
+   if(!SymbolInfoString(symbolName, SYMBOL_CURRENCY_BASE, outTmp))
+     {
+      symbolName = secondInstrumentName + firstInstrumentName + suffix;
+      if(!SymbolInfoString(symbolName, SYMBOL_CURRENCY_BASE, outTmp))
+        {
+         return false;
+        }
+     }
+
+   return true;
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int findFirstStrongCurrency(double& currencyStrength[])
+  {
+   for(int index = 0; index < ArraySize(currencyStrength); ++index)
+     {
+      if(currencyStrength[index] >= 60)
+        {
+         return index;
+        }
+     }
+
+   return -1;
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int findFirstWeakCurrency(double& currencyStrength[])
+  {
+
+   for(int index = 0; index < ArraySize(currencyStrength); ++index)
+     {
+      if(currencyStrength[index] <= 40)
+        {
+         return index;
+        }
+     }
+
+   return -1;
   }
 //+------------------------------------------------------------------+
