@@ -1186,6 +1186,7 @@ void OnTick()
             snrfibo(i);
          int mainSignal = 0;
          bool change=false;
+         int changeNum=-1;
          bool exitchange=false;
          if(indikator1 != off)
            {
@@ -1194,6 +1195,7 @@ void OnTick()
               {
                MasterSignal[i] = m;
                change=true;
+               changeNum=1;
               }
            }
          if(indikator2 != off)
@@ -1203,6 +1205,7 @@ void OnTick()
               {
                Signal2[i] = s2;
                change=true;
+               changeNum=2;
               }
            }
          if(indikator3 != off)
@@ -1212,6 +1215,7 @@ void OnTick()
               {
                Signal3[i] =s3;
                change=true;
+               changeNum=3;
               }
            }
          if(indikator4 != off)
@@ -1221,6 +1225,7 @@ void OnTick()
               {
                Signal4[i] = s4;
                change=true;
+               changeNum=4;
               }
            }
          if(indikator1x != off)
@@ -1247,27 +1252,27 @@ void OnTick()
             // =====================================Buy =====================================
             if(Trade_Direction == buyx || Trade_Direction == bothx)
               {
-               if(MasterSignal[i] > 0)
+               if(MasterSignal[i] >0&&changeNum==1)
                  {
                   Buy(i, comment1,indikator1,timeframe1);
                   mainSignal = 1;
                   change=false;
 
                  }
-               if(Signal2[i] > 0)
+               if(Signal2[i] > 0&&changeNum==2)
                  {
                   Buy(i, comment2,indikator2,timeframe2);
 
                   mainSignal = 1;
                   change=false;
                  }
-               if(Signal3[i] > 0)
+               if(Signal3[i] > 0&&changeNum==3)
                  {
                   Buy(i, comment3,indikator3,timeframe3);
                   mainSignal = 1;
                   change=false;
                  }
-               if(Signal4[i] > 0)
+               if(Signal4[i] > 0&&changeNum==4)
                  {
                   Buy(i, comment4,indikator4,timeframe4);
                   mainSignal = 1;
@@ -1278,25 +1283,25 @@ void OnTick()
             // ========================================Sell =================================
             if(Trade_Direction == sellx || Trade_Direction == bothx)
               {
-               if(MasterSignal[i] < 0)
+               if(MasterSignal[i] < 0&&changeNum==1)
                  {
                   Sell(i, comment1,indikator1,timeframe1);
                   mainSignal = -1;
                   change=false;
                  }
-               if(Signal2[i] < 0)
+               if(Signal2[i] < 0&&changeNum==2)
                  {
                   Sell(i, comment2,indikator2,timeframe2);
                   mainSignal = -1;
                   change=false;
                  }
-               if(Signal3[i] < 0)
+               if(Signal3[i] < 0&&changeNum==3)
                  {
                   Sell(i, comment3,indikator3,timeframe3);
                   mainSignal = -1;
                   change=false;
                  }
-               if(Signal4[i] < 0)
+               if(Signal4[i] < 0&&changeNum==4)
                  {
                   Sell(i, comment4,indikator4,timeframe4);
                   mainSignal = -1;
@@ -1312,19 +1317,19 @@ void OnTick()
             if(Trade_Direction == buyx || Trade_Direction == bothx)
               {
 
-               if(Signal2[i] > 0 && MasterSignal[i] > 0)
+               if(Signal2[i] > 0 && MasterSignal[i] > 0&&changeNum==2)
                  {
                   Buy(i, comment2,indikator1,timeframe1,indikator2,timeframe2);
                   mainSignal = 1;
                   change=false;
                  }
-               if(Signal3[i] > 0 && MasterSignal[i] > 0)
+               if(Signal3[i] > 0 && MasterSignal[i] > 0&&changeNum==3)
                  {
                   Buy(i, comment3,indikator1,timeframe1,indikator3,timeframe3);
                   mainSignal = 1;
                   change=false;
                  }
-               if(Signal4[i] > 0 && MasterSignal[i] > 0)
+               if(Signal4[i] > 0 && MasterSignal[i] > 0&&changeNum==4)
                  {
                   Buy(i, comment4,indikator1,timeframe1,indikator4,timeframe4);
                   mainSignal = 1;
@@ -1336,19 +1341,19 @@ void OnTick()
             if(Trade_Direction == sellx || Trade_Direction == bothx)
               {
 
-               if(Signal2[i] < 0 && MasterSignal[i] < 0)
+               if(Signal2[i] < 0 && MasterSignal[i] < 0&&changeNum==2)
                  {
                   Sell(i, comment2,indikator1,timeframe1,indikator2,timeframe2);
                   mainSignal = -1;
                   change=false;
                  }
-               if(Signal3[i] < 0 && MasterSignal[i] < 0)
+               if(Signal3[i] < 0 && MasterSignal[i] < 0&&changeNum==3)
                  {
                   Sell(i, comment3,indikator1,timeframe1,indikator3,timeframe3);
                   mainSignal = -1;
                   change=false;
                  }
-               if(Signal4[i] < 0 && MasterSignal[i] < 0)
+               if(Signal4[i] < 0 && MasterSignal[i] < 0&&changeNum==4)
                  {
                   Sell(i, comment4,indikator1,timeframe1,indikator4,timeframe4);
                   mainSignal = -1;
@@ -2530,7 +2535,8 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
         {
          n=No_Trades_per_signal;
         }
-   string c=commentselect == AutoComment?s1+s2+s3+s4: Cmnt;
+   string s=Strategy==single?"(SG)":Strategy==seperate?"(SEP)":"(JT)";
+   string c=commentselect == AutoComment?s1+s2+s3+s4+s: Cmnt;
    bool open=false;
    if(Execution_Mode == instan)
      {
