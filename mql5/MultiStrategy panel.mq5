@@ -20,12 +20,14 @@
 #include <Arrays\ArrayObj.mqh>
 #include  <YM\Execute\Execute.mqh>
 #include  <YM\Position\Position.mqh>
+#include  <YM\HistoryPosition\HistoryPosition.mqh>
+
 // defination
 #define  NL "\n"
 #define ExpertName         "MultiStrategy Panel"
 #define OBJPREFIX          "YM - "
 //---
-int CLIENT_BG_WIDTH  = 450;
+int CLIENT_BG_WIDTH  = 150;
 #define INDENT_TOP         15
 //---
 #define OPENPRICE          0
@@ -115,9 +117,26 @@ enum LOT_TYPE
    LOT_PER,
    RISK,
   };
+enum closetype
+  {
+   closeAll,
+   closePartial,
+   close
+  };
+  
+enum DYS_WEEK
+  {
+   Sunday = 0,
+   Monday = 1,
+   Tuesday = 2,
+   Wednesday,
+   Thursday = 4,
+   Friday = 5,
+   Saturday
+  };
+
 //--- User inputs
-input string Set= "                    <===================== General ==========================>";
-input ENUM_MODE SelectedMode = COMPACT; /*Dashboard (Size)*/
+input string Set0= "                    <===================== General ==========================>";
 input string Prefix = ""; //Symbol Prefix
 input string Suffix = ""; //Symbol Suffix
 input string TradeSymbols = "AUDCHF;AUDJPY;AUDUSD;AUDCAD;CADJPY;CADCHF;CHFJPY;EURAUD;EURCAD;EURCHF;EURGBP;EURUSD;EURJPY;EURNZD;GBPAUD;GBPCAD;GBPCHF;GBPJPY;GBPUSD;GBPNZD;USDCHF;USDCAD;USDJPY;NZDCAD;NZDCHF;NZDJPY;NZDUSD;"; /*Symbol List (separated by " ; ")*/
@@ -128,8 +147,7 @@ input TRADE_PAIR TRADE_ON = MULTIPLE_PAIRS;
 input ORDERTYPE type = BOTH;
 input SL_TP sltype = op1;
 input TP_TYPE tpType = PIPS;
-input int Max_Orders = 20;
-input int Max_Orders_symbols=1;
+
 input double TAKEPROFIT = 100;
 input double tp1 = 0;
 input double tp2 = 0;
@@ -145,9 +163,11 @@ input double Fixed_Lot = 0.1;
 input double Risk = 2; // RISK PRECENTAGE
 input double lot_Per = 1; // LOT PER 1000
 input string set3       ="======================Closing =====================";
-input bool  closeWithPercentage    = true;
-input double level_To_Close = 60; // Level to close
-input string set5  ="======================Partial close Settings =============";
+input bool  closeWithPercentage    = true; //close with avg
+input double level_To_Close = 60; // avg to close
+input bool closewithCSM       =false;
+input double Max_Account_lost =50;
+input string set4  ="======================Partial close Settings =============";
 input bool  close_With_levels = true;
 input double close_level1    = 20;
 input double close_Precentage1=10;
@@ -173,6 +193,34 @@ input double SL5 = 0;
 input double profit_level5 =0;
 input string set7=      "=======================Filters=============================";
 input bool use_CMS_Filters=  true;  // Use CMS Filtering
+input indi_type CSMType    =Default;
+input bool Hedge           =true;
+input int Max_Orders = 20;
+input int Max_Orders_symbols=1;
+input int Max_loss_trade_daily=10;
+input int Max_loss_trade_Weekly=10;
+input int Max_Trade_daily     =10;
+input int Max_Trade_weekly    =10;
+input int Max_negative_symbol_daily  =10;
+input int Max_negative_All_daily     =10;
+input int Max_negative_symbol_weekly =10;
+input int Max_negative_All_weekly    =10;
+input int Max_Positive_symbol_daily  =10;
+input int Max_Positive_All_daily     =10;
+input int Max_Positive_symbol_weekly  =10;
+input int Max_Positive_All_weekly     =10;
+input double Max_DrawDown             =40;
+input bool close_Drawdown             =true;
+input bool close_All_prec_profit      =true;
+input double prec_profit_close        =20;
+input bool close_position_prec_profit =true;
+input double prec_close_position      =20;
+input DYS_WEEK                 EA_START_DAY = Sunday;
+input string                   EA_START_TIME = "22:00";
+input DYS_WEEK                 EA_STOP_DAY = Friday;
+input string                   EA_STOP_TIME = "22:00";
+input TIME_LOCK                EA_TIME_LOCK_ACTION = closeall;
+input double profit_prec_to_close=20;
 input string set8         = "======================CMS Indicator Settings ================";
 input ENUM_TIMEFRAMES period = PERIOD_CURRENT;// Period for CMS
 input int latency             = 0;// Latency (Refresh delay in seconds) 0 means every tick
@@ -188,12 +236,12 @@ input int Algo_Type           =0;// CSM algorithm type (RSI = 0, CCI = 1, RVI = 
 input string Algo_Params      ="";// CSM algorithm params (Empty string means default params)
 
 
-input string p00 = "<----------------->PRELIMINARIES<------------------->"; //******* PRELIMINARIES *******
+input string Set9 = "===========================Indicators============================";
 input bool useAlerts = true; // Use popup Alerts
 input bool useTel = false; // Use Telegram Alerts
 input string InpChannelName = "fmfxstk"; // Telegram Channel ID
 input string InpToken = "5111296664:AAEg7d8drUaTphBVRDYU7YWWtcVz6EIuvTU"; // Telegram Token
-input string p14 = "<----------------->SAR<----------------->"; //******* SAR **************
+input string p00 = "<----------------->SAR<----------------->"; //******* SAR **************
 input bool useSAR = true; // Use SAR
 input ENUM_TIMEFRAMES sar_tf = PERIOD_CURRENT; // Timeframe
 input double sar_step = 0.02; // Step
@@ -275,7 +323,16 @@ input int kijun = 26; // Kijun
 input int senkou = 52; // Senkou-Span B
 
 bool KeyboardTrading = true; /*Keyboard Trading*/
-input string set4  = "==================================  Graphics =============================";
+input string set10  = "==================================  Dashboard Settings  =============================";
+input ENUM_MODE SelectedMode = COMPACT; /*Dashboard (Size)*/
+input bool showAvg           =true;
+input bool showBase          =true;
+input bool showQuote         =true;
+input bool showCSM           =true;//Show CSM Tradable
+input bool ShowTradeable     =true;
+input bool showClosable      =true;
+input bool ShowSL            =true;
+input bool ShowTp            =true;
 input color COLOR_BORDER = C'255, 151, 25'; /*Panel Border*/
 input color COLOR_CBG_LIGHT = C'252, 252, 252'; /*Chart Background (Light)*/
 input color COLOR_CBG_DARK = C'28, 27, 26'; /*Chart Background (Dark)*/
@@ -387,15 +444,22 @@ string PriceRowRightArr[] =
    "Pivot"
   };
 
-
+datetime lastweek=0;
+datetime lastDay=0;
+bool TradeAllow_Day[];
+bool TradeAllow_Day_ALl=true;
+bool TradeAllow_Week[];
+bool TradeAllow_Week_ALl=true;
 //variables
 double Lot;
-
+datetime StartTime=0;
 int s_ma_handle[], d_fma_handle[], d_sma_handle[], st_handle[], storsi_handle[], sto_handle[], mac_handle[], adx_handle[], atr_handle[], rsi_handle[], bb_handle[], bbw_handle[];
 int Ichi_handle[], rsiDiv_handle[], sar_handle[];
 datetime time0[];
 int buyPartial[],sellPartial[];
 double currenciesStrength[CURRENCIES_COUNT];
+double currenciesStrength1[CURRENCIES_COUNT];
+double currenciesStrength2[CURRENCIES_COUNT];
 string cc0 = "";
 bool signal[];
 CExecute * trades[];
@@ -403,6 +467,8 @@ CPosition * Positions[];
 CPosition * SellPositions[];
 CPosition * BuyPositions[];
 CUtilities * tools[];
+CHistoryPosition * Hist[];
+
 //telegram bot class
 //+------------------------------------------------------------------+
 //|   CMyBot                                                         |
@@ -438,7 +504,7 @@ int OnInit()
 //---
 //---- CreateTimer
    EventSetMillisecondTimer(100);
-
+   StartTime=TimeCurrent();
    if(useTel)
      {
       //--- set token
@@ -658,6 +724,10 @@ int OnInit()
    ArrayResize(tools, size, size);
    ArrayResize(buyPartial,size,size);
    ArrayResize(sellPartial,size,size);
+   ArrayResize(Hist,size,size);
+   ArrayResize(TradeAllow_Day,size,size);
+   ArrayResize(TradeAllow_Week,size,size);
+
 
 //--- InitFullSymbs
 
@@ -800,7 +870,10 @@ int OnInit()
       BuyPositions[i] = new CPosition(sym, magic_Number, GROUP_POSITIONS_BUYS);
       SellPositions[i] = new CPosition(sym, magic_Number, GROUP_POSITIONS_SELLS);
       Positions[i] = new CPosition(sym, magic_Number, GROUP_POSITIONS_ALL);
+      Hist[i]= new CHistoryPosition(sym,magic_Number,GROUP_HISTORY_POSITIONS_ALL);
       tools[i] = new CUtilities(sym);
+      TradeAllow_Day[i]=true;
+      TradeAllow_Week[i]=true;
       sellPartial[i]=0;
       buyPartial[i]=0;
      }
@@ -868,7 +941,16 @@ int OnInit()
 
    if(useSAR)
       CLIENT_BG_WIDTH+=50;
-
+   if(showAvg)
+      CLIENT_BG_WIDTH+=50;
+   if(ShowTradeable)
+      CLIENT_BG_WIDTH+=100;
+   if(showClosable)
+      CLIENT_BG_WIDTH+=100;
+   if(ShowSL)
+      CLIENT_BG_WIDTH+=60;
+   if(ShowTp)
+      CLIENT_BG_WIDTH+=60;
 //--- Init ChartSize
    Chart_XSize = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS);
    Chart_YSize = (int)ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS);
@@ -1042,17 +1124,22 @@ void OnTick()
   {
 
 //---
-
+   Max_order_Day();
+   Max_order_Weekly();
    ArrayInitialize(currenciesStrength, 0);
+   ArrayInitialize(currenciesStrength1, 0);
+   ArrayInitialize(currenciesStrength2, 0);
 
 // Getting currencies strength for all 8 currencies to the currenciesStrength buffer
-   fetchCurrenciesStrength(currenciesStrength);
+   fetchCurrenciesStrength(currenciesStrength,0);
+   fetchCurrenciesStrength(currenciesStrength1,1);
+   fetchCurrenciesStrength(currenciesStrength2,2);
 
+//---
    if(ShowTradePanel)
      {
       //---
       ObjectsCreateAll();
-      //---
       for(int i = 0; i < ArraySize(aSymbols); i++)
         {
          ObjectsUpdateAll(Prefix+aSymbols[i]+Suffix);
@@ -1617,19 +1704,35 @@ void ObjectsCreateAll()
       xxx+=50;
       LabelCreate(0, OBJPREFIX+"quote", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Quote", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
-      LabelCreate(0, OBJPREFIX+"CMS-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "CMS Pairs", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"CMS-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "CSM Pairs", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=100;
      }
-   LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   xxx+=50;
-   LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   xxx+=100;
-   LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   xxx+=100;
-   LabelCreate(0, OBJPREFIX+"sl", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SL", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-   xxx+=60;
-   LabelCreate(0, OBJPREFIX+"tp", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "TP", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+   if(showAvg)
+     {
+      LabelCreate(0, OBJPREFIX+"avg", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "AVG", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=50;
+     }
+   if(ShowTradeable)
+     {
+      LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=100;
+     }
+   if(showClosable)
+     {
+      LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=100;
+     }
+   if(ShowSL)
+     {
+      LabelCreate(0, OBJPREFIX+"sl", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SL", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=60;
+     }
 
+   if(ShowTp)
+     {
+      LabelCreate(0, OBJPREFIX+"tp", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "TP", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      xxx+=60;
+     }
 //--- SymbolsGUI
    int fr_y = _y1+Dpi(60);
 
@@ -1975,10 +2078,13 @@ void CreateSymbGUI(int i, int Y)
 
      }
    xx+=10;
+   bool close = false;
+   bool CSMBuy=false;
+   bool CSMSell=false;
    if(use_CMS_Filters)
      {
       int siz=ArraySize(g_symbols);
-      double f1=0,f2=0;
+      double b1=0,q1=0,b2=0,q2=0,b3=0,q3=0;
       for(int z=0; z<siz; z++)
         {
          color c=currenciesStrength[z]>=60?clrLimeGreen:currenciesStrength[z]<=40?clrRed:clrYellow;
@@ -1986,74 +2092,106 @@ void CreateSymbGUI(int i, int Y)
            {
             LabelCreate(0, OBJPREFIX+"base"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
             xx+=50;
-            f1=currenciesStrength[z];
+            b1=currenciesStrength[z];
+            if(CSMType==increase_Decrease)
+              {
+               b2=currenciesStrength1[z];
+               b3=currenciesStrength2[z];
+              }
            }
 
          if(g_symbols[z]==Quote)
            {
             LabelCreate(0, OBJPREFIX+"quote"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
             xx+=10;
-            f2=currenciesStrength[z];
+            q1=currenciesStrength[z];
+            if(CSMType==increase_Decrease)
+              {
+               q2=currenciesStrength1[z];
+               q3=currenciesStrength2[z];
+              }
            }
 
         }
-      if(f1>=60&&f2<=40)
+      if((b1>=60&&q1<=40)||(CSMType==increase_Decrease&&((b1>=b2&&b2>=b3&&q1<=40)||(q1<=q2&&q2<=q3&&b1>=60))))
         {
          ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
          xx+=140;
+         CSMBuy=true;
         }
       else
-         if(f2>=60&&f1<=40)
+         if((q1>=60&&b1<=40)||(CSMType==increase_Decrease&&((q1>=q2&&q2>=q3&&b1<=40)||(b1<=b2&&b2<=b3&&q1>=60))))
            {
             ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
             xx+=140;
+            CSMSell=true;
            }
          else
            {
             ObjectDelete(0,OBJPREFIX+"CMS"+" - "+_Symb);
             xx+=140;
+            if(closewithCSM&&Positions[i].GroupTotal()>0)
+               Positions[i].GroupCloseAll(30);
+            close=true;
            }
 
      }
    double perc_b = (countb/(countb+countf+counts))*100;
    double perc_s = (counts/(countb+countf+counts))*100;
 //--
-
-   if(perc_b > perc_s)
+   if(showAvg)
      {
-      LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
-      xx+=10;
-     }
-   else
-      if(perc_b < perc_s)
+      if(perc_b > perc_s)
         {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
+         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_b, 2)+"%", sFontType, 9, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_b, 2)+"%");
          xx+=10;
         }
       else
-        {
-         LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-         xx+=10;
-        }
-
+         if(perc_b < perc_s)
+           {
+            LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(perc_s, 2)+"%", sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, _Symb+" avg : "+DoubleToString(perc_s, 2)+"%");
+            xx+=10;
+           }
+         else
+           {
+            LabelCreate(0, OBJPREFIX+"avg"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "______", sFontType, 9, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+            xx+=10;
+           }
+     }
 
    bool buy = false;
    bool sell = false;
-   bool close = false;
+
+
    if(perc_b == 100)
      {
       buy = true;
-      ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+      if(ShowTradeable)
+        {
+         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+         xx+=100;
+        }
+      if(showClosable)
+        {
+         xx+=130;
+        }
       ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-      xx+=230;
      }
    else
       if(perc_s == 100)
         {
          sell = true;
-         ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
+         if(ShowTradeable)
+           {
+            ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
+            xx+=100;
+           }
+         if(showClosable)
+           {
+            xx+=130;
+           }
          ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-         xx+=230;
+
         }
       else
          if(perc_b > perc_s && perc_b < level_To_Close)
@@ -2062,9 +2200,13 @@ void CreateSymbGUI(int i, int Y)
             if(closeWithPercentage)
                Positions[i].GroupCloseAll(30);
             ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
-            xx+=100;
-            ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-            xx+=130;
+            if(ShowTradeable)
+               xx+=100;
+            if(showClosable)
+              {
+               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+               xx+=130;
+              }
            }
          else
             if(perc_b < perc_s && perc_s < level_To_Close)
@@ -2073,19 +2215,69 @@ void CreateSymbGUI(int i, int Y)
                if(closeWithPercentage)
                   Positions[i].GroupCloseAll(30);
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
-               xx+=100;
-               ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-               xx+=120;
+               if(ShowTradeable)
+                  xx+=100;
+               if(showClosable)
+                 {
+                  ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+                  xx+=130;
+                 }
               }
             else
               {
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
                ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
-               xx+=230;
+               if(ShowTradeable)
+                  xx+=100;
+               if(showClosable)
+                 {
+                  xx+=130;
+                 }
               }
 
    PartialClosing(BuyPositions[i],SellPositions[i],tools[i],buyPartial[i],sellPartial[i]);
-   if(buy)
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+   bool trade_Allow=TradeAllow_Day[i]&&TradeAllow_Day_ALl&&TradeAllow_Week[i]&&TradeAllow_Week_ALl;
+
+   double Balance=AccountInfoDouble(ACCOUNT_BALANCE);
+   double profit= AccountInfoDouble(ACCOUNT_PROFIT);
+   if(profit<0&&MathAbs(profit)>Balance*(Max_Account_lost/100))
+     {
+      Alert("Your Account losses reach the Maximum");
+      trade_Allow=false;
+     }
+
+   if(profit<0&&MathAbs(profit)>Max_DrawDown)
+     {
+      Alert("Your Account DrawDown reach the Maximum");
+      trade_Allow=false;
+      if(close_Drawdown){
+        for(int b=0;b<ArraySize(aSymbols);b++){
+        Positions[b].GroupCloseAll(30);
+        }
+      }
+     }
+     if(close_All_prec_profit){
+       if(profit>Balance*(prec_profit_close/100)){
+         for(int b=0;b<ArraySize(aSymbols);b++){
+           Positions[b].GroupCloseAll(30);
+        }
+       }
+     }
+     if(close_position_prec_profit){
+       for(int b=0;b<ArraySize(Positions[i].GroupTotal());b++){
+         double pp=Positions[i][b].GetProfit();
+         if(pp>Balance*(prec_close_position/100)){
+           Positions[i][b].Close(30);
+         }
+       }
+     }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+   if(((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)
      {
       double temp[],
              temp1[];
@@ -2111,95 +2303,105 @@ void CreateSymbGUI(int i, int Y)
          tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
         }
       CalcLot(i,slpip/tools[i].Pip());
-      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
+      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
-            if(type == BOTH || type == BUY_ONLY)
-              {
-               if(BuyPositions[i].GroupTotal() == 0)
+            if((Hedge&&BuyPositions[i].GroupTotal()<Max_Orders_symbols)||(!Hedge&&Positions[i].GroupTotal()<Max_Orders_symbols))
+               if(type == BOTH || type == BUY_ONLY)
                  {
-                  if(TRADEMODE == SINGLE)
+                  if(BuyPositions[i].GroupTotal() == 0)
                     {
-                     trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                    }
-                  else
-                     if(TRADEMODE == MULTIPLE)
+                     if(TRADEMODE == SINGLE)
                        {
-                        if(tp1 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()+tp1*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()+tp1*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp2 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()+tp2*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()+tp2*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp3 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()+tp3*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()+tp3*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp4 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()+tp4*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()+tp4*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp5 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()+tp5*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()+tp5*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-
+                        trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                        }
+                     else
+                        if(TRADEMODE == MULTIPLE)
+                          {
+                           if(tp1 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()+tp1*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()+tp1*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp2 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()+tp2*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()+tp2*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp3 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()+tp3*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()+tp3*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp4 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()+tp4*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()+tp4*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp5 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()+tp5*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()+tp5*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+
+                          }
+                    }
                  }
-              }
            }
         }
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      xx+=60;
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-
+      if(ShowSL)
+        {
+         LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         xx+=60;
+        }
+      if(ShowTp)
+        {
+         LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         xx+=60;
+        }
       signal[i] = true;
       cc0 = _Symb+" BUY SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
      }
-   if(sell)
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+   if(((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell))&&trade_Allow)
      {
       double temp[],
              temp1[];
@@ -2225,92 +2427,99 @@ void CreateSymbGUI(int i, int Y)
          tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
         }
       CalcLot(i,slpip/tools[i].Pip());
-      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders&&Positions[i].GroupTotal()<Max_Orders_symbols)
+      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
-            if(type == BOTH || type == SELL_ONLY)
-              {
-               if(SellPositions[i].GroupTotal() == 0)
+            if((Hedge&&SellPositions[i].GroupTotal()<Max_Orders_symbols)||(!Hedge&&Positions[i].GroupTotal()<Max_Orders_symbols))
+               if(type == BOTH || type == SELL_ONLY)
                  {
-                  if(TRADEMODE == SINGLE)
+                  if(SellPositions[i].GroupTotal() == 0)
                     {
-                     trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                    }
-                  else
-                     if(TRADEMODE == MULTIPLE)
+                     if(TRADEMODE == SINGLE)
                        {
-                        if(tp1 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()-tp1*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()-tp1*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp2 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()-tp2*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()-tp2*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp3 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()-tp3*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()-tp3*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp4 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()-tp4*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()-tp4*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-                        if(tp5 > 0)
-                          {
-                           if(tpType == RISK_REWARD)
-                             {
-                              tp = tools[i].Bid()-tp5*slpip;
-                             }
-                           if(tpType == PIPS)
-                             {
-                              tp = tools[i].Bid()-tp5*tools[i].Pip();
-                             }
-                           trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
-                          }
-
+                        trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                        }
+                     else
+                        if(TRADEMODE == MULTIPLE)
+                          {
+                           if(tp1 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()-tp1*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()-tp1*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp2 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()-tp2*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()-tp2*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp3 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()-tp3*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()-tp3*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp4 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()-tp4*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()-tp4*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+                           if(tp5 > 0)
+                             {
+                              if(tpType == RISK_REWARD)
+                                {
+                                 tp = tools[i].Bid()-tp5*slpip;
+                                }
+                              if(tpType == PIPS)
+                                {
+                                 tp = tools[i].Bid()-tp5*tools[i].Pip();
+                                }
+                              trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
+                             }
+
+                          }
+                    }
                  }
-              }
            }
         }
       cc0 = _Symb+" SELL SL "+DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS))+" TP " +DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS));
-      LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-      xx+=60;
-      LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-
+      if(ShowSL)
+        {
+         LabelCreate(0, OBJPREFIX+"sl"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(sl, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         xx+=60;
+        }
+      if(ShowTp)
+        {
+         LabelCreate(0, OBJPREFIX+"tp"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, DoubleToString(tp, (int)SymbolInfoInteger(_Symb, SYMBOL_DIGITS)), sFontType, 9, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+         xx+=60;
+        }
       signal[i] = true;
      }
 //---
@@ -2325,7 +2534,8 @@ void CreateSymbGUI(int i, int Y)
 //---
    if(useTel && cc0 != "" && time0[i] != iTime(_Symbol, PERIOD_CURRENT, 0))
      {
-      time0[i] = iTime(_Symbol, PERIOD_CURRENT, 0);
+      time0[i]
+         = iTime(_Symbol, PERIOD_CURRENT, 0);
 
       if(getme_result != 0)
         {
@@ -3887,13 +4097,13 @@ void Trailing_P()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool fetchCurrenciesStrength(double& currencyStrength[])
+bool fetchCurrenciesStrength(double& currencyStrength[],int i)
   {
    for(int index = 0; index < CURRENCIES_COUNT; ++index)
      {
       double strength[1] = { EMPTY_VALUE };
       // Copying currency strength data from CMS indicator to strength buffer
-      if(CopyBuffer(g_handle, index, 0, 1, strength) != 1)
+      if(CopyBuffer(g_handle, index, i, i+1, strength) != 1)
         {
          Print("CopyBuffer from CSM failed, no data");
          return false;
@@ -3962,4 +4172,159 @@ int findFirstWeakCurrency(double& currencyStrength[])
 
    return -1;
   }
+
+//+------------------------------------------------------------------+
+void Max_order_Day()
+  {
+   int size=ArraySize(aSymbols);
+   int Max_N_D=0;
+   int Max_P_D=0;
+   for(int z=0; z<size; z++)
+     {
+      datetime time=iTime(aSymbols[z],PERIOD_D1,0);
+      Hist[z].SetHistoryRange(time,TimeCurrent());
+      int total=Hist[z].GroupTotal();
+      int n=0;
+      int x=0;
+      for(int i= 0; i<total; i++)
+        {
+         if(Hist[z][i].GetProfit()<0)
+           {
+            n++;
+           }
+         if(Hist[z][i].GetProfit()>0)
+           {
+            x++;
+           }
+        }
+
+      int tot=Positions[z].GroupTotal();
+      int s=0;
+      for(int i= 0; i<tot; i++)
+        {
+         if(Positions[z][i].GetTimeOpen()>=time)
+           {
+            s++;
+           }
+        }
+      Max_N_D+=n;
+      Max_P_D+=x;
+
+      if(n>=Max_negative_symbol_daily)
+        {
+         Alert("Your Negative Trades reach the Maximum for today");
+         TradeAllow_Day[z]=false;
+        }
+      else
+         if(x>=Max_Positive_symbol_daily)
+           {
+            Alert("Your Positive Trades reach the Maximum for today");
+            TradeAllow_Day[z]=false;
+           }
+         else
+            if(s>=Max_Trade_daily)
+              {
+               Alert("Your Trades reach the Maximum for this Day");
+               TradeAllow_Day[z]=false;
+              }
+            else
+              {
+               TradeAllow_Day[z]=true;
+              }
+     }
+   if(Max_N_D>=Max_negative_All_daily)
+     {
+      Alert("Your Negative Trades for All Symbols reach the Maximum for today");
+      TradeAllow_Day_ALl=false;
+     }
+   else
+      if(Max_P_D>=Max_Positive_All_daily)
+        {
+         Alert("Your Positive Trades for All Symbols reach the Maximum for today");
+         TradeAllow_Day_ALl=false;
+        }
+      else
+        {
+         TradeAllow_Day_ALl=true;
+        }
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Max_order_Weekly()
+  {
+   int size=ArraySize(aSymbols);
+   int Max_N_W=0;
+   int Max_P_W=0;
+   for(int z=0; z<size; z++)
+     {
+      datetime time=iTime(aSymbols[z],PERIOD_W1,0);
+      Hist[z].SetHistoryRange(time,TimeCurrent());
+      int total=Hist[z].GroupTotal();
+      int n=0;
+      int x=0;
+      for(int i= 0; i<total; i++)
+        {
+         if(Hist[z][i].GetProfit()<0)
+           {
+            n++;
+           }
+         if(Hist[z][i].GetProfit()>0)
+           {
+            x++;
+           }
+        }
+
+      int tot=Positions[z].GroupTotal();
+      int s=0;
+      for(int i= 0; i<tot; i++)
+        {
+         if(Positions[z][i].GetTimeOpen()>=time)
+           {
+            s++;
+           }
+        }
+      Max_P_W+=x;
+      Max_N_W+=n;
+      if(n>=Max_negative_symbol_weekly)
+        {
+         Alert("Your Negative Trades reach the Maximum for this week");
+         TradeAllow_Week[z]=false;
+        }
+      else
+         if(x>=Max_Positive_symbol_weekly)
+           {
+            Alert("Your Positive Trades reach the Maximum for this week");
+            TradeAllow_Week[z]=false;
+           }
+         else
+            if(s>=Max_Trade_weekly)
+              {
+               Alert("Your Trades reach the Maximum for this week");
+               TradeAllow_Week[z]=false;
+              }
+            else
+              {
+               TradeAllow_Week[z]=true;
+              }
+     }
+   if(Max_N_W>=Max_negative_All_weekly)
+     {
+      Alert("Your Negative Trades for All Symbols reach the Maximum for this week");
+      TradeAllow_Week_ALl=false;
+     }
+   else
+      if(Max_P_W>=Max_Positive_All_weekly)
+        {
+         Alert("Your Positive Trades for All Symbols reach the Maximum for this Week");
+         TradeAllow_Week_ALl=false;
+        }
+      else
+        {
+         TradeAllow_Week_ALl=true;
+        }
+  }
+
 //+------------------------------------------------------------------+
