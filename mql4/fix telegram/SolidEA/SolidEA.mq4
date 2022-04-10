@@ -313,7 +313,7 @@ input bool useAuto_SL = true;
 
 input int maxbuy = 40; //Max allowed Buy Trade
 input int maxsell = 40; //Max Allowed Sell Trade
-input int MaxLevel = 2; //Max Open Trade
+input int MaxLevel = 40; //Max Open Trade
 input int Max_Spread = 25; // MaxSpread
 
 //+------------------------------------------------------------------+
@@ -654,7 +654,7 @@ CMyBot bot;
 int getme_result;
 double added_lot=0;
 double Px = 0, Sx = 0, Rx = 0, S1x = 0, R1x = 0, S2x = 0, R2x = 0, S3x = 0, R3x = 0;
-datetime date0 = D'2022.04.16 00:00';
+datetime date0 = D'2022.04.20 00:00';
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -986,12 +986,6 @@ int OnInit()
 
 
 
-//---
-   if(!GlobalVariableCheck(OBJPREFIX+"Dashboard"))
-      ShowDashboard = true;
-   else
-      ShowDashboard = GlobalVariableGet(OBJPREFIX+"Dashboard");
-
 
 //---
    PriceRowLeft = (int)GlobalVariableGet(OBJPREFIX+"PRL");
@@ -1262,7 +1256,6 @@ void OnTick()
                if(Signal2[i] > 0&&changeNum==2)
                  {
                   Buy(i, comment2,indikator2,timeframe2);
-
                   mainSignal = 1;
                   change=false;
                  }
@@ -2282,7 +2275,7 @@ double CalcLot(string symbol)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-string Get_Timeframe(ENUM_TIMEFRAMES tf)
+string Get_Timeframe(int tf)
   {
    string txt="";
 
@@ -2550,7 +2543,7 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
             open=true;
            }
         }
-      if(SendOpen)
+      if(SendOpen&&open)
         {
          cc0=Get_Strategy(0)+", "+Symbols[i]+", Sell, "+s1+s2+s3+s4+" @ "+DoubleToString(tools[i].Bid(),(int)tools[i].Digits())+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
@@ -2579,7 +2572,7 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
             open=true;
            }
         }
-      if(SendOpen)
+      if(SendOpen&&open)
         {
          cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
@@ -2589,14 +2582,14 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
             if(sendIndicatorSignal)
                cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
            }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+" ,SellLimit, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
    if(Execution_Mode == stop&&!MaxSellExceed)
      {
-      double openPrice = tools[i]
-                         .Bid()-orderdistance*tools[i].Pip();
+      double openPrice = tools[i].Bid()-orderdistance*tools[i].Pip();
 
       for(int x=0; x<n; x++)
         {
@@ -2608,7 +2601,7 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
             open=true;
            }
         }
-      if(SendOpen)
+      if(SendOpen&&open)
         {
          cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
         }
@@ -2618,8 +2611,9 @@ void Sell(int i, string Cmnt, indi i1,ENUM_TIMEFRAMES tf1=0,indi i2=0,ENUM_TIMEF
             if(sendIndicatorSignal)
                cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
            }
-      if(sendTradesignal)
-         cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
+         else
+            if(sendTradesignal)
+               cc0=Get_Strategy(0)+", "+Symbols[i]+", SellStop, "+s1+s2+s3+s4+" @ "+(string)openPrice+" Time: "+ TimeToString(TimeCurrent(),TIME_MINUTES)+" Date: "+ TimeToString(TimeCurrent(),TIME_DATE);
 
      }
   }
@@ -4168,33 +4162,33 @@ void snrfibo(int i)
       if(tools[i].Bid()>R1&&tools[i].Bid()<R1+3*tools[i].Pip()&&tools[i].Bid()<R2&&lastResistance[i]!=R1)
         {
          lastResistance[i]=R1;
-         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R1,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R1,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
       if(tools[i].Bid()>R2&&tools[i].Bid()<R2+3*tools[i].Pip()&&tools[i].Bid()<R3&&lastResistance[i]!=R2)
         {
          lastResistance[i]=R2;
-         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R2,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R2,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
       if(tools[i].Bid()>=R3&&tools[i].Bid()<R3+3*tools[i].Pip()&&lastResistance[i]!=R3)
         {
          lastResistance[i]=R3;
-         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R3,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Resistant Zone @ "+ DoubleToString(R3,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
       if(tools[i].Bid()<S1&&tools[i].Bid()>S1-3*tools[i].Pip()&&tools[i].Bid()>S2&&lastResistance[i]!=S1)
         {
          lastResistance[i]=S1;
-         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S1,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S1,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
       if(tools[i].Bid()<S2&&tools[i].Bid()>S2-3*tools[i].Pip()&&tools[i].Bid()>S3&&lastResistance[i]!=S2)
         {
          lastResistance[i]=S2;
 
-         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S2,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S2,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
       if(tools[i].Bid()<=S3&&tools[i].Bid()>R3-3*tools[i].Pip()&&lastResistance[i]!=S3)
         {
          lastResistance[i]=S3;
-         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S3,(int)tools[i].Digits())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
+         cc0=sym+ " Reached Support Zone @ "+ DoubleToString(S3,(int)tools[i].Digits())+" Timeframe: "+Get_Timeframe(Period())+" "+ TimeToString(TimeCurrent(),TIME_DATE)+" - "+TimeToString(TimeCurrent(),TIME_MINUTES);
         }
      }
    if(sym==Symbol())
