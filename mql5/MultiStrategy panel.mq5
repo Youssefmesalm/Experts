@@ -210,6 +210,11 @@ input int Max_Positive_All_daily     =10;
 input int Max_Positive_symbol_weekly  =10;
 input int Max_Positive_All_weekly     =10;
 input double Max_DrawDown             =40;
+input bool close_Drawdown             =true;
+input bool close_All_prec_profit      =true;
+input double prec_profit_close        =20;
+input bool close_position_prec_profit =true;
+input double prec_close_position      =20;
 input DYS_WEEK                 EA_START_DAY = Sunday;
 input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
@@ -2248,6 +2253,26 @@ void CreateSymbGUI(int i, int Y)
      {
       Alert("Your Account DrawDown reach the Maximum");
       trade_Allow=false;
+      if(close_Drawdown){
+        for(int b=0;b<ArraySize(aSymbols);b++){
+        Positions[b].GroupCloseAll(30);
+        }
+      }
+     }
+     if(close_All_prec_profit){
+       if(profit>Balance*(prec_profit_close/100)){
+         for(int b=0;b<ArraySize(aSymbols);b++){
+           Positions[b].GroupCloseAll(30);
+        }
+       }
+     }
+     if(close_position_prec_profit){
+       for(int b=0;b<ArraySize(Positions[i].GroupTotal());b++){
+         double pp=Positions[i][b].GetProfit();
+         if(pp>Balance*(prec_close_position/100)){
+           Positions[i][b].Close(30);
+         }
+       }
      }
 //+------------------------------------------------------------------+
 //|                                                                  |
