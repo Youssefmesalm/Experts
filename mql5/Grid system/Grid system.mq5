@@ -29,6 +29,8 @@ input string CustomPairs = "EURUSD,USDCHF,USDCAD,USDJPY,GBPUSD";
 sinput string set2 = "<----------------Trading Settings-------------------->";
 input double lotStarter = 0.1;
 input double LotMultiplier=1.6;
+input double LotMultiplier_loss=1.1;
+input double LotMultiplier_profit=1.2;
 input int TradingLevelsNumbers=11;
 input int GapBetweenLevels=100;
 input bool CloseWith_Points=false;
@@ -36,6 +38,7 @@ input int ProfitPointsToCloseLossTrades=10;// Close Loss Trades with Profit in P
 input bool CloseWith_Dollar=true;
 input double ProfitUSDToCloseLossTrades=10; // Close Loss Trades with Profit in Dollar
 input double trailingStop=50;  //trailing stop for Profit trades
+input double closeUSDAccountProfit  = 100;  // Close All when account with profit in Dollar
 input long magic_Number = 2020;
 
 //global variables
@@ -191,7 +194,7 @@ void OnTick()
       CheckNewOpen(Positions[i],BuyPositions[i],SellPositions[i],Total[i],TotalBuy[i],TotalSell[i],openDirection[i],WhichClos[i]);
       if(openDirection[i]!=0)
         {
-         UpdateLot(Positions[i],Pendings[i],trades[i],Highest[i],lowest[i],openDirection[i]);
+         UpdateLot(Positions[i],Pendings[i],trades[i],tools[i],Highest[i],lowest[i],openDirection[i]);
         }
       Repending(Positions[i],BuyPositions[i],SellPositions[i],trades[i],tools[i],Pendings[i],BuyPendings[i],SellPendings[i],WhichClos[i],Levelprices[i],Total[i],TotalBuy[i],TotalSell[i]);
       Traliling(BuyPositions[i],SellPositions[i],tools[i],Levelprices[i]);
@@ -202,7 +205,7 @@ void OnTick()
         }
 
      }
-   if(AccountInfoDouble(ACCOUNT_PROFIT)>=ProfitUSDToCloseLossTrades)
+   if(AccountInfoDouble(ACCOUNT_PROFIT)>=closeUSDAccountProfit)
      {
       size= ArraySize(Symbols);
       for(int i=0; i<size; i++)
@@ -217,7 +220,7 @@ void OnTick()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,int & H,int & L,int & D)
+void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & tool,int & H,int & L,int & D)
   {
    int size=Pos.GroupTotal();
    int direction=0;
@@ -272,11 +275,17 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,int & H,int & L,
          string c=Pending[x].GetComment();
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
+         double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
+           {
+            double l=lots[MathAbs(comment)+1];
+            NewLot = Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+           }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            open.Order(type,lots[MathAbs(comment)+1],openPrice,sl,0,SLTP_PRICE,0,30,c);
+            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
            }
         }
@@ -304,11 +313,17 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,int & H,int & L,
          string c=Pending[x].GetComment();
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
+         double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
+           {
+            double l=lots[MathAbs(comment)+1];
+            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+           }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            open.Order(type,lots[MathAbs(comment)+1],openPrice,sl,0,SLTP_PRICE,0,30,c);
+            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
            }
         }
@@ -338,12 +353,18 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,int & H,int & L,
          string c=Pending[x].GetComment();
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
+         double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
+         if(MathAbs(comment)<TradingLevelsNumbers-MathAbs(L)-1)
+           {
+            double l = lots[MathAbs(comment)+lotindex+1];
+            NewLot= Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+           }
          Pending[x].Close();
 
          if(MathAbs(comment)<TradingLevelsNumbers-MathAbs(L)-1)
            {
-            open.Order(type,lots[MathAbs(comment)+lotindex+1],openPrice,sl,0,SLTP_PRICE,0,30,c);
+            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
            }
         }
@@ -371,11 +392,18 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,int & H,int & L,
          string c=Pending[x].GetComment();
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
+         double NewLot=0;
+
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
+         if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
+           {
+            double l=lots[MathAbs(comment)+lotindex+1];
+            NewLot=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+           }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
            {
-            open.Order(type,lots[MathAbs(comment)+lotindex+1],openPrice,sl,0,SLTP_PRICE,0,30,c);
+            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
            }
         }
