@@ -215,6 +215,9 @@ input bool close_All_prec_profit      =true;
 input double prec_profit_close        =20;
 input bool close_position_prec_profit =true;
 input double prec_close_position      =20;
+input bool closeAll_DayEnd            =false;
+input bool closeAll_WeekEnd           =false;
+input bool closeAll_MonthEnd          =false;
 input DYS_WEEK                 EA_START_DAY = Sunday;
 input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
@@ -2274,6 +2277,15 @@ void CreateSymbGUI(int i, int Y)
          }
        }
      }
+     if(closeAll_DayEnd){
+       if(ClosingTimeFilter("23:59"))
+          Positions[i].GroupCloseAll();
+     }
+     if(closeAll_WeekEnd){
+       
+       if(ClosingTimeFilter("23:59"))
+          Positions[i].GroupCloseAll();
+     }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -4328,3 +4340,14 @@ void Max_order_Weekly()
   }
 
 //+------------------------------------------------------------------+
+bool ClosingTimeFilter(string ET)
+  {
+
+   datetime End   =StringToTime(TimeToString(TimeCurrent(),TIME_DATE)+" "+ET);
+
+   if((iTime(Symbol(),PERIOD_CURRENT,0)<=End))
+     {
+      return(false);
+     }
+   return(true);
+  }
