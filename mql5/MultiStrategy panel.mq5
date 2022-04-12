@@ -123,7 +123,7 @@ enum closetype
    closePartial,
    close
   };
-  
+
 enum DYS_WEEK
   {
    Sunday = 0,
@@ -222,7 +222,6 @@ input DYS_WEEK                 EA_START_DAY = Sunday;
 input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
 input string                   EA_STOP_TIME = "22:00";
-input TIME_LOCK                EA_TIME_LOCK_ACTION = closeall;
 input double profit_prec_to_close=20;
 input string set8         = "======================CMS Indicator Settings ================";
 input ENUM_TIMEFRAMES period = PERIOD_CURRENT;// Period for CMS
@@ -2256,35 +2255,56 @@ void CreateSymbGUI(int i, int Y)
      {
       Alert("Your Account DrawDown reach the Maximum");
       trade_Allow=false;
-      if(close_Drawdown){
-        for(int b=0;b<ArraySize(aSymbols);b++){
-        Positions[b].GroupCloseAll(30);
+      if(close_Drawdown)
+        {
+         for(int b=0; b<ArraySize(aSymbols); b++)
+           {
+            Positions[b].GroupCloseAll(30);
+           }
         }
-      }
      }
-     if(close_All_prec_profit){
-       if(profit>Balance*(prec_profit_close/100)){
-         for(int b=0;b<ArraySize(aSymbols);b++){
-           Positions[b].GroupCloseAll(30);
+   if(close_All_prec_profit)
+     {
+      if(profit>Balance*(prec_profit_close/100))
+        {
+         for(int b=0; b<ArraySize(aSymbols); b++)
+           {
+            Positions[b].GroupCloseAll(30);
+           }
         }
-       }
      }
-     if(close_position_prec_profit){
-       for(int b=0;b<ArraySize(Positions[i].GroupTotal());b++){
+   if(close_position_prec_profit)
+     {
+      for(int b=0; b<Positions[i].GroupTotal(); b++)
+        {
          double pp=Positions[i][b].GetProfit();
-         if(pp>Balance*(prec_close_position/100)){
-           Positions[i][b].Close(30);
-         }
-       }
+         if(pp>Balance*(prec_close_position/100))
+           {
+            Positions[i][b].Close(30);
+           }
+        }
      }
-     if(closeAll_DayEnd){
-       if(ClosingTimeFilter("23:59"))
-          Positions[i].GroupCloseAll();
+   MqlDateTime current;
+   datetime currentDT;
+   currentDT=TimeCurrent();
+   TimeToStruct(currentDT,current);
+   if(closeAll_DayEnd)
+     {
+      if(ClosingTimeFilter("23:59"))
+         Positions[i].GroupCloseAll();
      }
-     if(closeAll_WeekEnd){
-       
-       if(ClosingTimeFilter("23:59"))
-          Positions[i].GroupCloseAll();
+   if(closeAll_WeekEnd)
+     {
+
+      if(current.day_of_week==5&&current.hour==23)
+         Positions[i].GroupCloseAll();
+     }
+   if(closeAll_MonthEnd)
+     {
+      if(current.day==1&&current.hour==0&&current.min<2)
+        {
+         Positions[i].GroupCloseAll();
+        }
      }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -4351,3 +4371,4 @@ bool ClosingTimeFilter(string ET)
      }
    return(true);
   }
+//+------------------------------------------------------------------+
