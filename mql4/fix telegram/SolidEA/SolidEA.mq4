@@ -2051,9 +2051,10 @@ int GetIndicatorsSignal(indi indicator, ENUM_TIMEFRAMES period, string cmnt, int
    if(indicator == HMATreend)
      {
       buy = iCustom(symbol, period,"HMATREND.ex4", 0, shift);
-      if(ValidateBuffer(buy))
+       sell = iCustom(symbol, period,"HMATREND.ex4", 1, shift);
+
+      if(ValidateBuffer(buy)&&!ValidateBuffer(sell))
          signal = 1;
-      sell = iCustom(symbol, period,"HMATREND.ex4", 1, shift);
       if(ValidateBuffer(sell))
          signal = -1;
      }
