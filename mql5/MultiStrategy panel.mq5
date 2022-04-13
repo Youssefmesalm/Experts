@@ -134,7 +134,9 @@ enum DYS_WEEK
    Friday = 5,
    Saturday
   };
-
+enum RISKOPTIONS{
+  LOW,MID,HIGH,
+};
 //--- User inputs
 input string Set0= "                    <===================== General ==========================>";
 input string Prefix = ""; //Symbol Prefix
@@ -160,7 +162,12 @@ input string comment ="FM Stallions";
 input string set2 = "=====================  RISK Management ===============";
 input LOT_TYPE LotType = RISK;
 input double Fixed_Lot = 0.1;
-input double Risk = 2; // RISK PRECENTAGE
+input double LowRisk =1;
+input double LowRiskTP =1;
+input double MidRisk =2;
+input double MidRiskTP = 2;
+input double HighRisk = 3; // RISK PRECENTAGE
+input double HighRiskTP =3;
 input double lot_Per = 1; // LOT PER 1000
 input string set3       ="======================Closing =====================";
 input bool  closeWithPercentage    = true; //close with avg
@@ -223,6 +230,18 @@ input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
 input string                   EA_STOP_TIME = "22:00";
 input double profit_prec_to_close=20;
+input string set11       = "===================== RISK FILTTERS OPTIONS===================";
+input bool Monday_Filtter =false;
+input RISKOPTIONS Monday_Risk = MID;
+input bool last_week_month  =false;
+input RISKOPTIONS last_week_month_risk =LOW;
+input bool first_week_month = false;
+input RISKOPTIONS first_week_month_risk =LOW;
+input bool first_day_month =false;
+input RISKOPTIONS first_day_month_risk = LOW;
+input bool last_day_month =false;
+input RISKOPTIONS last_day_month_risk = LOW;
+
 input string set8         = "======================CMS Indicator Settings ================";
 input ENUM_TIMEFRAMES period = PERIOD_CURRENT;// Period for CMS
 input int latency             = 0;// Latency (Refresh delay in seconds) 0 means every tick
@@ -454,6 +473,7 @@ bool TradeAllow_Week[];
 bool TradeAllow_Week_ALl=true;
 //variables
 double Lot;
+RISKOPTIONS Risk=0;
 datetime StartTime=0;
 int s_ma_handle[], d_fma_handle[], d_sma_handle[], st_handle[], storsi_handle[], sto_handle[], mac_handle[], adx_handle[], atr_handle[], rsi_handle[], bb_handle[], bbw_handle[];
 int Ichi_handle[], rsiDiv_handle[], sar_handle[];
@@ -2284,13 +2304,15 @@ void CreateSymbGUI(int i, int Y)
            }
         }
      }
-   MqlDateTime current;
+   MqlDateTime current,tmrw;
    datetime currentDT;
+   datetime tmrwDT=currentDT+24*60*60;
    currentDT=TimeCurrent();
+   TimeToStruct(tmrwDT,tmrw);
    TimeToStruct(currentDT,current);
    if(closeAll_DayEnd)
      {
-      if(ClosingTimeFilter("23:59"))
+      if(current.hour==23&&current.min>=50)
          Positions[i].GroupCloseAll();
      }
    if(closeAll_WeekEnd)
@@ -2306,6 +2328,36 @@ void CreateSymbGUI(int i, int Y)
          Positions[i].GroupCloseAll();
         }
      }
+     // RISK OPTIONS
+     if(Monday_Filtter){
+       if(current.day_of_week==1){
+         Risk=Monday_Risk;
+       }
+     }else
+     if(last_week_month){
+       if(current.day>=21){
+         Risk=last_week_month_risk;
+       }
+     }else
+     if(first_week_month){
+       if(current.day<=7){
+         Risk=first_week_month_risk;
+       }
+     }else
+     if(first_day_month){
+       if(current.day==1){
+         Risk=first_day_month_risk;
+       }
+     }else
+     if(last_day_month){
+       if(tmrw.day==1){
+         Risk=last_day_month_risk;
+       }
+     }else
+     {
+       Risk=HighRisk;
+     }
+     
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2332,7 +2384,9 @@ void CreateSymbGUI(int i, int Y)
       double slpip = tools[i].Bid()-sl;
       if(tpType == RISK_REWARD)
         {
-         tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
+          double 
+          if(Risk==)
+         tp = tools[i].Bid()+TAKEPROFIT*slpip;
         }
       CalcLot(i,slpip/tools[i].Pip());
       if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
@@ -3851,8 +3905,8 @@ void CalcLot(int i,double sls)
    if(LotType == RISK)
      {
       double sl = sls;
-
-      Lot = tools[i].NormalizeVolume((AccountInfoDouble(ACCOUNT_EQUITY)*Risk/1000)/sl);
+      double R =Risk==LOW?LowRisk:Risk==MID?MidRisk:HighRisk;
+      Lot = tools[i].NormalizeVolume((AccountInfoDouble(ACCOUNT_EQUITY)*R/1000)/sl);
       if(Lot < SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN))
          Lot = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
       if(Lot > SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX))
