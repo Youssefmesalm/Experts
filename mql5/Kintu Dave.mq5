@@ -132,32 +132,32 @@ void OnTick()
 
 
      }
-   if(touch_M&&total==0&&TotalLots<Max_total_volume&&Trade_Allowed)
+   if(touch_U&&total==0&&TotalLots<Max_total_volume&&Trade_Allowed)
+     {
+      Trade.Position(TYPE_POSITION_SELL,volume,0,0,SLTP_PIPS,30,comment);
+        if(Addition_Entry_Mode==StdDev)
+         devValue=Std[0]*Standard_Deviation;
+     }
+      if(touch_L&&total==0&&TotalLots<Max_total_volume&&Trade_Allowed)
      {
       Trade.Position(TYPE_POSITION_BUY,volume,0,0,SLTP_PIPS,30,comment);
-      Trade.Position(TYPE_POSITION_SELL,volume,0,0,SLTP_PIPS,30,comment);
-      devValue=0;
+     if(Addition_Entry_Mode==StdDev)
+         devValue=Std[0]*Standard_Deviation;
      }
    int Buytotal=BuyPos.GroupTotal();
    double BuytotalProfit=BuyPos.GroupTotalProfit();
    if(touch_U&&Buytotal==1&&BuytotalProfit>0)
      {
       BuyPos.GroupCloseAll(30);
-      Trade.Position(TYPE_POSITION_SELL,volume,0,0,SLTP_PIPS,30,comment);
-      if(Addition_Entry_Mode==StdDev)
-         devValue=Std[0]*Standard_Deviation;
      }
    int Selltotal=SellPos.GroupTotal();
    double SelltotalProfit=SellPos.GroupTotalProfit();
    if(touch_L&&Selltotal==1&&SelltotalProfit>0)
      {
-      SellPos.GroupCloseAll(30);
-      Trade.Position(TYPE_POSITION_BUY,volume,0,0,SLTP_PIPS,30,comment);
-      if(Addition_Entry_Mode==StdDev)
-         devValue=Std[0]/Standard_Deviation;
+      SellPos.GroupCloseAll(30);      
      }
    Selltotal=SellPos.GroupTotal();
-   if(Selltotal>1)
+   if(Selltotal>=1&&SelltotalProfit<0)
      {
       double priceopen=SellPos[Selltotal-1].GetPriceOpen();
       if(Addition_Entry_Mode==Pips_Distance)
@@ -175,12 +175,11 @@ void OnTick()
             double NewLot=SellPos[Selltotal-1].GetVolume()+Added_Lot;
             Trade.Position(TYPE_POSITION_SELL,NewLot,0,0,SLTP_PIPS,30,comment);
             devValue=Std[0]*Standard_Deviation;
-
            }
         }
      }
    Buytotal=BuyPos.GroupTotal();
-   if(Buytotal>1)
+   if(Buytotal>=1&&BuytotalProfit<0)
      {
       double priceopen=BuyPos[Buytotal-1].GetPriceOpen();
       if(Addition_Entry_Mode==Pips_Distance)
@@ -193,25 +192,25 @@ void OnTick()
         }
       else
         {
-         if(Std[0]<=devValue)
+         if(Std[0]>=devValue)
            {
             double NewLot=BuyPos[Buytotal-1].GetVolume()+Added_Lot;
             Trade.Position(TYPE_POSITION_BUY,NewLot,0,0,SLTP_PIPS,30,comment);
-            devValue=Std[0]/Standard_Deviation;
+            devValue=Std[0]*Standard_Deviation;
 
            }
 
         }
      }
    Buytotal=BuyPos.GroupTotal();
+   Selltotal=SellPos.GroupTotal();
    BuytotalProfit=BuyPos.GroupTotalProfit();
-   if(touch_U&&Buytotal>1&&BuytotalProfit>0)
+   if(touch_U&&Buytotal>1&&BuytotalProfit>0&&Selltotal==0)
      {
       BuyPos.GroupCloseAll(30);
      }
-   Selltotal=SellPos.GroupTotal();
    SelltotalProfit=SellPos.GroupTotalProfit();
-   if(touch_L&&Selltotal>1&&SelltotalProfit>0)
+   if(touch_L&&Selltotal>1&&SelltotalProfit>0&&Buytotal==0)
      {
       SellPos.GroupCloseAll(30);
      }
