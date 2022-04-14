@@ -154,8 +154,8 @@ bool NewSell2 = false;
 bool NewBuy2 = false;
 static int BARS;
 double pips,p,Dinero,Dineros,OPb,OPs,TPb,TPs,SLs,SLb,Lob,Los,OPb2,OPs2,TPb2,TPs2,SLs2,SLb2,Lob2,Los2;
-double BEOPb,BEOPs;
-double BEOPb2,BEOPs2;
+double BEOPb,BEOPs,BEtpb,BEslb,BEsls,BEtps;
+double BEOPb2,BEOPs2,BEtpb2,BEslb2,BEsls2,BEtps2;
 
 bool SellReady2=false;
 bool BuyReady2=false;
@@ -259,6 +259,14 @@ void OnTick()
          SellReady2=false;
          BEOPb2=0.0;
          BEOPs2=0.0;
+         BEtpb=0;
+         BEtpb2=0;
+         BEtps2=0;
+         BEtps=0;
+         BEsls2=0;
+         BEslb2=0;
+         BEsls=0;
+         BEslb=0;
          OPb=0.0;
          OPb2=0.0;
          OPs=0.0;
@@ -387,6 +395,14 @@ void Manual()
                SellReady2=false;
                BEOPb2=0.0;
                BEOPs2=0.0;
+                    BEtpb=0;
+         BEtpb2=0;
+         BEtps2=0;
+         BEtps=0;
+         BEsls2=0;
+         BEslb2=0;
+         BEsls=0;
+         BEslb=0;
                OPb=0.0;
                OPb2=0.0;
                OPs=0.0;
@@ -427,6 +443,14 @@ void Manual()
                SellReady2=false;
                BEOPb2=0.0;
                BEOPs2=0.0;
+                   BEtpb=0;
+         BEtpb2=0;
+         BEtps2=0;
+         BEtps=0;
+         BEsls2=0;
+         BEslb2=0;
+         BEsls=0;
+         BEslb=0;
                OPb=0.0;
                OPb2=0.0;
                OPs=0.0;
@@ -665,7 +689,7 @@ void SetOrder()
             double p=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
             if(p>=BEOPb)
               {
-               OpenBuy1(MagicNumber,Lots_Pending,p+TakeProfit1*pips,p-StopLoss1*pips,"KEENE");
+               OpenBuy1(MagicNumber,Lots_Pending,BEtpb,BEslb,"KEENE");
               }
             else
                OpenBuyStop(MagicNumber,Lots_Pending,BEOPb);
@@ -692,7 +716,7 @@ void SetOrder()
             double p=SymbolInfoDouble(_Symbol,SYMBOL_BID);
             if(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs)
               {
-               OpenSell1(MagicNumber,Lots_Pending,p-TakeProfit1*pips,p+StopLoss1*pips,"KEENE");
+               OpenSell1(MagicNumber,Lots_Pending,BEtps,BEsls,"KEENE");
               }
             else
                OpenSellStop(MagicNumber,Lots_Pending,BEOPs);
@@ -757,7 +781,7 @@ void SetOrder2()
 
             double p=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
             if(p>=BEOPb2)
-               OpenBuy1(MagicNumber,Lots_Pending,p+TakeProfit2*pips,p-StopLoss2*pips,"KEENE2");
+               OpenBuy1(MagicNumber,Lots_Pending,BEtpb2,BEslb2,"KEENE2");
             else
                OpenBuyStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
 
@@ -784,7 +808,7 @@ void SetOrder2()
             Y=CountPosition(MagicNumber);
             double p=SymbolInfoDouble(_Symbol,SYMBOL_BID);
             if(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs2)
-               OpenSell1(MagicNumber,Lots_Pending,p-TakeProfit2*pips,p+StopLoss2*pips,"KEENE2");
+               OpenSell1(MagicNumber,Lots_Pending,BEsls2,BEtps2,"KEENE2");
             else
                OpenSellStopStop(MagicNumber,Lots_Pending2,p,TakeProfit2,StopLoss2);
             if(x!=CountPosition1(MagicNumber))
@@ -1336,14 +1360,16 @@ void BreakEvenP()
                if(Use_Close_WhenBE_P1&&PositionGetString(POSITION_COMMENT) == "KEENE")
                  {
                   BEOPb=PositionGetDouble(POSITION_PRICE_OPEN);
-
+                  BEslb=PositionGetDouble(POSITION_SL);
+                  BEtpb=PositionGetDouble(POSITION_TP);
                   BreakAgainP=false;
                   BuyReady=true;
                  }
                if(Use_Close_WhenBE_P2&&PositionGetString(POSITION_COMMENT) == "KEENE2")
                  {
                   BEOPb2=PositionGetDouble(POSITION_PRICE_OPEN);
-
+                  BEslb2=PositionGetDouble(POSITION_SL);
+                  BEtpb2=PositionGetDouble(POSITION_TP);
                   BreakAgainP=false;
                   BuyReady2=true;
                  }
@@ -1362,12 +1388,16 @@ void BreakEvenP()
                if(Use_Close_WhenBE_P1&&PositionGetString(POSITION_COMMENT) == "KEENE")
                  {
                   BEOPs=PositionGetDouble(POSITION_PRICE_OPEN);
+                  BEsls=PositionGetDouble(POSITION_SL);
+                  BEtps=PositionGetDouble(POSITION_TP);
                   SellReady=true;
                   BreakAgainP=false;
                  }
                if(Use_Close_WhenBE_P2&&PositionGetString(POSITION_COMMENT) == "KEENE2")
                  {
                   BEOPs2=PositionGetDouble(POSITION_PRICE_OPEN);
+                  BEsls2=PositionGetDouble(POSITION_SL);
+                  BEtps2=PositionGetDouble(POSITION_TP);
                   SellReady2=true;
                   BreakAgainP=false;
                  }
