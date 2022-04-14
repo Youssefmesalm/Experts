@@ -18,6 +18,7 @@
 #define SEPARATOR "________________"
 #define TOTAL_OpenOrExit 2
 #define  MyPass "1234"
+#define MT4account 1234
 //---
 #define INAME     "FFC"
 #define TITLE     0
@@ -236,7 +237,6 @@ string EA_Name = "TFM EA v1.00";
 
 //User Input
 input string                  h0 = "==========================General============================";
-input int                     MT4account = 78081825; // MT4 Number/ Pascode
 input string                  EAPass = "1000"; // EA PassWord
 input                         trademode usemode = Auto; // Trade Mode
 input                         typeorder Trade_Direction = bothx; // Trade Direction
@@ -666,11 +666,11 @@ int OnInit()
 //   Alert("This Account Not Allowed To use the Expert , Please Contact the Owner");
 //   ExpertRemove();
 //  }
-//if(MyPass!=EAPass)
-//  {
-//   Alert("Wrong Password  , Please Try Again or Contact the Owner");
-//   ExpertRemove();
-//  }
+if(MyPass!=EAPass)
+  {
+   Alert("Wrong Password  , Please Try Again or Contact the Owner");
+   ExpertRemove();
+  }
    added_lot=SubLots-Lots;
 //--- check for DLL
    if(!TerminalInfoInteger(TERMINAL_DLLS_ALLOWED))
@@ -1158,11 +1158,11 @@ void OnDeinit(const int reason)
 void OnTick()
   {
 //---
-   if(isExpired())
-     {
-      ExpertRemove();
-      return;
-     }
+//if(isExpired())
+//  {
+//   ExpertRemove();
+//   return;
+//  }
    Telegram();
 
    ClosingFilter();
@@ -2051,7 +2051,7 @@ int GetIndicatorsSignal(indi indicator, ENUM_TIMEFRAMES period, string cmnt, int
    if(indicator == HMATreend)
      {
       buy = iCustom(symbol, period,"HMATREND.ex4", 0, shift);
-       sell = iCustom(symbol, period,"HMATREND.ex4", 1, shift);
+      sell = iCustom(symbol, period,"HMATREND.ex4", 1, shift);
 
       if(ValidateBuffer(buy)&&!ValidateBuffer(sell))
          signal = 1;
