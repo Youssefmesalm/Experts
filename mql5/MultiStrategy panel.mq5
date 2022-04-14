@@ -134,9 +134,10 @@ enum DYS_WEEK
    Friday = 5,
    Saturday
   };
-enum RISKOPTIONS{
-  LOW,MID,HIGH,
-};
+enum RISKOPTIONS
+  {
+   LOW,MID,HIGH,
+  };
 //--- User inputs
 input string Set0= "                    <===================== General ==========================>";
 input string Prefix = ""; //Symbol Prefix
@@ -231,7 +232,7 @@ input bool weekly_gain_limit        =false;
 input double weekly_gain_limit_prcentage=10;
 input bool monthly_gain_limit        =false;
 input double monthly_gain_limit_prcentage=10;
-input bool daily_
+
 input DYS_WEEK                 EA_START_DAY = Sunday;
 input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
@@ -481,10 +482,10 @@ bool TradeAllow_Week_ALl=true;
 bool limit_gain=false;
 bool daily_limit=false;
 bool weekly_limit=false;
-bool monthly_imit=false;
+bool monthly_limit=false;
 datetime daily_limit_date=0;
 datetime weekly_limit_date=0;
-datetime monthly_imit_date=0;
+datetime monthly_limit_date=0;
 //variables
 double Lot;
 RISKOPTIONS Risk=0;
@@ -1170,52 +1171,64 @@ void OnTick()
    fetchCurrenciesStrength(currenciesStrength,0);
    fetchCurrenciesStrength(currenciesStrength1,1);
    fetchCurrenciesStrength(currenciesStrength2,2);
-double Balance = AccountInfoDouble(ACCOUNT_BALANCE);
-double Profit= AccountInfoDouble(ACCOUNT_PROFIT);
-datetime d1=iTime(Symbol(),PERIOD_D1,0);
-datetime w1=iTime(Symbol(),PERIOD_W1,0);
-datetime m1 =iTime(Symbol(),PERIOD_M1 0);
-if(daily_gain_limit){
-  if(d1>daily_limit_date&&daily_limit){
-    daily_limit=false;
-  }
-  if(Balance*(daily_gain_limit_prcentage/100)<=Profit){
-    Alert(" Daily gain limit reached");
-    daily_limit=true;
-    daily_limit_date=iTime(Symbol(),PERIOD_D1,0);
-    for(int z=0;z<ArraySize(aSymbols);z++){
-      Positions[z].GroupCloseAll(30);
-    }
-  }
-}
+   double Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   double Profit= AccountInfoDouble(ACCOUNT_PROFIT);
+   datetime d1=iTime(Symbol(),PERIOD_D1,0);
+   datetime w1=iTime(Symbol(),PERIOD_W1,0);
+   datetime m1 =iTime(Symbol(),PERIOD_M1,0);
+   if(daily_gain_limit)
+     {
+      if(d1>daily_limit_date&&daily_limit)
+        {
+         daily_limit=false;
+        }
+      if(Balance*(daily_gain_limit_prcentage/100)<=Profit)
+        {
+         Alert(" Daily gain limit reached");
+         daily_limit=true;
+         daily_limit_date=iTime(Symbol(),PERIOD_D1,0);
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
+           }
+        }
+     }
 
-if(weekly_gain_limit){
-  if(w1>weekly_limit_date&&weekly_limit){
-    weekly_limit=false;
-  }
-  if(Balance*(weekly_gain_limit_prcentage/100)<=Profit){
-    Alert(" weekly gain limit reached");
-    weekly_limit=true;
-    weekly_limit_date=w1;
-    for(int z=0;z<ArraySize(aSymbols);z++){
-      Positions[z].GroupCloseAll(30);
-    }
-  }
-}
-if(monthly_gain_limit){
-  if(m1>monthly_imit_date&&monthly_imit){
-    monthly_imit=false;
-  }
-  if(Balance*(monthly_gain_limit_prcentage/100)<=Profit){
-Alert(" Monthly gain limit reached");
-    monthly_limit=true;
-    monthly_limit_date=m1;
-    for(int z=0;z<ArraySize(aSymbols);z++){
-      Positions[z].GroupCloseAll(30);
-    }
-  }
-}
-limit_gain=daily_limit&&weekly_limit&&monthly_limit;
+   if(weekly_gain_limit)
+     {
+      if(w1>weekly_limit_date&&weekly_limit)
+        {
+         weekly_limit=false;
+        }
+      if(Balance*(weekly_gain_limit_prcentage/100)<=Profit)
+        {
+         Alert(" weekly gain limit reached");
+         weekly_limit=true;
+         weekly_limit_date=w1;
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
+           }
+        }
+     }
+   if(monthly_gain_limit)
+     {
+      if(m1>monthly_limit_date&&monthly_limit)
+        {
+         monthly_limit=false;
+        }
+      if(Balance*(monthly_gain_limit_prcentage/100)<=Profit)
+        {
+         Alert(" Monthly gain limit reached");
+         monthly_limit=true;
+         monthly_limit_date=m1;
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
+           }
+        }
+     }
+   limit_gain=daily_limit&&weekly_limit&&monthly_limit;
 //---
    if(ShowTradePanel)
      {
@@ -2364,7 +2377,7 @@ void CreateSymbGUI(int i, int Y)
         }
      }
    MqlDateTime current,tmrw;
-   datetime currentDT;
+   datetime currentDT=0;
    datetime tmrwDT=currentDT+24*60*60;
    currentDT=TimeCurrent();
    TimeToStruct(tmrwDT,tmrw);
@@ -2387,36 +2400,51 @@ void CreateSymbGUI(int i, int Y)
          Positions[i].GroupCloseAll();
         }
      }
-     // RISK OPTIONS
-     if(Monday_Filtter){
-       if(current.day_of_week==1){
-         Risk=Monday_Risk;
-       }
-     }else
-     if(last_week_month){
-       if(current.day>=21){
-         Risk=last_week_month_risk;
-       }
-     }else
-     if(first_week_month){
-       if(current.day<=7){
-         Risk=first_week_month_risk;
-       }
-     }else
-     if(first_day_month){
-       if(current.day==1){
-         Risk=first_day_month_risk;
-       }
-     }else
-     if(last_day_month){
-       if(tmrw.day==1){
-         Risk=last_day_month_risk;
-       }
-     }else
+// RISK OPTIONS
+   if(Monday_Filtter)
      {
-       Risk=HighRisk;
+      if(current.day_of_week==1)
+        {
+         Risk=Monday_Risk;
+        }
      }
-     
+   else
+      if(last_week_month)
+        {
+         if(current.day>=21)
+           {
+            Risk=last_week_month_risk;
+           }
+        }
+      else
+         if(first_week_month)
+           {
+            if(current.day<=7)
+              {
+               Risk=first_week_month_risk;
+              }
+           }
+         else
+            if(first_day_month)
+              {
+               if(current.day==1)
+                 {
+                  Risk=first_day_month_risk;
+                 }
+              }
+            else
+               if(last_day_month)
+                 {
+                  if(tmrw.day==1)
+                    {
+                     Risk=last_day_month_risk;
+                    }
+                 }
+               else
+                 {
+                  Risk=HighRisk;
+                 }
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2443,9 +2471,8 @@ void CreateSymbGUI(int i, int Y)
       double slpip = tools[i].Bid()-sl;
       if(tpType == RISK_REWARD)
         {
-          double 
-          if(Risk==)
-         tp = tools[i].Bid()+TAKEPROFIT*slpip;
+        
+            tp = tools[i].Bid()+TAKEPROFIT*slpip;
         }
       CalcLot(i,slpip/tools[i].Pip());
       if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
