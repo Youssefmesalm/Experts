@@ -225,6 +225,13 @@ input double prec_close_position      =20;
 input bool closeAll_DayEnd            =false;
 input bool closeAll_WeekEnd           =false;
 input bool closeAll_MonthEnd          =false;
+input bool daily_gain_limit          =false;
+input double daily_gain_limit_prcentage=10;
+input bool weekly_gain_limit        =false;
+input double weekly_gain_limit_prcentage=10;
+input bool monthly_gain_limit        =false;
+input double monthly_gain_limit_prcentage=10;
+input bool daily_
 input DYS_WEEK                 EA_START_DAY = Sunday;
 input string                   EA_START_TIME = "22:00";
 input DYS_WEEK                 EA_STOP_DAY = Friday;
@@ -471,6 +478,13 @@ bool TradeAllow_Day[];
 bool TradeAllow_Day_ALl=true;
 bool TradeAllow_Week[];
 bool TradeAllow_Week_ALl=true;
+bool limit_gain=false;
+bool daily_limit=false;
+bool weekly_limit=false;
+bool monthly_imit=false;
+datetime daily_limit_date=0;
+datetime weekly_limit_date=0;
+datetime monthly_imit_date=0;
 //variables
 double Lot;
 RISKOPTIONS Risk=0;
@@ -1156,7 +1170,52 @@ void OnTick()
    fetchCurrenciesStrength(currenciesStrength,0);
    fetchCurrenciesStrength(currenciesStrength1,1);
    fetchCurrenciesStrength(currenciesStrength2,2);
+double Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+double Profit= AccountInfoDouble(ACCOUNT_PROFIT);
+datetime d1=iTime(Symbol(),PERIOD_D1,0);
+datetime w1=iTime(Symbol(),PERIOD_W1,0);
+datetime m1 =iTime(Symbol(),PERIOD_M1 0);
+if(daily_gain_limit){
+  if(d1>daily_limit_date&&daily_limit){
+    daily_limit=false;
+  }
+  if(Balance*(daily_gain_limit_prcentage/100)<=Profit){
+    Alert(" Daily gain limit reached");
+    daily_limit=true;
+    daily_limit_date=iTime(Symbol(),PERIOD_D1,0);
+    for(int z=0;z<ArraySize(aSymbols);z++){
+      Positions[z].GroupCloseAll(30);
+    }
+  }
+}
 
+if(weekly_gain_limit){
+  if(w1>weekly_limit_date&&weekly_limit){
+    weekly_limit=false;
+  }
+  if(Balance*(weekly_gain_limit_prcentage/100)<=Profit){
+    Alert(" weekly gain limit reached");
+    weekly_limit=true;
+    weekly_limit_date=w1;
+    for(int z=0;z<ArraySize(aSymbols);z++){
+      Positions[z].GroupCloseAll(30);
+    }
+  }
+}
+if(monthly_gain_limit){
+  if(m1>monthly_imit_date&&monthly_imit){
+    monthly_imit=false;
+  }
+  if(Balance*(monthly_gain_limit_prcentage/100)<=Profit){
+Alert(" Monthly gain limit reached");
+    monthly_limit=true;
+    monthly_limit_date=m1;
+    for(int z=0;z<ArraySize(aSymbols);z++){
+      Positions[z].GroupCloseAll(30);
+    }
+  }
+}
+limit_gain=daily_limit&&weekly_limit&&monthly_limit;
 //---
    if(ShowTradePanel)
      {
@@ -2261,7 +2320,7 @@ void CreateSymbGUI(int i, int Y)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool trade_Allow=TradeAllow_Day[i]&&TradeAllow_Day_ALl&&TradeAllow_Week[i]&&TradeAllow_Week_ALl;
+   bool trade_Allow=TradeAllow_Day[i]&&TradeAllow_Day_ALl&&TradeAllow_Week[i]&&TradeAllow_Week_ALl&&limit_gain;
 
    double Balance=AccountInfoDouble(ACCOUNT_BALANCE);
    double profit= AccountInfoDouble(ACCOUNT_PROFIT);
