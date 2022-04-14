@@ -41,19 +41,19 @@ input double               std_deviation=2.0;             // number of standard 
 input ENUM_APPLIED_PRICE   std_applied_price=PRICE_CLOSE; // type of price
 input ENUM_TIMEFRAMES      std_period=PERIOD_CURRENT;     // timeframe
 input string               set2="====================RSI  Settings=================";
-input int                  RSI_Ma_period=20;           // period of moving average
+input int                  RSI_Ma_period=3;           // period of moving average
 input ENUM_TIMEFRAMES      RSI_period=PERIOD_CURRENT;     // timeframe
 input ENUM_APPLIED_PRICE   RSI_applied_price=PRICE_CLOSE; // type of price
 input string               set3="====================Close  Settings=================";
-input bool                 CloseWithRrverse   =true;
-input string               set430="====================MA1 Settings=================";
-input int                  MA1_period2=20;           // period of moving average
+input bool                 CloseWithRrverse   =false; //Close With Reverse
+input string               set430="====================MA1 Settings (sm)=================";
+input int                  MA1_period2=5;           // period of moving average
 input int                  MA1_shift=0;             // shift
 input ENUM_MA_METHOD       MA1_Method=MODE_EMA;   // Metod
 input ENUM_APPLIED_PRICE   MA1_applied_price=PRICE_CLOSE; // type of price
 input ENUM_TIMEFRAMES      MA1_period=PERIOD_CURRENT;     // timeframe
-input string               set31="====================MA2 Settings=================";
-input int                  MA2_period2=20;           // period of moving average
+input string               set31="====================MA2 Settings (lg)=================";
+input int                  MA2_period2=14;           // period of moving average
 input int                  MA2_shift=0;             // shift
 input ENUM_MA_METHOD       MA2_Method=MODE_EMA;   // Metod
 input ENUM_APPLIED_PRICE   MA2_applied_price=PRICE_CLOSE; // type of price
@@ -122,10 +122,11 @@ void OnTick()
    if(Addition_Entry_Mode==StdDev)
       CopyBuffer(handle1,0,0,1,Std);
    CopyBuffer(handle2,0,0,1,Rsi);
-   if(CloseWithRrverse){
-   CopyBuffer(handle3,0,0,1,MA1);
-   CopyBuffer(handle4,0,0,1,MA2);
-   }
+   if(CloseWithRrverse)
+     {
+      CopyBuffer(handle3,0,0,1,MA1);
+      CopyBuffer(handle4,0,0,1,MA2);
+     }
    bool touch_M = (M_Band[1]<=tool.Bid()&&M_Band[0]>=tool.Bid())||(M_Band[0]<=tool.Bid()&&M_Band[1]>=tool.Bid());
    bool touch_U = (U_Band[1]<=tool.Bid()&&U_Band[0]>=tool.Bid())||(U_Band[0]<=tool.Bid()&&U_Band[1]>=tool.Bid());
    bool touch_L = (L_Band[1]<=tool.Bid()&&L_Band[0]>=tool.Bid())||(L_Band[0]<=tool.Bid()&&L_Band[1]>=tool.Bid());
@@ -237,8 +238,25 @@ void OnTick()
 
         }
      }
-     if(CloseWithRrverse){
-     if
+   if(CloseWithRrverse)
+     {
+      if(trend<0&&MA1[0]<MA2[0])
+        {
+         if(BuyPos.GroupTotal()>0)
+           {
+            BuyPos.GroupCloseAll(30);
+            Alert("Close With Reverse ");
+           }
+
+        }
+      if(trend>0&&MA1[0]>MA2[0])
+        {
+         if(SellPos.GroupTotal()>0)
+           {
+            SellPos.GroupCloseAll(30);
+            Alert("Close With Reverse ");
+           }
+        }
      }
    Buytotal=BuyPos.GroupTotal();
    Selltotal=SellPos.GroupTotal();
