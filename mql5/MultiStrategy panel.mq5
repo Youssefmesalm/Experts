@@ -1278,6 +1278,16 @@ void OnTick()
          }
        }
      }
+     if(PartialclosewithTime){
+       if(today.day_of_week==DayToCloseAllParial&&today.hour==HourToCloseAllPartial&&today.min==MinToCloseAllPartial){
+         for(int x=0;x<ArraySize(aSymbols);x++){
+           for(int z=0;z<Positions[x].GroupTotal();z++){
+             double ll=Positions[x][z].GetVolume();
+             Positions[x][z].ClosePartial(ll*(ParialClosePrecentage/100),30);
+           }
+         }
+       }
+     }
    limit_gain=!daily_limit&&!weekly_limit&&!monthly_limit;
 //---
    if(ShowTradePanel)
