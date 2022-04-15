@@ -249,16 +249,20 @@ input string set71 = "======================== Closing with time ===============
 input bool CloseAllWitTime=false;
 input DYS_WEEK DayToCloseAll=Friday;
 input int HourToCloseAll= 22;
+input int MinToCloseAll=0;
 input bool PartialclosewithTime=false;
 input DYS_WEEK DayToCloseAllParial=Friday;
 input int HourToCloseAllPartial= 22;
+input int MinToCloseAllPartial=0;
 input double ParialClosePrecentage=20;
 input bool CloseLossWithTime=false;
 input DYS_WEEK DayToCloseLoss=Friday;
 input int HourToCloseloss= 22;
+input int MinToCloseLoss=0;
 input bool CloseProfitWithProfit=false;
 input DYS_WEEK DayToCloseProfit=Friday;
 input int HourToCloseProfit= 22;
+input int MinToCloseProfit=0;
 input string set11       = "===================== RISK FILTTERS OPTIONS===================";
 input bool Monday_Filtter =false;
 input RISKOPTIONS Monday_Risk = MID;
@@ -1264,8 +1268,15 @@ void OnTick()
            }
         }
      }
+     MqlDateTime today;
+     datetime todayDT=TimeCurrent();
+     TimeToStruct(todayDT,today);
      if(CloseAllWitTime){
-     
+       if(today.day_of_week==DayToCloseAll&&today.hour==HourToCloseAll&&today.min==MinToCloseAll){
+         for(int x=0;x<ArraySize(aSymbols);x++){
+           Positions[x].GroupCloseAll(30);
+         }
+       }
      }
    limit_gain=!daily_limit&&!weekly_limit&&!monthly_limit;
 //---
