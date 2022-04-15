@@ -259,7 +259,7 @@ input bool CloseLossWithTime=false;
 input DYS_WEEK DayToCloseLoss=Friday;
 input int HourToCloseloss= 22;
 input int MinToCloseLoss=0;
-input bool CloseProfitWithProfit=false;
+input bool CloseProfitWithTime=false;
 input DYS_WEEK DayToCloseProfit=Friday;
 input int HourToCloseProfit= 22;
 input int MinToCloseProfit=0;
@@ -1284,6 +1284,32 @@ void OnTick()
            for(int z=0;z<Positions[x].GroupTotal();z++){
              double ll=Positions[x][z].GetVolume();
              Positions[x][z].ClosePartial(ll*(ParialClosePrecentage/100),30);
+           }
+         }
+       }
+     }
+     if(CloseLossWithTime){
+       if(today.day_of_week==DayToCloseLoss&&today.hour==HourToCloseloss&&today.min==MinToCloseLoss){
+         for(int x=0;x<ArraySize(aSymbols);x++){
+           for(int z=0;z<Positions[x].GroupTotal();z++){
+             double pp= Positions[x][z].GetProfit();
+             if(pp<0&&CloseLossWithTime){
+               Positions[x][z].Close(30);
+             }
+            
+           }
+         }
+       }
+     }
+     if(CloseProfitWithTime){
+       if(today.day_of_week==DayToCloseProfit&&today.hour==HourToCloseProfit&&today.min==MinToCloseProfit){
+         for(int x=0;x<ArraySize(aSymbols);x++){
+           for(int z=0;z<Positions[x].GroupTotal();z++){
+             double pp= Positions[x][z].GetProfit();
+             if(pp>0&&CloseProfitWithTime){
+               Positions[x][z].Close(30);
+             }
+            
            }
          }
        }
