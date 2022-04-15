@@ -15,6 +15,15 @@
 #property description Link
 //#property icon "logo.ico"
 //---
+#define INAME     "FFC"
+#define TITLE     0
+#define COUNTRY   1
+#define DATE      2
+#define TIME      3
+#define IMPACT    4
+#define FORECAST  5
+#define PREVIOUS  6
+
 // includes
 #include <Telegram.mqh>
 #include <Arrays\ArrayObj.mqh>
@@ -27,7 +36,7 @@
 #define ExpertName         "MultiStrategy Panel"
 #define OBJPREFIX          "YM - "
 //---
-int CLIENT_BG_WIDTH  = 150;
+int CLIENT_BG_WIDTH  =     150;
 #define INDENT_TOP         15
 //---
 #define OPENPRICE          0
@@ -132,7 +141,7 @@ enum DYS_WEEK
    Wednesday,
    Thursday = 4,
    Friday = 5,
-   Saturday
+   Saturday =6,
   };
 enum RISKOPTIONS
   {
@@ -201,6 +210,10 @@ input double SL5 = 0;
 input double profit_level5 =0;
 input string set7=      "=======================Filters=============================";
 input bool use_CMS_Filters=  true;  // Use CMS Filtering
+input int num1=60;      // CMS open Num 1
+input int num2=40;   // CMS open Num 2
+input int Cnum1=50;      // CMS Close Num 1
+input int Cnum2=4500;   // CMS Close Num 2
 input indi_type CSMType    =Default;
 input bool Hedge           =true;
 input int Max_Orders = 20;
@@ -219,25 +232,33 @@ input int Max_Positive_symbol_weekly  =10;
 input int Max_Positive_All_weekly     =10;
 input double Max_DrawDown             =40;
 input bool close_Drawdown             =true;
-input bool close_All_prec_profit      =true;
-input double prec_profit_close        =20;
-input bool close_position_prec_profit =true;
-input double prec_close_position      =20;
-input bool closeAll_DayEnd            =false;
-input bool closeAll_WeekEnd           =false;
-input bool closeAll_MonthEnd          =false;
+input bool close_All_prec_profit      =true; // Close All Positions when account profit reach xx%
+input double prec_profit_close        =20;   // xx% profit to close all
+input bool close_position_prec_profit =true; //Close one Position when its profit reach xx%
+input double prec_close_position      =20;  // xx% profit to close position
+input bool closeAll_DayEnd            =false; //close All Positions at the end of the day
+input bool closeAll_WeekEnd           =false; //close All Positions at the end of the week
+input bool closeAll_MonthEnd          =false;//close All Positions at the end of the Month
 input bool daily_gain_limit          =false;
-input double daily_gain_limit_prcentage=10;
+input double daily_gain_limit_prcentage=10; 
 input bool weekly_gain_limit        =false;
 input double weekly_gain_limit_prcentage=10;
 input bool monthly_gain_limit        =false;
 input double monthly_gain_limit_prcentage=10;
-
-input DYS_WEEK                 EA_START_DAY = Sunday;
-input string                   EA_START_TIME = "22:00";
-input DYS_WEEK                 EA_STOP_DAY = Friday;
-input string                   EA_STOP_TIME = "22:00";
-input double profit_prec_to_close=20;
+input string set71 = "======================== Closing with time =========================";
+input bool CloseAllWitTime=false;
+input DYS_WEEK DayToCloseAll=Friday;
+input int HourToCloseAll= 22;
+input bool PartialclosewithTime=false;
+input DYS_WEEK DayToCloseAllParial=Friday;
+input int HourToCloseAllPartial= 22;
+input double ParialClosePrecentage=20;
+input bool CloseLossWithTime=false;
+input DYS_WEEK DayToCloseLoss=Friday;
+input int HourToCloseloss= 22;
+input bool CloseProfitWithProfit=false;
+input DYS_WEEK DayToCloseProfit=Friday;
+input int HourToCloseProfit= 22;
 input string set11       = "===================== RISK FILTTERS OPTIONS===================";
 input bool Monday_Filtter =false;
 input RISKOPTIONS Monday_Risk = MID;
@@ -272,12 +293,14 @@ input string InpChannelName = "fmfxstk"; // Telegram Channel ID
 input string InpToken = "5111296664:AAEg7d8drUaTphBVRDYU7YWWtcVz6EIuvTU"; // Telegram Token
 input string p00 = "<----------------->SAR<----------------->"; //******* SAR **************
 input bool useSAR = true; // Use SAR
+input bool ShowSar = true;
 input ENUM_TIMEFRAMES sar_tf = PERIOD_CURRENT; // Timeframe
 input double sar_step = 0.02; // Step
 input double sar_max = 0.2; // Maximum
 
 input string p01 = "<----------------->SINGLE MA<----------------->"; //******* SINGLE MA *********
 input bool useSingleMA = true; // Use single MA
+input bool ShowSingleMA=true;
 input ENUM_TIMEFRAMES MA1_tf = PERIOD_CURRENT; // Timeframe
 input int MA1_per = 50; // Period
 input ENUM_MA_METHOD MA1_method = MODE_SMA; // Method
@@ -285,6 +308,7 @@ input ENUM_APPLIED_PRICE MA1_price = PRICE_CLOSE; // Applied price
 
 input string p02 = "<----------------->DOUBLE MA<----------------->"; //******** DOUBLE MA *********
 input bool useDoubleMA = true; // Use double MA
+input bool showDoubleMa=true;
 input ENUM_TIMEFRAMES MA2_tf = PERIOD_CURRENT; // Fast MA Timeframe
 input int MA2_per = 10; // Fast MA Period
 input ENUM_MA_METHOD MA2_method = MODE_SMA; // Fast MA Method
@@ -296,12 +320,14 @@ input ENUM_APPLIED_PRICE MA3_price = PRICE_CLOSE; // Slow MA Applied price
 
 input string p03 = "<----------------->SUPERTREND<----------------->"; //******** SUPERTREND ********
 input bool useSuperTrend = true; // Use supertrend
+input bool showSupertrend=true;
 input ENUM_TIMEFRAMES st_tf = PERIOD_CURRENT; // Timeframe
 input int st_per = 10; // Period
 input double st_mult = 4.5; // Multiplier
 
 input string p05 = "<-----------------> STOCHASTIC<-----------------> "; //******** STOCHASTIC ********
 input bool useSto = true; // Use stochastic oscillator
+input bool showSto =true;
 input ENUM_TIMEFRAMES sto_tf = PERIOD_CURRENT; // Timeframe
 input int sto_dper = 10; // STO D-Period
 input int sto_kper = 3; // STO K-Period
@@ -309,6 +335,7 @@ input int sto_sper = 3; // STO Slow-Period
 
 input string p06 = "<-----------------> MACD <----------------->"; //******** MACD ********
 input bool useMacd = true; // Use MACD
+input bool showMacd  =true;
 input indi_type MacdType=increase_Decrease;
 input ENUM_TIMEFRAMES mac_tf = PERIOD_CURRENT; // Timeframe
 input int mac_fper = 12; // Fast EMA
@@ -318,6 +345,7 @@ input double macd_level = 0; // level
 
 input string p07 = "<-----------------> ADX <----------------->"; //******** ADX ********
 input bool useAdx = true; // Use ADX
+input bool showAdx = true;
 input indi_type AdxType=increase_Decrease;
 input ENUM_TIMEFRAMES adx_tf = PERIOD_CURRENT; // Timeframe
 input int adx_per = 14; // Period
@@ -325,12 +353,14 @@ input double adx_lev = 25; // Level
 
 input string p08 = "<-----------------> ATR <----------------->"; //******** ATR ********
 input bool useAtr = true; // Use ATR
+input bool showAtr= true;
 input indi_type AtrType=increase_Decrease;
 input ENUM_TIMEFRAMES atr_tf = PERIOD_CURRENT; // Timeframe
 input int atr_per = 14; // Period
 
 input string p09 = "<-----------------> RSI <----------------->"; //******** RSI ********
 input bool useRSI = true; // Use RSI
+input bool showRsi = true;
 input indi_type RsiType=Default;
 input ENUM_TIMEFRAMES rsi_tf = PERIOD_CURRENT; // Timeframe
 input int rsi_per = 14; // Period
@@ -338,6 +368,7 @@ input double rsi_level = 50; // level
 
 input string p10 = "<-----------------> BOLLINGER <----------------->"; //******** BOLLINGER BAND ********
 input bool useBB = true; // Use Bollinger
+input bool ShowBB = true;
 input indi_type BBType=Default;
 input ENUM_TIMEFRAMES bb_tf = PERIOD_CURRENT; // Timeframe
 input int BB_per = 28; // Period
@@ -345,6 +376,7 @@ input double BB_dev = 2; // Deviation
 
 input string p12 = "<-----------------> ICHIMOKU <----------------->"; //******** ICHIMOKU ********
 input bool useIchi = true; // Use Ichimoku
+input bool showIchi = true;
 input indi_type IchType=increase_Decrease;
 input ENUM_TIMEFRAMES Ichi_tf = PERIOD_CURRENT; // Timeframe
 input int tekan = 9; // Tekan
@@ -365,7 +397,7 @@ input bool ShowTp            =true;
 input color COLOR_BORDER = C'255, 151, 25'; /*Panel Border*/
 input color COLOR_CBG_LIGHT = C'252, 252, 252'; /*Chart Background (Light)*/
 input color COLOR_CBG_DARK = C'28, 27, 26'; /*Chart Background (Dark)*/
-//--- Global variables
+
 string sTradeSymbols = TradeSymbols;
 string sFontType = "";
 //---
@@ -473,6 +505,8 @@ string PriceRowRightArr[] =
    "Pivot"
   };
 
+
+/////////////
 datetime lastweek=0;
 datetime lastDay=0;
 bool TradeAllow_Day[];
@@ -488,6 +522,8 @@ datetime weekly_limit_date=0;
 datetime monthly_limit_date=0;
 //variables
 double Lot;
+int tradableNum=0;
+int ClosableNum=0;
 RISKOPTIONS Risk=0;
 datetime StartTime=0;
 int s_ma_handle[], d_fma_handle[], d_sma_handle[], st_handle[], storsi_handle[], sto_handle[], mac_handle[], adx_handle[], atr_handle[], rsi_handle[], bb_handle[], bbw_handle[];
@@ -915,13 +951,13 @@ int OnInit()
       buyPartial[i]=0;
      }
 
-   if(useSingleMA)
+   if(useSingleMA&&ShowSingleMA)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useDoubleMA)
+   if(useDoubleMA&&showDoubleMa)
      {
 
       CLIENT_BG_WIDTH+=50;
@@ -931,52 +967,52 @@ int OnInit()
    if(useSuperTrend||sltype==2||useAtr)
      {
 
-      if(useSuperTrend)
+      if(useSuperTrend&&showSupertrend)
          CLIENT_BG_WIDTH+=50;
      }
 
 //---
-   if(useSto)
+   if(useSto&&showSto)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useMacd)
+   if(useMacd&&showMacd)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useAdx)
+   if(useAdx&&showAdx)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useAtr)
+   if(useAtr&&showAtr)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useRSI)
+   if(useRSI&&showRsi)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 //---
-   if(useBB)
+   if(useBB&&ShowBB)
      {
 
       CLIENT_BG_WIDTH+=50;
      }
 
 //---
-   if(useIchi)
+   if(useIchi&&showIchi)
       CLIENT_BG_WIDTH+=50;
 
-   if(useSAR)
+   if(useSAR&&ShowSar)
       CLIENT_BG_WIDTH+=50;
    if(showAvg)
       CLIENT_BG_WIDTH+=50;
@@ -1228,7 +1264,10 @@ void OnTick()
            }
         }
      }
-   limit_gain=daily_limit&&weekly_limit&&monthly_limit;
+     if(CloseAllWitTime){
+     
+     }
+   limit_gain=!daily_limit&&!weekly_limit&&!monthly_limit;
 //---
    if(ShowTradePanel)
      {
@@ -1736,57 +1775,57 @@ void ObjectsCreateAll()
    LabelCreate(0, OBJPREFIX+"BALANCE«", 0, _x1+Dpi(300), _y1+Dpi(8), CORNER_LEFT_UPPER, Balance(), sFontType, 8, C'59, 41, 40', 0, ANCHOR_CENTER, false, false, true, 0, "Balance is :"+Balance());
    LabelCreate(0, OBJPREFIX+"Pairs", 0, _x1+Dpi(10), _y1+Dpi(30), CORNER_LEFT_UPPER, "Pairs", "Arial Black", 12, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
    int xxx=100;
-   if(useSingleMA)
+   if(useSingleMA&&ShowSingleMA)
      {
       LabelCreate(0, OBJPREFIX+"1MA", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "1 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useDoubleMA)
+   if(useDoubleMA&&showDoubleMa)
      {
       LabelCreate(0, OBJPREFIX+"2MA", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "2 MA", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useSto)
+   if(useSto&&showSto)
      {
       LabelCreate(0, OBJPREFIX+"sto", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "STO", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useMacd)
+   if(useMacd&&showMacd)
      {
       LabelCreate(0, OBJPREFIX+"macd", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "MACD", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useAdx)
+   if(useAdx&&showAdx)
      {
       LabelCreate(0, OBJPREFIX+"adx", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ADX", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useAtr)
+   if(useAtr&&showAtr)
      {
       LabelCreate(0, OBJPREFIX+"atr", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ATR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useRSI)
+   if(useRSI&&showRsi)
      {
       LabelCreate(0, OBJPREFIX+"rsi", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "RSI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useBB)
+   if(useBB&&ShowBB)
      {
       LabelCreate(0, OBJPREFIX+"bb", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "BB", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useIchi)
+   if(useIchi&&showIchi)
      {
       LabelCreate(0, OBJPREFIX+"ichi", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "ICHI", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useSuperTrend)
+   if(useSuperTrend&&showSupertrend)
      {
       LabelCreate(0, OBJPREFIX+"str", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "STR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
      }
-   if(useSAR)
+   if(useSAR&&ShowSar)
      {
       LabelCreate(0, OBJPREFIX+"sar", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "SAR", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=50;
@@ -1808,12 +1847,12 @@ void ObjectsCreateAll()
      }
    if(ShowTradeable)
      {
-      LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"trade-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Tradable("+(string)tradableNum+")", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=100;
      }
    if(showClosable)
      {
-      LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+      LabelCreate(0, OBJPREFIX+"close-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Closable("+(string)ClosableNum+")", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
       xxx+=100;
      }
    if(ShowSL)
@@ -1829,7 +1868,8 @@ void ObjectsCreateAll()
      }
 //--- SymbolsGUI
    int fr_y = _y1+Dpi(60);
-
+   tradableNum=0;
+   ClosableNum=0;
 //---
    for(int i = 0; i < ArraySize(aSymbols); i++)
      {
@@ -1872,27 +1912,36 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSingleMA)
             countb++;
-         ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
-         LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-         xx+=50;
+         if(ShowSingleMA)
+           {
+            ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
+            LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+            xx+=50;
+           }
         }
       else
          if(sig_SingleMA(i) == -1)
            {
             if(useSingleMA)
                counts++;
-            ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
-            LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
-            xx+=50;
+            if(ShowSingleMA)
+              {
+               ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
+               LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+               xx+=50;
+              }
            }
          else
            {
             if(useSingleMA)
                countf++;
-            ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
+            if(ShowSingleMA)
+              {
+               ObjectDelete(0, OBJPREFIX+"1MA"+" - "+_Symb);
 
-            LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-            xx+=50;
+               LabelCreate(0, OBJPREFIX+"1MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+               xx+=50;
+              }
            }
      }
 //--
@@ -1902,26 +1951,35 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useDoubleMA)
             countb++;
-         ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-         LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
-         xx+=50;
+         if(ShowSingleMA)
+           {
+            ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
+            LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+            xx+=50;
+           }
         }
       else
          if(sig_DoubleMA(i) == -1)
            {
             if(useDoubleMA)
                counts++;
-            ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-            LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
-            xx+=50;
+            if(showDoubleMa)
+              {
+               ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
+               LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+               xx+=50;
+              }
            }
          else
            {
             if(useDoubleMA)
                countf++;
-            ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
-            LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
-            xx+=50;
+            if(showDoubleMa)
+              {
+               ObjectDelete(0, OBJPREFIX+"2MA"+" - "+_Symb);
+               LabelCreate(0, OBJPREFIX+"2MA"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+               xx+=50;
+              }
            }
      }
 
@@ -1932,7 +1990,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSto)
             countb++;
-         LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showSto)
+            LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -1940,17 +1999,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useSto)
                counts++;
-            LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showSto)
+               LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useSto)
                countf++;
-            LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showSto)
+               LabelCreate(0, OBJPREFIX+"sto"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(showSto)
+         xx+=50;
      }
 
 //--
@@ -1960,7 +2022,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useMacd)
             countb++;
-         LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showMacd)
+            LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
 
@@ -1969,17 +2032,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useMacd)
                counts++;
-            LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showMacd)
+               LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useMacd)
                countf++;
-            LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showMacd)
+               LabelCreate(0, OBJPREFIX+"macd"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(showMacd)
+         xx+=50;
      }
 //--
    if(useAdx)
@@ -1988,7 +2054,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useAdx)
             countb++;
-         LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showAdx)
+            LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -1996,17 +2063,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useAdx)
                counts++;
-            LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showAdx)
+               LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useAdx)
                countf++;
-            LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showAdx)
+               LabelCreate(0, OBJPREFIX+"adx"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(showAdx)
+         xx+=50;
      }
 
 //--
@@ -2016,7 +2086,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useAtr)
             countb++;
-         LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showAtr)
+            LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -2024,17 +2095,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useAtr)
                counts++;
-            LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showAtr)
+               LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useAtr)
                countf++;
-            LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showAtr)
+               LabelCreate(0, OBJPREFIX+"atr"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(showAtr)
+         xx+=50;
      }
 
 //--
@@ -2044,7 +2118,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useRSI)
             countb++;
-         LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
+         if(showRsi)
+            LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Rsi Buy "+_Symb);
 
         }
       else
@@ -2052,16 +2127,19 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useRSI)
                counts++;
-            LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showRsi)
+               LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useRSI)
                countf++;
-            LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showRsi)
+               LabelCreate(0, OBJPREFIX+"rsi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
            }
-      xx+=50;
+      if(showRsi)
+         xx+=50;
      }
 
 //--
@@ -2071,7 +2149,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useBB)
             countb++;
-         LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(ShowBB)
+            LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -2079,17 +2158,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useBB)
                counts++;
-            LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(ShowBB)
+               LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useBB)
                countf++;
-            LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(ShowBB)
+               LabelCreate(0, OBJPREFIX+"bb"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(ShowBB)
+         xx+=50;
      }
 //--
    if(useIchi)
@@ -2098,7 +2180,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useIchi)
             countb++;
-         LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showIchi)
+            LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -2106,17 +2189,20 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useIchi)
                counts++;
-            LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showIchi)
+               LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useIchi)
                countf++;
-            LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showIchi)
+               LabelCreate(0, OBJPREFIX+"ichi"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
 
            }
-      xx+=50;
+      if(showIchi)
+         xx+=50;
      }
 //--
    if(useSuperTrend)
@@ -2125,7 +2211,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSuperTrend)
             countb++;
-         LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(showIchi)
+            LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -2133,16 +2220,19 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useSuperTrend)
                counts++;
-            LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(showIchi)
+               LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useSuperTrend)
                countf++;
-            LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(showIchi)
+               LabelCreate(0, OBJPREFIX+"str"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
            }
-      xx+=50;
+      if(showIchi)
+         xx+=50;
      }
 //--
    if(useSAR)
@@ -2151,7 +2241,8 @@ void CreateSymbGUI(int i, int Y)
         {
          if(useSAR)
             countb++;
-         LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
+         if(ShowSar)
+            LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "5", "Webdings", 15, clrLimeGreen, 0, ANCHOR_RIGHT, false, false, true, 0, "Buy "+_Symb);
 
         }
       else
@@ -2159,16 +2250,19 @@ void CreateSymbGUI(int i, int Y)
            {
             if(useSAR)
                counts++;
-            LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
+            if(ShowSar)
+               LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "6", "Webdings", 15, clrRed, 0, ANCHOR_RIGHT, false, false, true, 0, "Sell "+_Symb);
 
            }
          else
            {
             if(useSAR)
                countf++;
-            LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
+            if(ShowSar)
+               LabelCreate(0, OBJPREFIX+"sar"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER, "4", "Webdings", 15, clrYellow, 0, ANCHOR_RIGHT, false, false, true, 0, "No Signal "+_Symb);
            }
-      xx+=50;
+      if(ShowSar)
+         xx+=50;
 
      }
    xx+=10;
@@ -2207,14 +2301,14 @@ void CreateSymbGUI(int i, int Y)
            }
 
         }
-      if((b1>=60&&q1<=40)||(CSMType==increase_Decrease&&((b1>=b2&&b2>=b3&&q1<=40)||(q1<=q2&&q2<=q3&&b1>=60))))
+      if((b1>=num1&&q1<=num2)||(CSMType==increase_Decrease&&((b1>=b2&&b2>=b3&&q1<=num2)||(q1<=q2&&q2<=q3&&b1>=num1))))
         {
          ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
          xx+=140;
          CSMBuy=true;
         }
       else
-         if((q1>=60&&b1<=40)||(CSMType==increase_Decrease&&((q1>=q2&&q2>=q3&&b1<=40)||(b1<=b2&&b2<=b3&&q1>=60))))
+         if((q1>=num1&&b1<=num2)||(CSMType==increase_Decrease&&((q1>=q2&&q2>=q3&&b1<=num2)||(b1<=b2&&b2<=b3&&q1>=num1))))
            {
             ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
             xx+=140;
@@ -2225,8 +2319,28 @@ void CreateSymbGUI(int i, int Y)
             ObjectDelete(0,OBJPREFIX+"CMS"+" - "+_Symb);
             xx+=140;
             if(closewithCSM&&Positions[i].GroupTotal()>0)
-               Positions[i].GroupCloseAll(30);
-            close=true;
+              {
+               if(Risk==HighRisk)
+                 {
+                  Positions[i].GroupCloseAll(30);
+                  close=true;
+                 }
+               else
+                 {
+                  if(b1<=Cnum1&&q1>=Cnum2)
+                    {
+                     BuyPositions[i].GroupCloseAll(30);
+                     close=true;
+
+                    }
+                  if(q1<=Cnum1&&b1>=Cnum2)
+                    {
+                     SellPositions[i].GroupCloseAll(30);
+                     close=true;
+
+                    }
+                 }
+              }
            }
 
      }
@@ -2264,6 +2378,7 @@ void CreateSymbGUI(int i, int Y)
         {
          ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
          xx+=100;
+         tradableNum++;
         }
       if(showClosable)
         {
@@ -2279,6 +2394,7 @@ void CreateSymbGUI(int i, int Y)
            {
             ButtonCreate(0, OBJPREFIX+"trade"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 10, C'59, 41, 40', clrRed, C'239, 112, 112', false, false, false, true, 1, "Sell "+_Symb);
             xx+=100;
+            tradableNum++;
            }
          if(showClosable)
            {
@@ -2300,6 +2416,7 @@ void CreateSymbGUI(int i, int Y)
               {
                ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
                xx+=130;
+               ClosableNum++;
               }
            }
          else
@@ -2315,6 +2432,7 @@ void CreateSymbGUI(int i, int Y)
                  {
                   ButtonCreate(0, OBJPREFIX+"close"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
                   xx+=130;
+                  ClosableNum++;
                  }
               }
             else
@@ -2471,8 +2589,8 @@ void CreateSymbGUI(int i, int Y)
       double slpip = tools[i].Bid()-sl;
       if(tpType == RISK_REWARD)
         {
-        
-            tp = tools[i].Bid()+TAKEPROFIT*slpip;
+
+         tp = tools[i].Bid()+TAKEPROFIT*slpip;
         }
       CalcLot(i,slpip/tools[i].Pip());
       if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
@@ -4511,4 +4629,6 @@ bool ClosingTimeFilter(string ET)
      }
    return(true);
   }
+//+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
