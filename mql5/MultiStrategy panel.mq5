@@ -222,14 +222,30 @@ input int Max_loss_trade_daily=10;
 input int Max_loss_trade_Weekly=10;
 input int Max_Trade_daily     =10;
 input int Max_Trade_weekly    =10;
-input int Max_negative_symbol_daily  =10;
-input int Max_negative_All_daily     =10;
-input int Max_negative_symbol_weekly =10;
-input int Max_negative_All_weekly    =10;
-input int Max_Positive_symbol_daily  =10;
-input int Max_Positive_All_daily     =10;
-input int Max_Positive_symbol_weekly  =10;
-input int Max_Positive_All_weekly     =10;
+input int Max_negative_symbol_daily_low  =10;
+input int Max_negative_All_daily_low     =10;
+input int Max_negative_symbol_weekly_low =10;
+input int Max_negative_All_weekly_low    =10;
+input int Max_Positive_symbol_daily_low  =10;
+input int Max_Positive_All_daily_low     =10;
+input int Max_Positive_symbol_weekly_low  =10;
+input int Max_Positive_All_weekly_low     =10;
+input int Max_negative_symbol_daily_mid   =10;
+input int Max_negative_All_daily_mid     =10;
+input int Max_negative_symbol_weekly_mid =10;
+input int Max_negative_All_weekly_mid    =10;
+input int Max_Positive_symbol_daily_mid  =10;
+input int Max_Positive_All_daily_mid     =10;
+input int Max_Positive_symbol_weekly_mid  =10;
+input int Max_Positive_All_weekly_mid     =10;
+input int Max_negative_symbol_daily_high  =10;
+input int Max_negative_All_daily_high     =10;
+input int Max_negative_symbol_weekly_high =10;
+input int Max_negative_All_weekly_high    =10;
+input int Max_Positive_symbol_daily_high  =10;
+input int Max_Positive_All_daily_high     =10;
+input int Max_Positive_symbol_weekly_high  =10;
+input int Max_Positive_All_weekly_high     =10;
 input double Max_DrawDown             =40;
 input bool close_Drawdown             =true;
 input bool close_All_prec_profit      =true; // Close All Positions when account profit reach xx%
@@ -1199,7 +1215,61 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
+// RISK OPTIONS
+   if(Monday_Filtter)
+     {
+      if(current.day_of_week==1)
+        {
+         Risk=Monday_Risk;
+        }
+     }
+   else
+      if(last_week_month)
+        {
+         if(current.day>=21)
+           {
+            Risk=last_week_month_risk;
+           }
+        }
+      else
+         if(first_week_month)
+           {
+            if(current.day<=7)
+              {
+               Risk=first_week_month_risk;
+              }
+           }
+         else
+            if(first_day_month)
+              {
+               if(current.day==1)
+                 {
+                  Risk=first_day_month_risk;
+                 }
+              }
+            else
+               if(last_day_month)
+                 {
+                  if(tmrw.day==1)
+                    {
+                     Risk=last_day_month_risk;
+                    }
+                 }
+               else
+                 {
+                  Risk=HighRisk;
+                 }
 
+ int Max_negative_symbol_daily  =Risk==HighRisk?Max_negative_symbol_daily_high,Risk==MidRisk?Max_negative_symbol_daily_mid:Max_negative_symbol_daily_low;
+ int Max_negative_All_daily     =Risk==HighRisk?Max_negative_All_daily_high,Risk==MidRisk?Max_negative_All_daily_mid:Max_negative_All_daily_low;
+ int Max_negative_symbol_weekly =Risk==HighRisk?Max_negative_symbol_weekly_high,Risk==MidRisk?Max_negative_symbol_weekly_mid:Max_negative_symbol_weekly_low;
+ int Max_negative_All_weekly   =Risk==HighRisk?Max_Positive_All_weekly_high,Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
+ int Max_Positive_symbol_daily=Risk==HighRisk?Max_Positive_symbol_daily_high,Risk==MidRisk?Max_Positive_symbol_daily_mid:Max_Positive_symbol_daily_low;
+ int Max_Positive_All_daily    =Risk==HighRisk?Max_Positive_Al_daily_high,Risk==MidRisk?Max_Positive_All_daily_mid:Max_Positive_All_daily_low;
+ int Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high,Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
+ int Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high,Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
+//+------------------------------------------------------------------+
+//|                    
 //---
    Max_order_Day();
    Max_order_Weekly();
@@ -2565,53 +2635,7 @@ void CreateSymbGUI(int i, int Y)
          Positions[i].GroupCloseAll();
         }
      }
-// RISK OPTIONS
-   if(Monday_Filtter)
-     {
-      if(current.day_of_week==1)
-        {
-         Risk=Monday_Risk;
-        }
-     }
-   else
-      if(last_week_month)
-        {
-         if(current.day>=21)
-           {
-            Risk=last_week_month_risk;
-           }
-        }
-      else
-         if(first_week_month)
-           {
-            if(current.day<=7)
-              {
-               Risk=first_week_month_risk;
-              }
-           }
-         else
-            if(first_day_month)
-              {
-               if(current.day==1)
-                 {
-                  Risk=first_day_month_risk;
-                 }
-              }
-            else
-               if(last_day_month)
-                 {
-                  if(tmrw.day==1)
-                    {
-                     Risk=last_day_month_risk;
-                    }
-                 }
-               else
-                 {
-                  Risk=HighRisk;
-                 }
-
-//+------------------------------------------------------------------+
-//|                                                                  |
+                                              |
 //+------------------------------------------------------------------+
    if(((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)
      {
