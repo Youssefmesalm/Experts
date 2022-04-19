@@ -147,6 +147,19 @@ enum RISKOPTIONS
   {
    LOW,MID,HIGH,
   };
+enum DD_Action
+  {
+   Stop_Trading,
+   Close_Profit,
+   Close_loss,
+   ClosAll,
+  };
+enum close_Filtter
+  {
+   Indicators_only,
+   CSM_only,
+   Both
+  };
 //--- User inputs
 input string Set0= "                    <===================== General ==========================>";
 input string Prefix = ""; //Symbol Prefix
@@ -157,30 +170,49 @@ input TRADE_TYPE trade_type = SIGNALS_ONLY;
 input TRADE_MODE TRADEMODE = SINGLE;
 input TRADE_PAIR TRADE_ON = MULTIPLE_PAIRS;
 input ORDERTYPE type = BOTH;
+input bool Trade_Immediatly=true;
+input ENUM_TIMEFRAMES TF_Interval=PERIOD_CURRENT;
+input long magic_Number = 2020;
+input string comment ="FM Stallions";
+input string set11       = "===================== RISK FILTTERS OPTIONS===================";
+input bool Monday_Filtter =false;
+input RISKOPTIONS Monday_Risk = MID;
+input bool last_week_month  =false;
+input RISKOPTIONS last_week_month_risk =LOW;
+input bool first_week_month = false;
+input RISKOPTIONS first_week_month_risk =LOW;
+input bool first_day_month =false;
+input RISKOPTIONS first_day_month_risk = LOW;
+input bool last_day_month =false;
+input RISKOPTIONS last_day_month_risk = LOW;
+input string set2 = "=====================  RISK Management ===============";
+input LOT_TYPE LotType = RISK;
 input SL_TP sltype = op1;
 input TP_TYPE tpType = PIPS;
-
-input double TAKEPROFIT = 100;
-input double tp1 = 0;
+input double Fixed_Lot = 0.1;
+input double lot_Per = 1; // LOT PER 1000
+input double LowRisk =1;   // Low Risk
+input double LowRiskTP =1;  //Tp for Low Risk
+input double MidRisk =2; // Mid Risk
+input double MidRiskTP = 2;  // Tp for Mid Risk
+input double HighRisk = 3; //High Risk
+input double HighRiskTP =3;  // Tp for High Risk
+double TAKEPROFIT = 0;
 input double tp2 = 0;
 input double tp3 = 0;
 input double tp4 = 0;
 input double tp5 = 0;
 input double STOPLOSS = 100;
-input long magic_Number = 2020;
-input string comment ="FM Stallions";
-input string set2 = "=====================  RISK Management ===============";
-input LOT_TYPE LotType = RISK;
-input double Fixed_Lot = 0.1;
-input double LowRisk =1;
-input double LowRiskTP =1;
-input double MidRisk =2;
-input double MidRiskTP = 2;
-input double HighRisk = 3; // RISK PRECENTAGE
-input double HighRiskTP =3;
-input double lot_Per = 1; // LOT PER 1000
+input bool use_CMS_Filters=  true;  // Use CMS Filtering to open trade
+input int num1=60;      // CMS open Num 1
+input int num2=40;   // CMS open Num 2
+input int Cnum1=50;      // CMS Close Num 1
+input int Cnum2=50;   // CMS Close Num 2
+input double avg_to_Trada=100; // Avg level to open trades
+input indi_type CSMType    =Default;
 input string set3       ="======================Closing =====================";
 input bool  closeWithPercentage    = true; //close with avg
+input close_Filtter CloseFilter= Both;
 input double level_To_Close = 60; // avg to close
 input bool closewithCSM       =false;
 input double Max_Account_lost =50;
@@ -209,45 +241,83 @@ input double profit_level4 = 0;
 input double SL5 = 0;
 input double profit_level5 =0;
 input string set7=      "=======================Filters=============================";
-input bool use_CMS_Filters=  true;  // Use CMS Filtering
-input int num1=60;      // CMS open Num 1
-input int num2=40;   // CMS open Num 2
-input int Cnum1=50;      // CMS Close Num 1
-input int Cnum2=4500;   // CMS Close Num 2
-input indi_type CSMType    =Default;
 input bool Hedge           =true;
-input int Max_Orders = 20;
-input int Max_Orders_symbols=1;
-input int Max_loss_trade_daily=10;
-input int Max_loss_trade_Weekly=10;
-input int Max_Trade_daily     =10;
-input int Max_Trade_weekly    =10;
-input int Max_negative_symbol_daily_low  =10;
-input int Max_negative_All_daily_low     =10;
-input int Max_negative_symbol_weekly_low =10;
-input int Max_negative_All_weekly_low    =10;
-input int Max_Positive_symbol_daily_low  =10;
-input int Max_Positive_All_daily_low     =10;
-input int Max_Positive_symbol_weekly_low  =10;
-input int Max_Positive_All_weekly_low     =10;
-input int Max_negative_symbol_daily_mid   =10;
-input int Max_negative_All_daily_mid     =10;
-input int Max_negative_symbol_weekly_mid =10;
-input int Max_negative_All_weekly_mid    =10;
-input int Max_Positive_symbol_daily_mid  =10;
-input int Max_Positive_All_daily_mid     =10;
-input int Max_Positive_symbol_weekly_mid  =10;
-input int Max_Positive_All_weekly_mid     =10;
-input int Max_negative_symbol_daily_high  =10;
-input int Max_negative_All_daily_high     =10;
-input int Max_negative_symbol_weekly_high =10;
-input int Max_negative_All_weekly_high    =10;
-input int Max_Positive_symbol_daily_high  =10;
-input int Max_Positive_All_daily_high     =10;
-input int Max_Positive_symbol_weekly_high  =10;
-input int Max_Positive_All_weekly_high     =10;
+input bool Use_Max_Orders = false;    // Use Max Total Trades for All Symbols
+input int Max_Orders = 20;    // Max Total Trades for All Symbols
+input int Max_Orders_symbols=1; // Max total trades for each symbol
+input bool Use_Max_Trade_daily     =false; //Use Max trades Daily for Each symbol
+input int Max_Trade_daily     =10; // Max trades Daily for Each symbol
+input bool Use_Max_Trade_weekly    =false; // Use Max trades Weekly for Each symbol
+input int Max_Trade_weekly    =10; // Max trades Weekly for Each symbol
+input bool Use_Max_negative_symbol_daily  =false;  //Use Max negative orders daily for each symbol
+input bool Use_Max_negative_All_daily     =false;  //Use Max negative orders daily for All symbol
+input bool Use_Max_negative_symbol_weekly =false;  //Use Max negative orders weekly for each symbol 
+input bool  Use_Max_negative_All_weekly    =false;  //Use Max negative orders weekly for All symbol
+ 
+input bool Use_Max_positive_symbol_daily  =false;  //Use Max Positive orders daily for each symbol
+input bool Use_Max_positive_All_daily     =false;  //Use Max Positive orders daily for All symbol
+input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol 
+input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol 
+
+input int Max_negative_symbol_daily_low  =10;  //Max negative orders daily for each symbol (Low)
+input int Max_negative_All_daily_low     =10;  //Max negative orders daily for All symbol (Low)
+input int Max_negative_symbol_weekly_low =10;  //Max negative orders weekly for each symbol (Low)
+input int Max_negative_All_weekly_low    =10;  //Max negative orders weekly for All symbol (Low)
+input int Max_Positive_symbol_daily_low  =10;  //Max positive orders daily for each symbol (Low)
+input int Max_Positive_All_daily_low     =10;  //Max positive orders daily for All symbol (Low)
+input int Max_Positive_symbol_weekly_low  =10; //Max Positive orders weekly for each symbol (Low)
+input int Max_Positive_All_weekly_low     =10; //Max Positive orders weekly for All symbol (Low)
+input int Max_negative_symbol_daily_mid   =10;  //Max negative orders daily for each symbol (Mid)
+input int Max_negative_All_daily_mid     =10;  //Max negative orders daily for All symbol (Mid)
+input int Max_negative_symbol_weekly_mid =10;  //Max negative orders weekly for each symbol (Mid)
+input int Max_negative_All_weekly_mid    =10;   //Max negative orders weekly for All symbol (Mid)
+input int Max_Positive_symbol_daily_mid  =10;   //Max positive orders daily for each symbol (Mid)
+input int Max_Positive_All_daily_mid     =10;   //Max positive orders daily for All symbol (Mid)
+input int Max_Positive_symbol_weekly_mid  =10;  //Max positive orders weekly for each symbol (Mid)
+input int Max_Positive_All_weekly_mid     =10;  //Max positive orders weekly for All symbol (Mid)
+input int Max_negative_symbol_daily_high  =10;   //Max negative orders daily for each symbol (High)
+input int Max_negative_All_daily_high     =10;   //Max negative orders daily for All symbol (High)
+input int Max_negative_symbol_weekly_high =10;    //Max negative orders weekly for each symbol (High)
+input int Max_negative_All_weekly_high    =10;     //Max negative orders weekly for each symbol (High)
+input int Max_Positive_symbol_daily_high  =10;     //Max positive orders daily for each symbol (High)
+input int Max_Positive_All_daily_high     =10;//Max positive orders daily for All symbol (High)
+input int Max_Positive_symbol_weekly_high  =10;//Max positive orders weekly for each symbol (High)
+input int Max_Positive_All_weekly_high     =10;//Max positive orders weekly for All symbol (Low)
+input int Max_Positive_trade_AUD     =10;  // Max Positive Trades For AUD daily
+input int Max_Negative_trade_AUD     =10;  // Max Negative Trades For AUD daily
+input int Max_Positive_trade_EUR     =10;  // Max Positive Trades For EUR daily
+input int Max_Negative_trade_EUR     =10;  // Max Negative Trades For EUR daily
+input int Max_Positive_trade_USD     =10;  // Max Positive Trades For USD daily
+input int Max_Negative_trade_USD     =10;  // Max Negative Trades For USD daily
+input int Max_Positive_trade_GBP     =10;  // Max Positive Trades For GBP daily
+input int Max_Negative_trade_GBP     =10;  // Max Negative Trades For GBP daily
+input int Max_Positive_trade_JPY     =10;  // Max Positive Trades For JPY daily
+input int Max_Negative_trade_JPY     =10;  // Max Negative Trades For JPY daily
+input int Max_Positive_trade_CAD     =10;  // Max Positive Trades For CAD daily
+input int Max_Negative_trade_CAD     =10;  // Max Negative Trades For CAD daily
+input int Max_Positive_trade_NZD     =10;  // Max Positive Trades For NZD daily
+input int Max_Negative_trade_NZD     =10;  // Max Negative Trades For NZD daily
+input int Max_Positive_trade_CHF     =10;  // Max Positive Trades For CHF daily
+input int Max_Negative_trade_CHF     =10;  // Max Negative Trades For CHF daily
+input int weekly_Max_Positive_trade_AUD     =10;  // Max Positive Trades For AUD weekly
+input int weekly_Max_Negative_trade_AUD     =10;  // Max Negative Trades For AUD weekly
+input int weekly_Max_Positive_trade_EUR     =10;  // Max Positive Trades For EUR weekly
+input int weekly_Max_Negative_trade_EUR     =10;  // Max Negative Trades For EUR weekly
+input int weekly_Max_Positive_trade_USD     =10;  // Max Positive Trades For USD weekly
+input int weekly_Max_Negative_trade_USD     =10;  // Max Negative Trades For USD weekly
+input int weekly_Max_Positive_trade_GBP     =10;  // Max Positive Trades For GBP weekly
+input int weekly_Max_Negative_trade_GBP     =10;  // Max Negative Trades For GBP weekly
+input int weekly_Max_Positive_trade_JPY     =10;  // Max Positive Trades For JPY weekly
+input int weekly_Max_Negative_trade_JPY     =10;  // Max Negative Trades For JPY weekly
+input int weekly_Max_Positive_trade_CAD     =10;  // Max Positive Trades For CAD weekly
+input int weekly_Max_Negative_trade_CAD     =10;  // Max Negative Trades For CAD weekly
+input int weekly_Max_Positive_trade_NZD     =10;  // Max Positive Trades For NZD weekly
+input int weekly_Max_Negative_trade_NZD     =10;  // Max Negative Trades For NZD weekly
+input int weekly_Max_Positive_trade_CHF     =10;  // Max Positive Trades For CHF weekly
+input int weekly_Max_Negative_trade_CHF     =10;  // Max Negative Trades For CHF weekly
 input double Max_DrawDown             =40;
-input bool close_Drawdown             =true;
+input bool close_Drawdown             =true;  // Close All when reach Max DrawDown
+input DD_Action DrawDown_Action      =ClosAll;
 input bool close_All_prec_profit      =true; // Close All Positions when account profit reach xx%
 input double prec_profit_close        =20;   // xx% profit to close all
 input bool close_position_prec_profit =true; //Close one Position when its profit reach xx%
@@ -256,11 +326,17 @@ input bool closeAll_DayEnd            =false; //close All Positions at the end o
 input bool closeAll_WeekEnd           =false; //close All Positions at the end of the week
 input bool closeAll_MonthEnd          =false;//close All Positions at the end of the Month
 input bool daily_gain_limit          =false;
-input double daily_gain_limit_prcentage=10; 
+input double daily_gain_limit_prcentage=10;
 input bool weekly_gain_limit        =false;
 input double weekly_gain_limit_prcentage=10;
 input bool monthly_gain_limit        =false;
 input double monthly_gain_limit_prcentage=10;
+input bool daily_loss_limit          =false;
+input double daily_loss_limit_prcentage=10;
+input bool weekly_loss_limit        =false;
+input double weekly_loss_limit_prcentage=10;
+input bool monthly_loss_limit        =false;
+input double monthly_loss_limit_prcentage=10;
 input string set71 = "======================== Closing with time =========================";
 input bool CloseAllWitTime=false;
 input DYS_WEEK DayToCloseAll=Friday;
@@ -279,17 +355,7 @@ input bool CloseProfitWithTime=false;
 input DYS_WEEK DayToCloseProfit=Friday;
 input int HourToCloseProfit= 22;
 input int MinToCloseProfit=0;
-input string set11       = "===================== RISK FILTTERS OPTIONS===================";
-input bool Monday_Filtter =false;
-input RISKOPTIONS Monday_Risk = MID;
-input bool last_week_month  =false;
-input RISKOPTIONS last_week_month_risk =LOW;
-input bool first_week_month = false;
-input RISKOPTIONS first_week_month_risk =LOW;
-input bool first_day_month =false;
-input RISKOPTIONS first_day_month_risk = LOW;
-input bool last_day_month =false;
-input RISKOPTIONS last_day_month_risk = LOW;
+
 
 input string set8         = "======================CMS Indicator Settings ================";
 input ENUM_TIMEFRAMES period = PERIOD_CURRENT;// Period for CMS
@@ -540,15 +606,31 @@ bool monthly_limit=false;
 datetime daily_limit_date=0;
 datetime weekly_limit_date=0;
 datetime monthly_limit_date=0;
+
+bool limit_loss=false;
+bool daily_limit_loss=false;
+bool weekly_limit_loss=false;
+bool monthly_limit_loss=false;
+datetime daily_limit_date_loss=0;
+datetime weekly_limit_date_loss=0;
+datetime monthly_limit_date_loss=0;
 //variables
 double Lot;
+int Max_negative_symbol_daily  =0;
+int Max_negative_All_daily     =0;
+int Max_negative_symbol_weekly =0;
+int Max_negative_All_weekly   =0;
+int Max_Positive_symbol_daily=0;
+int Max_Positive_All_daily    =0;
+int Max_Positive_symbol_weekly=0;
+int Max_Positive_All_weekly=0;
 int tradableNum=0;
 int ClosableNum=0;
 RISKOPTIONS Risk=0;
 datetime StartTime=0;
 int s_ma_handle[], d_fma_handle[], d_sma_handle[], st_handle[], storsi_handle[], sto_handle[], mac_handle[], adx_handle[], atr_handle[], rsi_handle[], bb_handle[], bbw_handle[];
 int Ichi_handle[], rsiDiv_handle[], sar_handle[];
-datetime time0[];
+datetime time0[],time1[];
 int buyPartial[],sellPartial[];
 double currenciesStrength[CURRENCIES_COUNT];
 double currenciesStrength1[CURRENCIES_COUNT];
@@ -630,7 +712,6 @@ int OnInit()
       if(g_handle == INVALID_HANDLE)
         {
          printf("Error creating CSM indicator");
-         return INIT_FAILED;
         }
       CLIENT_BG_WIDTH+=200;
 
@@ -807,6 +888,7 @@ int OnInit()
    ArrayResize(Ichi_handle, ArraySize(aSymbols));
    ArrayResize(rsiDiv_handle, ArraySize(aSymbols));
    ArrayResize(time0, ArraySize(aSymbols));
+   ArrayResize(time1, ArraySize(aSymbols));
    ArrayResize(sar_handle, ArraySize(aSymbols));
    ArrayResize(signal, ArraySize(aSymbols));
    int size = ArraySize(aSymbols);
@@ -1164,6 +1246,15 @@ int OnInit()
 void OnDeinit(const int reason)
   {
 //---
+   for(int i=0; i<ArraySize(aSymbols); i++)
+     {
+      delete trades[i];
+      delete Positions[i];
+      delete Hist[i];
+      delete tools[i];
+      delete SellPositions[i];
+      delete BuyPositions[i];
+     }
 //---- DestroyTimer
    EventKillTimer();
 
@@ -1182,6 +1273,9 @@ void OnDeinit(const int reason)
       //---
       GlobalVariablesFlush();
      }
+   ArrayInitialize(currenciesStrength, 0);
+   ArrayInitialize(currenciesStrength1, 0);
+   ArrayInitialize(currenciesStrength2, 0);
 //--- DeleteObjects
    if(reason <= REASON_REMOVE || reason == REASON_CLOSE || reason == REASON_RECOMPILE || reason == REASON_INITFAILED || reason == REASON_ACCOUNT)
      {
@@ -1215,6 +1309,13 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
+   Risk=HighRisk;
+   MqlDateTime current,tmrw;
+   datetime currentDT=0;
+   datetime tmrwDT=currentDT+24*60*60;
+   currentDT=TimeCurrent();
+   TimeToStruct(tmrwDT,tmrw);
+   TimeToStruct(currentDT,current);
 // RISK OPTIONS
    if(Monday_Filtter)
      {
@@ -1223,64 +1324,61 @@ void OnTick()
          Risk=Monday_Risk;
         }
      }
-   else
-      if(last_week_month)
-        {
-         if(current.day>=21)
-           {
-            Risk=last_week_month_risk;
-           }
-        }
-      else
-         if(first_week_month)
-           {
-            if(current.day<=7)
-              {
-               Risk=first_week_month_risk;
-              }
-           }
-         else
-            if(first_day_month)
-              {
-               if(current.day==1)
-                 {
-                  Risk=first_day_month_risk;
-                 }
-              }
-            else
-               if(last_day_month)
-                 {
-                  if(tmrw.day==1)
-                    {
-                     Risk=last_day_month_risk;
-                    }
-                 }
-               else
-                 {
-                  Risk=HighRisk;
-                 }
 
- int Max_negative_symbol_daily  =Risk==HighRisk?Max_negative_symbol_daily_high,Risk==MidRisk?Max_negative_symbol_daily_mid:Max_negative_symbol_daily_low;
- int Max_negative_All_daily     =Risk==HighRisk?Max_negative_All_daily_high,Risk==MidRisk?Max_negative_All_daily_mid:Max_negative_All_daily_low;
- int Max_negative_symbol_weekly =Risk==HighRisk?Max_negative_symbol_weekly_high,Risk==MidRisk?Max_negative_symbol_weekly_mid:Max_negative_symbol_weekly_low;
- int Max_negative_All_weekly   =Risk==HighRisk?Max_Positive_All_weekly_high,Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
- int Max_Positive_symbol_daily=Risk==HighRisk?Max_Positive_symbol_daily_high,Risk==MidRisk?Max_Positive_symbol_daily_mid:Max_Positive_symbol_daily_low;
- int Max_Positive_All_daily    =Risk==HighRisk?Max_Positive_Al_daily_high,Risk==MidRisk?Max_Positive_All_daily_mid:Max_Positive_All_daily_low;
- int Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high,Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
- int Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high,Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
+   if(last_week_month)
+     {
+      if(current.day>=21)
+        {
+         Risk=last_week_month_risk;
+        }
+     }
+
+   if(first_week_month)
+     {
+      if(current.day<=7)
+        {
+         Risk=first_week_month_risk;
+        }
+     }
+
+   if(first_day_month)
+     {
+      if(current.day==1)
+        {
+         Risk=first_day_month_risk;
+        }
+     }
+
+
+   if(last_day_month)
+     {
+      if(tmrw.day==1)
+        {
+         Risk=last_day_month_risk;
+        }
+     }
+
+   Max_negative_symbol_daily  =Risk==HighRisk?Max_negative_symbol_daily_high:Risk==MidRisk?Max_negative_symbol_daily_mid:Max_negative_symbol_daily_low;
+   Max_negative_All_daily     =Risk==HighRisk?Max_negative_All_daily_high:Risk==MidRisk?Max_negative_All_daily_mid:Max_negative_All_daily_low;
+   Max_negative_symbol_weekly =Risk==HighRisk?Max_negative_symbol_weekly_high:Risk==MidRisk?Max_negative_symbol_weekly_mid:Max_negative_symbol_weekly_low;
+   Max_negative_All_weekly   =Risk==HighRisk?Max_negative_All_weekly_high:Risk==MidRisk?Max_negative_All_weekly_mid:Max_negative_All_weekly_low;
+   Max_Positive_symbol_daily=Risk==HighRisk?Max_Positive_symbol_daily_high:Risk==MidRisk?Max_Positive_symbol_daily_mid:Max_Positive_symbol_daily_low;
+   Max_Positive_All_daily    =Risk==HighRisk?Max_Positive_All_daily_high:Risk==MidRisk?Max_Positive_All_daily_mid:Max_Positive_All_daily_low;
+   Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high:Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
+   Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high:Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
 //+------------------------------------------------------------------+
-//|                    
+//|
 //---
    Max_order_Day();
    Max_order_Weekly();
-   ArrayInitialize(currenciesStrength, 0);
-   ArrayInitialize(currenciesStrength1, 0);
-   ArrayInitialize(currenciesStrength2, 0);
+
 
 // Getting currencies strength for all 8 currencies to the currenciesStrength buffer
-   fetchCurrenciesStrength(currenciesStrength,0);
-   fetchCurrenciesStrength(currenciesStrength1,1);
-   fetchCurrenciesStrength(currenciesStrength2,2);
+   if(use_CMS_Filters)
+     {
+      fetchCurrenciesStrength(currenciesStrength,currenciesStrength1,currenciesStrength2);
+
+     }
    double Balance = AccountInfoDouble(ACCOUNT_BALANCE);
    double Profit= AccountInfoDouble(ACCOUNT_PROFIT);
    datetime d1=iTime(Symbol(),PERIOD_D1,0);
@@ -1303,7 +1401,23 @@ void OnTick()
            }
         }
      }
-
+   if(daily_loss_limit)
+     {
+      if(d1>daily_limit_date_loss&&daily_limit_loss)
+        {
+         daily_limit_loss=false;
+        }
+      if(Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+        {
+         Alert(" Daily loss limit reached");
+         daily_limit_loss=true;
+         daily_limit_date_loss=iTime(Symbol(),PERIOD_D1,0);
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
+           }
+        }
+     }
    if(weekly_gain_limit)
      {
       if(w1>weekly_limit_date&&weekly_limit)
@@ -1315,6 +1429,23 @@ void OnTick()
          Alert(" weekly gain limit reached");
          weekly_limit=true;
          weekly_limit_date=w1;
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
+           }
+        }
+     }
+   if(weekly_loss_limit)
+     {
+      if(w1>weekly_limit_date_loss&&weekly_limit_loss)
+        {
+         weekly_limit=false;
+        }
+      if(Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+        {
+         Alert(" weekly loss limit reached");
+         weekly_limit_loss=true;
+         weekly_limit_date_loss=w1;
          for(int z=0; z<ArraySize(aSymbols); z++)
            {
             Positions[z].GroupCloseAll(30);
@@ -1338,53 +1469,92 @@ void OnTick()
            }
         }
      }
-     MqlDateTime today;
-     datetime todayDT=TimeCurrent();
-     TimeToStruct(todayDT,today);
-     if(CloseAllWitTime){
-       if(today.day_of_week==DayToCloseAll&&today.hour==HourToCloseAll&&today.min==MinToCloseAll){
-         for(int x=0;x<ArraySize(aSymbols);x++){
-           Positions[x].GroupCloseAll(30);
-         }
-       }
-     }
-     if(PartialclosewithTime){
-       if(today.day_of_week==DayToCloseAllParial&&today.hour==HourToCloseAllPartial&&today.min==MinToCloseAllPartial){
-         for(int x=0;x<ArraySize(aSymbols);x++){
-           for(int z=0;z<Positions[x].GroupTotal();z++){
-             double ll=Positions[x][z].GetVolume();
-             Positions[x][z].ClosePartial(ll*(ParialClosePrecentage/100),30);
+   if(monthly_loss_limit)
+     {
+      if(m1>monthly_limit_date_loss&&monthly_limit_loss)
+        {
+         monthly_limit_loss=false;
+        }
+      if(Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+        {
+         Alert(" Monthly loss limit reached");
+         monthly_limit_loss=true;
+         monthly_limit_date_loss=m1;
+         for(int z=0; z<ArraySize(aSymbols); z++)
+           {
+            Positions[z].GroupCloseAll(30);
            }
-         }
-       }
+        }
      }
-     if(CloseLossWithTime){
-       if(today.day_of_week==DayToCloseLoss&&today.hour==HourToCloseloss&&today.min==MinToCloseLoss){
-         for(int x=0;x<ArraySize(aSymbols);x++){
-           for(int z=0;z<Positions[x].GroupTotal();z++){
-             double pp= Positions[x][z].GetProfit();
-             if(pp<0&&CloseLossWithTime){
-               Positions[x][z].Close(30);
-             }
-            
+   MqlDateTime today;
+   datetime todayDT=TimeCurrent();
+   TimeToStruct(todayDT,today);
+   if(CloseAllWitTime)
+     {
+      if(today.day_of_week==DayToCloseAll&&today.hour==HourToCloseAll&&today.min==MinToCloseAll)
+        {
+         for(int x=0; x<ArraySize(aSymbols); x++)
+           {
+            Positions[x].GroupCloseAll(30);
            }
-         }
-       }
+        }
      }
-     if(CloseProfitWithTime){
-       if(today.day_of_week==DayToCloseProfit&&today.hour==HourToCloseProfit&&today.min==MinToCloseProfit){
-         for(int x=0;x<ArraySize(aSymbols);x++){
-           for(int z=0;z<Positions[x].GroupTotal();z++){
-             double pp= Positions[x][z].GetProfit();
-             if(pp>0&&CloseProfitWithTime){
-               Positions[x][z].Close(30);
-             }
-            
+   if(PartialclosewithTime)
+     {
+      if(today.day_of_week==DayToCloseAllParial&&today.hour==HourToCloseAllPartial&&today.min==MinToCloseAllPartial)
+        {
+         for(int x=0; x<ArraySize(aSymbols); x++)
+           {
+            for(int z=0; z<Positions[x].GroupTotal(); z++)
+              {
+               double ll=Positions[x][z].GetVolume();
+               Positions[x][z].ClosePartial(ll*(ParialClosePrecentage/100),30);
+              }
            }
-         }
-       }
+        }
+     }
+   if(CloseLossWithTime)
+     {
+      if(today.day_of_week==DayToCloseLoss&&today.hour==HourToCloseloss&&today.min==MinToCloseLoss)
+        {
+         for(int x=0; x<ArraySize(aSymbols); x++)
+           {
+            for(int z=0; z<Positions[x].GroupTotal(); z++)
+              {
+               double pp= Positions[x][z].GetProfit();
+               if(pp<0&&CloseLossWithTime)
+                 {
+                  Positions[x][z].Close(30);
+                 }
+
+              }
+           }
+        }
+     }
+   if(CloseProfitWithTime)
+     {
+      if(today.day_of_week==DayToCloseProfit&&today.hour==HourToCloseProfit&&today.min==MinToCloseProfit)
+        {
+         for(int x=0; x<ArraySize(aSymbols); x++)
+           {
+            for(int z=0; z<Positions[x].GroupTotal(); z++)
+              {
+               double pp= Positions[x][z].GetProfit();
+               if(pp>0&&CloseProfitWithTime)
+                 {
+                  Positions[x][z].Close(30);
+                 }
+
+              }
+           }
+        }
      }
    limit_gain=!daily_limit&&!weekly_limit&&!monthly_limit;
+   limit_loss=!daily_limit_loss&&!weekly_limit_loss&&!monthly_limit_loss;
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+
 //---
    if(ShowTradePanel)
      {
@@ -1950,12 +2120,21 @@ void ObjectsCreateAll()
 
    if(use_CMS_Filters)
      {
-      LabelCreate(0, OBJPREFIX+"base", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Base", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-      xxx+=50;
-      LabelCreate(0, OBJPREFIX+"quote", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Quote", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-      xxx+=50;
-      LabelCreate(0, OBJPREFIX+"CMS-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "CSM Pairs", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
-      xxx+=100;
+      if(showBase)
+        {
+         LabelCreate(0, OBJPREFIX+"base", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Base", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+         xxx+=50;
+        }
+      if(showQuote)
+        {
+         LabelCreate(0, OBJPREFIX+"quote", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "Quote", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+         xxx+=50;
+        }
+      if(showCSM)
+        {
+         LabelCreate(0, OBJPREFIX+"CMS-pair", 0, _x1+Dpi(xxx), _y1+Dpi(30), CORNER_LEFT_UPPER, "CSM Pairs", "Arial Black", 10, COLOR_FONT, 0, ANCHOR_LEFT, false, false, true, 0, "\n");
+         xxx+=100;
+        }
      }
    if(showAvg)
      {
@@ -2011,7 +2190,7 @@ void CreateSymbGUI(int i, int Y)
   {
 //---
    string _Symb = Prefix+aSymbols[i]+Suffix;
-   string Base =SymbolInfoString(aSymbols[i],SYMBOL_CURRENCY_BASE);
+   string Base =StringSubstr(aSymbols[i],0,3);
    string Quote = StringSubstr(aSymbols[i],3,3);
    color startcolor = FirstRun?clrNONE: COLOR_FONT;
    double countb = 0,
@@ -2386,17 +2565,25 @@ void CreateSymbGUI(int i, int Y)
    bool close = false;
    bool CSMBuy=false;
    bool CSMSell=false;
+
+   bool Aclose=false;
+   bool  CcloseBuy=false;
+   bool CcloseSell=false;
    if(use_CMS_Filters)
      {
       int siz=ArraySize(g_symbols);
       double b1=0,q1=0,b2=0,q2=0,b3=0,q3=0;
+      bool b_found=false,q_found=false;
       for(int z=0; z<siz; z++)
         {
          color c=currenciesStrength[z]>=60?clrLimeGreen:currenciesStrength[z]<=40?clrRed:clrYellow;
          if(g_symbols[z]==Base)
            {
-            LabelCreate(0, OBJPREFIX+"base"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-            xx+=50;
+            if(showBase)
+              {
+               LabelCreate(0, OBJPREFIX+"base"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+              }
+            b_found=true;
             b1=currenciesStrength[z];
             if(CSMType==increase_Decrease)
               {
@@ -2404,11 +2591,20 @@ void CreateSymbGUI(int i, int Y)
                b3=currenciesStrength2[z];
               }
            }
-
+        }
+      for(int z=0; z<siz; z++)
+        {
+         color c=currenciesStrength[z]>=60?clrLimeGreen:currenciesStrength[z]<=40?clrRed:clrYellow;
          if(g_symbols[z]==Quote)
            {
-            LabelCreate(0, OBJPREFIX+"quote"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
-            xx+=10;
+            if(showQuote)
+              {
+               if(showBase)
+                  xx+=50;
+               LabelCreate(0, OBJPREFIX+"quote"+" - "+_Symb, 0, _x1+Dpi(xx), Y, CORNER_LEFT_UPPER,DoubleToString(currenciesStrength[z],2), sFontType, 9, c, 0, ANCHOR_RIGHT, false, false, true, 0, "\n");
+
+              }
+            q_found=true;
             q1=currenciesStrength[z];
             if(CSMType==increase_Decrease)
               {
@@ -2418,49 +2614,76 @@ void CreateSymbGUI(int i, int Y)
            }
 
         }
-      if((b1>=num1&&q1<=num2)||(CSMType==increase_Decrease&&((b1>=b2&&b2>=b3&&q1<=num2)||(q1<=q2&&q2<=q3&&b1>=num1))))
+      if(showCSM)
+         xx+=10;
+      if(!b_found||!q_found)
         {
-         ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+         if(!b_found)
+            xx+=50;
+         if(!q_found)
+            xx+=10;
          xx+=140;
-         CSMBuy=true;
+
         }
       else
-         if((q1>=num1&&b1<=num2)||(CSMType==increase_Decrease&&((q1>=q2&&q2>=q3&&b1<=num2)||(b1<=b2&&b2<=b3&&q1>=num1))))
+         if((b1>=num1&&q1<=num2)||(CSMType==increase_Decrease&&((b1>=b2&&b2>=b3&&q1<=num2)||(q1<=q2&&q2<=q3&&b1>=num1))))
            {
-            ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
-            xx+=140;
-            CSMSell=true;
+            if(showCSM)
+              {
+               ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrLimeGreen, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+               xx+=140;
+              }
+            CSMBuy=true;
            }
          else
-           {
-            ObjectDelete(0,OBJPREFIX+"CMS"+" - "+_Symb);
-            xx+=140;
-            if(closewithCSM&&Positions[i].GroupTotal()>0)
+            if((q1>=num1&&b1<=num2)||(CSMType==increase_Decrease&&((q1>=q2&&q2>=q3&&b1<=num2)||(b1<=b2&&b2<=b3&&q1>=num1))))
               {
-               if(Risk==HighRisk)
+               if(showCSM)
                  {
-                  Positions[i].GroupCloseAll(30);
-                  close=true;
+                  ButtonCreate(0, OBJPREFIX+"CMS"+" - "+_Symb, 0, _x1+Dpi(xx), Y-Dpi(6), Dpi(77), Dpi(15), CORNER_LEFT_UPPER, _Symb, sFontType, 8, C'59, 41, 40', clrRed, C'144, 176, 239', false, false, false, true, 1, "Buy "+_Symb);
+                  xx+=140;
                  }
-               else
+               CSMSell=true;
+              }
+            else
+              {
+               ObjectDelete(0,OBJPREFIX+"CMS"+" - "+_Symb);
+               if(showCSM)
+                  xx+=140;
+               if(closewithCSM&&Positions[i].GroupTotal()>0)
                  {
+
                   if(b1<=Cnum1&&q1>=Cnum2)
                     {
-                     BuyPositions[i].GroupCloseAll(30);
-                     close=true;
+                     if(CloseFilter==CSM_only)
+                       {
+                        BuyPositions[i].GroupCloseAll(30);
+                        close=true;
+                       }
+                     if(CloseFilter==Both)
+                       {
+                        CcloseBuy=true;
+                       }
 
                     }
                   if(q1<=Cnum1&&b1>=Cnum2)
                     {
-                     SellPositions[i].GroupCloseAll(30);
-                     close=true;
-
+                     if(CloseFilter==CSM_only)
+                       {
+                        SellPositions[i].GroupCloseAll(30);
+                        close=true;
+                       }
+                     if(CloseFilter==Both)
+                       {
+                        CcloseSell=true;
+                       }
                     }
+
                  }
               }
-           }
 
      }
+
    double perc_b = (countb/(countb+countf+counts))*100;
    double perc_s = (counts/(countb+countf+counts))*100;
 //--
@@ -2488,7 +2711,7 @@ void CreateSymbGUI(int i, int Y)
    bool sell = false;
 
 
-   if(perc_b == 100)
+   if(perc_b >= avg_to_Trada)
      {
       buy = true;
       if(ShowTradeable)
@@ -2504,7 +2727,7 @@ void CreateSymbGUI(int i, int Y)
       ObjectDelete(0, OBJPREFIX+"close"+" - "+_Symb);
      }
    else
-      if(perc_s == 100)
+      if(perc_s >= avg_to_Trada)
         {
          sell = true;
          if(ShowTradeable)
@@ -2523,9 +2746,18 @@ void CreateSymbGUI(int i, int Y)
       else
          if(perc_b > perc_s && perc_b < level_To_Close)
            {
-            close = true;
             if(closeWithPercentage)
-               Positions[i].GroupCloseAll(30);
+              {
+               if(CloseFilter==Indicators_only)
+                 {
+                  Positions[i].GroupCloseAll(30);
+                  close = true;
+                 }
+               if(CloseFilter==Both)
+                 {
+                  Aclose=true;
+                 }
+              }
             ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
             if(ShowTradeable)
                xx+=100;
@@ -2539,9 +2771,19 @@ void CreateSymbGUI(int i, int Y)
          else
             if(perc_b < perc_s && perc_s < level_To_Close)
               {
-               close = true;
+
                if(closeWithPercentage)
-                  Positions[i].GroupCloseAll(30);
+                 {
+                  if(CloseFilter==Indicators_only)
+                    {
+                     Positions[i].GroupCloseAll(30);
+                     close = true;
+                    }
+                  if(CloseFilter==Both)
+                    {
+                     Aclose=true;
+                    }
+                 }
                ObjectDelete(0, OBJPREFIX+"trade"+" - "+_Symb);
                if(ShowTradeable)
                   xx+=100;
@@ -2564,30 +2806,261 @@ void CreateSymbGUI(int i, int Y)
                  }
               }
 
+   if(CloseFilter==Both)
+     {
+      if(CcloseBuy&&Aclose)
+        {
+         close=true;
+         BuyPositions[i].GroupCloseAll(30);
+        }
+      if(CcloseSell&&Aclose)
+        {
+         close=true;
+         SellPositions[i].GroupCloseAll(30);
+        }
+     }
+
    PartialClosing(BuyPositions[i],SellPositions[i],tools[i],buyPartial[i],sellPartial[i]);
+   bool T_Allow=true;
+   int siz=ArraySize(g_symbols);
+   for(int ss=0; ss<siz; ss++)
+     {
+      if(g_symbols[ss]==Base||g_symbols[ss]==Quote)
+        {
+
+         if(g_symbols[ss]=="EUR")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_EUR)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for EUR Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_EUR)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for EUR Reached for today");
+
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_EUR)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for EUR Reached for week");
+
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_EUR)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for EUR Reached for week");
+
+              }
+
+           }
+         if(g_symbols[ss]=="USD")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_USD)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for USD Reached for today");
+
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_USD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for USD Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_USD)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for USD Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_USD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for USD Reached for week");
+              }
+           }
+         if(g_symbols[ss]=="AUD")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_AUD)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for AUD Reached for Today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_AUD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for AUD Reached for Today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_AUD)
+              {
+               T_Allow=false;
+               Comment("Max -ve Trades for AUD Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_AUD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for AUD Reached for week");
+              }
+           }
+         if(g_symbols[ss]=="CAD")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_CAD)
+              {
+               T_Allow=false;
+               Comment("Max Negative Trades for CAD Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_CAD)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for CAD Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CAD)
+              {
+               T_Allow=false;
+               Comment("Max Negative Trades for CAD Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CAD)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for CAD Reached for week");
+              }
+           }
+         if(g_symbols[ss]=="GBP")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_GBP)
+              {
+               T_Allow=false;
+               Comment("Max Negative Trades for GBP Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_GBP)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for GBP Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_GBP)
+              {
+               T_Allow=false;
+               Comment("Max Negative Trades for GBP Reached for Week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_GBP)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for GBP Reached for Week");
+              }
+           }
+         if(g_symbols[ss]=="JPY")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_JPY)
+              {
+               T_Allow=false;
+              Comment("Max negative Trades for JPY Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_JPY)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for JPY Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_JPY)
+              {
+               T_Allow=false;
+               Comment("Max negative Trades for JPY Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_JPY)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for JPY Reached for week");
+              }
+           }
+         if(g_symbols[ss]=="CHF")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_CHF)
+              {
+               T_Allow=false;
+               Comment("Max negative Trades for CHF Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_CHF)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for CHF Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CHF)
+              {
+               T_Allow=false;
+               Comment("Max negative Trades for CHF Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CHF)
+              {
+               T_Allow=false;
+               Comment("Max Positive Trades for CHF Reached for week");
+              }
+           }
+         if(g_symbols[ss]=="NZD")
+           {
+            if(D_Max_N[ss]>=Max_Negative_trade_NZD)
+              {
+               T_Allow=false;
+               Comment("Max negative Trades for NZD Reached for today");
+              }
+            if(D_Max_P[ss]>=Max_Positive_trade_NZD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for NZD Reached for today");
+              }
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_NZD)
+              {
+               T_Allow=false;
+               Comment("Max negative Trades for NZD Reached for week");
+              }
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_NZD)
+              {
+               T_Allow=false;
+               Comment("Max +ve Trades for NZD Reached for week");
+              }
+           }
+        }
+     }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool trade_Allow=TradeAllow_Day[i]&&TradeAllow_Day_ALl&&TradeAllow_Week[i]&&TradeAllow_Week_ALl&&limit_gain;
-
+   bool trade_Allow=TradeAllow_Day[i]&&TradeAllow_Day_ALl&&TradeAllow_Week[i]&&TradeAllow_Week_ALl&&limit_gain&&limit_loss&&T_Allow;
+   MqlDateTime current,tmrw;
+   datetime currentDT=0;
+   datetime tmrwDT=currentDT+24*60*60;
+   currentDT=TimeCurrent();
+   TimeToStruct(tmrwDT,tmrw);
+   TimeToStruct(currentDT,current);
    double Balance=AccountInfoDouble(ACCOUNT_BALANCE);
    double profit= AccountInfoDouble(ACCOUNT_PROFIT);
    if(profit<0&&MathAbs(profit)>Balance*(Max_Account_lost/100))
      {
-      Alert("Your Account losses reach the Maximum");
+      Comment("Your Account losses reach the Maximum");
       trade_Allow=false;
      }
 
-   if(profit<0&&MathAbs(profit)>Max_DrawDown)
+   if(profit<0&&MathAbs(profit)>Balance*(Max_DrawDown/100))
      {
-      Alert("Your Account DrawDown reach the Maximum");
-      trade_Allow=false;
+      Comment("Your Account DrawDown reach the Maximum");
+      if(DrawDown_Action==Stop_Trading)
+         trade_Allow=false;
       if(close_Drawdown)
         {
-         for(int b=0; b<ArraySize(aSymbols); b++)
-           {
-            Positions[b].GroupCloseAll(30);
-           }
+         if(DrawDown_Action==ClosAll)
+            for(int b=0; b<ArraySize(aSymbols); b++)
+              {
+               Positions[b].GroupCloseAll(30);
+              }
+         if(DrawDown_Action==Close_Profit)
+            for(int b=0; b<ArraySize(aSymbols); b++)
+              {
+               if(Positions[b].GetProfit()>0)
+                  Positions[b].Close(30);
+              }
+         if(DrawDown_Action==Close_loss)
+            for(int b=0; b<ArraySize(aSymbols); b++)
+              {
+               if(Positions[b].GetProfit()<0)
+                  Positions[b].Close(30);
+              }
         }
      }
    if(close_All_prec_profit)
@@ -2611,18 +3084,14 @@ void CreateSymbGUI(int i, int Y)
            }
         }
      }
-   MqlDateTime current,tmrw;
-   datetime currentDT=0;
-   datetime tmrwDT=currentDT+24*60*60;
-   currentDT=TimeCurrent();
-   TimeToStruct(tmrwDT,tmrw);
-   TimeToStruct(currentDT,current);
+
    if(closeAll_DayEnd)
      {
       if(current.hour==23&&current.min>=50)
          Positions[i].GroupCloseAll();
      }
    if(closeAll_WeekEnd)
+
      {
 
       if(current.day_of_week==5&&current.hour==23)
@@ -2635,12 +3104,14 @@ void CreateSymbGUI(int i, int Y)
          Positions[i].GroupCloseAll();
         }
      }
-                                              |
+
+
 //+------------------------------------------------------------------+
-   if(((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)
+   if((((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
+
       ArraySetAsSeries(temp, true);
       if(sltype == 1)
          if(CopyBuffer(sar_handle[i], 0, 0, 1, temp) <= 0)
@@ -2656,15 +3127,16 @@ void CreateSymbGUI(int i, int Y)
          sl = temp[0];
       if(sltype == 2)
          sl = temp1[0];
+      TAKEPROFIT=Risk==HighRisk?HighRiskTP:Risk==MidRisk?MidRiskTP:LowRiskTP;
       double tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
       double slpip = tools[i].Bid()-sl;
       if(tpType == RISK_REWARD)
         {
-
          tp = tools[i].Bid()+TAKEPROFIT*slpip;
         }
+      time1[i]=iTime(_Symb,TF_Interval,0);
       CalcLot(i,slpip/tools[i].Pip());
-      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
+      if(trade_type == AUTO_TRADE&&((Use_Max_Orders&&OrdersTotal()<Max_Orders)||!Use_Max_Orders))
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
@@ -2680,15 +3152,15 @@ void CreateSymbGUI(int i, int Y)
                      else
                         if(TRADEMODE == MULTIPLE)
                           {
-                           if(tp1 > 0)
+                           if(TAKEPROFIT > 0)
                              {
                               if(tpType == RISK_REWARD)
                                 {
-                                 tp = tools[i].Bid()+tp1*slpip;
+                                 tp = tools[i].Bid()+TAKEPROFIT*slpip;
                                 }
                               if(tpType == PIPS)
                                 {
-                                 tp = tools[i].Bid()+tp1*tools[i].Pip();
+                                 tp = tools[i].Bid()+TAKEPROFIT*tools[i].Pip();
                                 }
                               trades[i].Position(TYPE_POSITION_BUY, Lot, sl, tp, SLTP_PRICE, 30, comment);
                              }
@@ -2762,7 +3234,7 @@ void CreateSymbGUI(int i, int Y)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   if(((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell))&&trade_Allow)
+   if((((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
@@ -2781,14 +3253,16 @@ void CreateSymbGUI(int i, int Y)
          sl = temp[0];
       if(sltype == 2)
          sl = temp1[0];
+      TAKEPROFIT=Risk==HighRisk?HighRiskTP:Risk==MidRisk?MidRiskTP:LowRiskTP;
       double tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
       double slpip = sl-tools[i].Bid();
       if(tpType == RISK_REWARD)
         {
-         tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
+         tp = tools[i].Bid()-TAKEPROFIT*slpip;
         }
       CalcLot(i,slpip/tools[i].Pip());
-      if(trade_type == AUTO_TRADE&&OrdersTotal()<Max_Orders)
+      time1[i]=iTime(_Symb,TF_Interval,0);
+      if(trade_type == AUTO_TRADE&&((Use_Max_Orders&&OrdersTotal()<Max_Orders)||!Use_Max_Orders))
         {
          if((TRADE_ON == CURRENT_ONLY && _Symb == Symbol()) || (TRADE_ON == MULTIPLE_PAIRS))
            {
@@ -2804,15 +3278,15 @@ void CreateSymbGUI(int i, int Y)
                      else
                         if(TRADEMODE == MULTIPLE)
                           {
-                           if(tp1 > 0)
+                           if(TAKEPROFIT > 0)
                              {
                               if(tpType == RISK_REWARD)
                                 {
-                                 tp = tools[i].Bid()-tp1*slpip;
+                                 tp = tools[i].Bid()-TAKEPROFIT*slpip;
                                 }
                               if(tpType == PIPS)
                                 {
-                                 tp = tools[i].Bid()-tp1*tools[i].Pip();
+                                 tp = tools[i].Bid()-TAKEPROFIT*tools[i].Pip();
                                 }
                               trades[i].Position(TYPE_POSITION_SELL, Lot, sl, tp, SLTP_PRICE, 30, comment);
                              }
@@ -4458,24 +4932,26 @@ void Trailing_P()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool fetchCurrenciesStrength(double& currencyStrength[],int i)
+bool fetchCurrenciesStrength(double& currencyStrength[],double& currencyStrength1[],double& currencyStrength2[])
   {
+
    for(int index = 0; index < CURRENCIES_COUNT; ++index)
      {
       double strength[1] = { EMPTY_VALUE };
       // Copying currency strength data from CMS indicator to strength buffer
-      if(CopyBuffer(g_handle, index, i, i+1, strength) != 1)
+      if(CopyBuffer(g_handle, index, 0, 1, strength) != 1)
         {
-         Print("CopyBuffer from CSM failed, no data");
+         //Print("CopyBuffer from CSM failed, no data");
          return false;
         }
 
-      if(MathAbs(strength[0] - EMPTY_VALUE) < 0.0001)
+      if(MathAbs(strength[0])== EMPTY_VALUE)
         {
-         Print("Currency strength is not ready yet (downloading historical data..)");
+         //Print("Currency strength is not ready yet (downloading historical data..)");
          return false;
         }
-
+      currencyStrength2[index]=currencyStrength1[index];
+      currencyStrength1[index]=currencyStrength[index];
       currencyStrength[index] = strength[0];
      }
 
@@ -4534,28 +5010,50 @@ int findFirstWeakCurrency(double& currencyStrength[])
    return -1;
   }
 
+int D_Max_N[CURRENCIES_COUNT];
+int D_Max_P[CURRENCIES_COUNT];
+int W_Max_N[CURRENCIES_COUNT];
+int W_Max_P[CURRENCIES_COUNT];
+
 //+------------------------------------------------------------------+
 void Max_order_Day()
   {
    int size=ArraySize(aSymbols);
    int Max_N_D=0;
    int Max_P_D=0;
+   ArrayInitialize(D_Max_N,0);
+   ArrayInitialize(D_Max_P,0);
    for(int z=0; z<size; z++)
      {
       datetime time=iTime(aSymbols[z],PERIOD_D1,0);
+      string pair= aSymbols[z];
+      string Base =StringSubstr(pair,0,3);
+      string Quote = StringSubstr(pair,3,3);
       Hist[z].SetHistoryRange(time,TimeCurrent());
       int total=Hist[z].GroupTotal();
       int n=0;
       int x=0;
+      int siz=ArraySize(g_symbols);
+
       for(int i= 0; i<total; i++)
         {
          if(Hist[z][i].GetProfit()<0)
            {
             n++;
+            for(int s=0; s<siz; s++)
+              {
+               if(g_symbols[s]==Base||g_symbols[s]==Quote)
+                  D_Max_N[s]++;
+              }
            }
          if(Hist[z][i].GetProfit()>0)
            {
             x++;
+            for(int s=0; s<siz; s++)
+              {
+               if(g_symbols[s]==Base||g_symbols[s]==Quote)
+                  D_Max_P[s]++;
+              }
            }
         }
 
@@ -4571,21 +5069,21 @@ void Max_order_Day()
       Max_N_D+=n;
       Max_P_D+=x;
 
-      if(n>=Max_negative_symbol_daily)
+      if(n>=Max_negative_symbol_daily&&Use_Max_negative_symbol_daily)
         {
-         Alert("Your Negative Trades reach the Maximum for today");
+         Comment("("+pair+") Your Negative Trades reach the Maximum for today ");
          TradeAllow_Day[z]=false;
         }
       else
-         if(x>=Max_Positive_symbol_daily)
+         if(x>=Max_Positive_symbol_daily&&Use_Max_positive_symbol_daily)
            {
-            Alert("Your Positive Trades reach the Maximum for today");
+            Comment("("+pair+") Your Positive Trades reach the Maximum for today");
             TradeAllow_Day[z]=false;
            }
          else
-            if(s>=Max_Trade_daily)
+            if(s>=Max_Trade_daily&&Use_Max_Trade_daily)
               {
-               Alert("Your Trades reach the Maximum for this Day");
+              Comment("("+pair+")Your Trades reach the Maximum for this Day");
                TradeAllow_Day[z]=false;
               }
             else
@@ -4593,15 +5091,15 @@ void Max_order_Day()
                TradeAllow_Day[z]=true;
               }
      }
-   if(Max_N_D>=Max_negative_All_daily)
+   if(Max_N_D>=Max_negative_All_daily&&Use_Max_negative_All_daily)
      {
-      Alert("Your Negative Trades for All Symbols reach the Maximum for today");
+      Comment("Your Negative Trades for All Symbols reach the Maximum for today");
       TradeAllow_Day_ALl=false;
      }
    else
-      if(Max_P_D>=Max_Positive_All_daily)
+      if(Max_P_D>=Max_Positive_All_daily&&Use_Max_positive_All_daily)
         {
-         Alert("Your Positive Trades for All Symbols reach the Maximum for today");
+         Comment("Your Positive Trades for All Symbols reach the Maximum for today");
          TradeAllow_Day_ALl=false;
         }
       else
@@ -4619,22 +5117,38 @@ void Max_order_Weekly()
    int size=ArraySize(aSymbols);
    int Max_N_W=0;
    int Max_P_W=0;
+   ArrayInitialize(W_Max_N,0);
+   ArrayInitialize(W_Max_P,0);
    for(int z=0; z<size; z++)
      {
       datetime time=iTime(aSymbols[z],PERIOD_W1,0);
+      string pair= aSymbols[z];
+      string Base =StringSubstr(pair,0,3);
+      string Quote = StringSubstr(pair,3,3);
       Hist[z].SetHistoryRange(time,TimeCurrent());
       int total=Hist[z].GroupTotal();
       int n=0;
       int x=0;
+      int siz=ArraySize(g_symbols);
       for(int i= 0; i<total; i++)
         {
          if(Hist[z][i].GetProfit()<0)
            {
             n++;
+            for(int s=0; s<siz; s++)
+              {
+               if(g_symbols[s]==Base||g_symbols[s]==Quote)
+                  W_Max_N[s]++;
+              }
            }
          if(Hist[z][i].GetProfit()>0)
            {
             x++;
+            for(int s=0; s<siz; s++)
+              {
+               if(g_symbols[s]==Base||g_symbols[s]==Quote)
+                  W_Max_P[s]++;
+              }
            }
         }
 
@@ -4649,21 +5163,21 @@ void Max_order_Weekly()
         }
       Max_P_W+=x;
       Max_N_W+=n;
-      if(n>=Max_negative_symbol_weekly)
+      if(n>=Max_negative_symbol_weekly&&Use_Max_negative_symbol_weekly)
         {
-         Alert("Your Negative Trades reach the Maximum for this week");
+         Comment("Your Negative Trades reach the Maximum for this week");
          TradeAllow_Week[z]=false;
         }
       else
-         if(x>=Max_Positive_symbol_weekly)
+         if(x>=Max_Positive_symbol_weekly&&Use_Max_positive_symbol_weekly)
            {
-            Alert("Your Positive Trades reach the Maximum for this week");
+            Comment("Your Positive Trades reach the Maximum for this week");
             TradeAllow_Week[z]=false;
            }
          else
-            if(s>=Max_Trade_weekly)
+            if(s>=Max_Trade_weekly&&Use_Max_Trade_weekly)
               {
-               Alert("Your Trades reach the Maximum for this week");
+               Comment("Your Trades reach the Maximum for this week");
                TradeAllow_Week[z]=false;
               }
             else
@@ -4671,21 +5185,22 @@ void Max_order_Weekly()
                TradeAllow_Week[z]=true;
               }
      }
-   if(Max_N_W>=Max_negative_All_weekly)
+   if(Max_N_W>=Max_negative_All_weekly&&Use_Max_negative_All_weekly)
      {
-      Alert("Your Negative Trades for All Symbols reach the Maximum for this week");
+      Comment("Your Negative Trades for All Symbols reach the Maximum for this week");
       TradeAllow_Week_ALl=false;
      }
    else
-      if(Max_P_W>=Max_Positive_All_weekly)
+      if(Max_P_W>=Max_Positive_All_weekly&&Use_Max_positive_All_weekly)
         {
-         Alert("Your Positive Trades for All Symbols reach the Maximum for this Week");
+         Comment("Your Positive Trades for All Symbols reach the Maximum for this Week");
          TradeAllow_Week_ALl=false;
         }
       else
         {
          TradeAllow_Week_ALl=true;
         }
+        
   }
 
 //+------------------------------------------------------------------+
