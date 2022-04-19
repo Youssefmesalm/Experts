@@ -661,11 +661,11 @@ datetime date0 = D'2022.04.20 00:00';
 //+------------------------------------------------------------------+
 int OnInit()
   {
-//if(AccountNumber()!=MT4account)
-//  {
-//   Alert("This Account Not Allowed To use the Expert , Please Contact the Owner");
-//   ExpertRemove();
-//  }
+if(AccountNumber()!=MT4account)
+  {
+   Alert("This Account Not Allowed To use the Expert , Please Contact the Owner");
+   ExpertRemove();
+  }
 if(MyPass!=EAPass)
   {
    Alert("Wrong Password  , Please Try Again or Contact the Owner");
