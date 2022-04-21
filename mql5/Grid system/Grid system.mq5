@@ -49,7 +49,7 @@ int Highest[],lowest[];
 
 // Arrays
 string Symbols[];
-double lots[];
+double lots[],p_lots[],l_lots[];
 // Class object
 CExecute *trades[];
 CPosition *Positions[];
@@ -174,6 +174,8 @@ void OnTick()
            {
             lot=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier,ROUNDING_OFF);
             lots[x]=lot;
+            p_lots[x]=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier_profit,ROUNDING_OFF);
+            l_lots[x]=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier_loss,ROUNDING_OFF);
             upPrice[i] =first?(upPrice[i]+(GapBetweenLevels/2)*tools[i].Pip()):upPrice[i]+(GapBetweenLevels*tools[i].Pip());
             dnPrice[i] =first?(dnPrice[i]-(GapBetweenLevels/2)*tools[i].Pip()):dnPrice[i]-(GapBetweenLevels*tools[i].Pip());
             trades[i].Order(TYPE_ORDER_BUYSTOP,lot,upPrice[i],bsl,0,SLTP_PRICE,0,30,(string)x);
@@ -279,8 +281,9 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            double l=lots[MathAbs(comment)+1];
-            NewLot = Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+             
+          
+            NewLot = Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
@@ -317,8 +320,8 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            double l=lots[MathAbs(comment)+1];
-            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+            
+            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?ll_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
@@ -357,8 +360,8 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-MathAbs(L)-1)
            {
-            double l = lots[MathAbs(comment)+lotindex+1];
-            NewLot= Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+            
+            NewLot= Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
 
@@ -397,8 +400,8 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
            {
-            double l=lots[MathAbs(comment)+lotindex+1];
-            NewLot=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l*LotMultiplier_loss:l*LotMultiplier_profit;
+          
+            NewLot=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
