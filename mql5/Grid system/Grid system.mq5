@@ -92,6 +92,9 @@ int OnInit()
    ArrayResize(Highest,size,size);
    ArrayResize(lowest,size,size);
    ArrayResize(lots,TradingLevelsNumbers,TradingLevelsNumbers);
+   ArrayResize(p_lots,TradingLevelsNumbers,TradingLevelsNumbers);
+   ArrayResize(l_lots,TradingLevelsNumbers,TradingLevelsNumbers);
+
    for(int i=0; i<size; i++)
      {
       Symbols[i]=Perfix+Symbols[i]+Suffix;
@@ -172,10 +175,10 @@ void OnTick()
          double lot=0;
          for(int x=0; x<TradingLevelsNumbers; x++)
            {
-            lot=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier,ROUNDING_OFF);
-            lots[x]=lot;
             p_lots[x]=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier_profit,ROUNDING_OFF);
             l_lots[x]=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier_loss,ROUNDING_OFF);
+            lot=first?lotStarter:tools[i].NormalizeVolume(lot*LotMultiplier,ROUNDING_OFF);
+            lots[x]=lot;
             upPrice[i] =first?(upPrice[i]+(GapBetweenLevels/2)*tools[i].Pip()):upPrice[i]+(GapBetweenLevels*tools[i].Pip());
             dnPrice[i] =first?(dnPrice[i]-(GapBetweenLevels/2)*tools[i].Pip()):dnPrice[i]-(GapBetweenLevels*tools[i].Pip());
             trades[i].Order(TYPE_ORDER_BUYSTOP,lot,upPrice[i],bsl,0,SLTP_PRICE,0,30,(string)x);
@@ -198,7 +201,7 @@ void OnTick()
         {
          UpdateLot(Positions[i],Pendings[i],trades[i],tools[i],Highest[i],lowest[i],openDirection[i]);
         }
-      Repending(Positions[i],BuyPositions[i],SellPositions[i],trades[i],tools[i],Pendings[i],BuyPendings[i],SellPendings[i],WhichClos[i],Levelprices[i],Total[i],TotalBuy[i],TotalSell[i]);
+      Repending(Positions[i],BuyPositions[i],SellPositions[i],trades[i],tools[i],Pendings[i],BuyPendings[i],SellPendings[i],WhichClos[i],Levelprices[i],Total[i],TotalBuy[i],TotalSell[i],openDirection[i]);
       Traliling(BuyPositions[i],SellPositions[i],tools[i],Levelprices[i]);
       Closing(BuyPositions[i],SellPositions[i],tools[i],Pendings[i],upPrice[i],dnPrice[i],Levelprices[i]);
       if(Positions[i].GroupTotal()==0&&Pendings[i].GroupTotal()<TradingLevelsNumbers*4)
@@ -274,15 +277,13 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         {
          long x=tickets[z];
          int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
+         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
          double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-             
-          
             NewLot = Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
@@ -313,15 +314,15 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         {
          long x=tickets[z];
          int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
+         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
          double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            
-            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?ll_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
+
+            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
@@ -353,19 +354,20 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         {
          long x=tickets[z];
          int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
+         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
          double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
-         if(MathAbs(comment)<TradingLevelsNumbers-MathAbs(L)-1)
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            
+
             NewLot= Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
+
            }
          Pending[x].Close();
 
-         if(MathAbs(comment)<TradingLevelsNumbers-MathAbs(L)-1)
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
             open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
@@ -392,19 +394,19 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         {
          long x=tickets[z];
          int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
+         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
          double openPrice=Pending[x].GetPriceOpen();
          double sl=Pending[x].GetStopLoss();
          double NewLot=0;
 
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
-         if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-          
+
             NewLot=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
-         if(MathAbs(comment)<TradingLevelsNumbers-lotindex-1)
+         if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
             open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
             D=0;
@@ -677,7 +679,7 @@ void Closing(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,COrder & 
 
 
 //+------------------------------------------------------------------+
-void Repending(CPosition & Pos, CPosition & BuyPos,CPosition & SellPos,CExecute & Place, CUtilities & tool,COrder & Pending,COrder & buyPend,COrder & sellPend,close & WhichClose, CArrayDouble & Levels,int & T,int & B,int & S)
+void Repending(CPosition & Pos, CPosition & BuyPos,CPosition & SellPos,CExecute & Place, CUtilities & tool,COrder & Pending,COrder & buyPend,COrder & sellPend,close & WhichClose, CArrayDouble & Levels,int & T,int & B,int & S,int & D)
   {
    int totalPos=Pos.GroupTotal();
    int totalSell=SellPos.GroupTotal();
@@ -778,7 +780,9 @@ void Repending(CPosition & Pos, CPosition & BuyPos,CPosition & SellPos,CExecute 
 
                if((!buypendingfound&&!buyfound))
                  {
-                  Place.Order(TYPE_ORDER_BUYSTOP,lot,Levels.At(i+2),Levels.At(0),0,SLTP_PRICE,0,30,coment);
+                  int c=(int)StringToInteger(coment);
+                  double Newlot=D>0?l_lots[MathAbs(c)]:p_lots[MathAbs(c)];
+                  Place.Order(TYPE_ORDER_BUYSTOP,Newlot,Levels.At(i+2),Levels.At(0),0,SLTP_PRICE,0,30,coment);
                  }
 
 
@@ -830,10 +834,10 @@ void Repending(CPosition & Pos, CPosition & BuyPos,CPosition & SellPos,CExecute 
                  }
                if(!sellpendingfound&&!sellfound)
                  {
-                  Place.Order(TYPE_ORDER_SELLSTOP,lot,Levels.At(i-1),Levels.At(levelsTotal-1),0,SLTP_PRICE,0,30,coment);
+                  int c=(int)StringToInteger(coment);
+                  double Newlot=D>0?l_lots[MathAbs(c)]:p_lots[MathAbs(c)];
+                  Place.Order(TYPE_ORDER_SELLSTOP,Newlot,Levels.At(i-1),Levels.At(levelsTotal-1),0,SLTP_PRICE,0,30,coment);
                  }
-
-
               }
            }
         }
