@@ -326,17 +326,29 @@ input bool closeAll_DayEnd            =false; //close All Positions at the end o
 input bool closeAll_WeekEnd           =false; //close All Positions at the end of the week
 input bool closeAll_MonthEnd          =false;//close All Positions at the end of the Month
 input bool daily_gain_limit          =false;
-input double daily_gain_limit_prcentage=10;
+input double daily_gain_limit_prcentage_low=10;
+input double daily_gain_limit_prcentage_mid=10;
+input double daily_gain_limit_prcentage_high=10;
 input bool weekly_gain_limit        =false;
-input double weekly_gain_limit_prcentage=10;
+input double weekly_gain_limit_prcentage_low=10;
+input double weekly_gain_limit_prcentage_mid=10;
+input double weekly_gain_limit_prcentage_high=10;
 input bool monthly_gain_limit        =false;
-input double monthly_gain_limit_prcentage=10;
+input double monthly_gain_limit_prcentage_low=10;
+input double monthly_gain_limit_prcentage_mid=10
+input double monthly_gain_limit_prcentage_high=10
 input bool daily_loss_limit          =false;
-input double daily_loss_limit_prcentage=10;
+input double daily_loss_limit_prcentage_low=10;
+input double daily_loss_limit_prcentage_mid=10;
+input double daily_loss_limit_prcentage_high=10;
 input bool weekly_loss_limit        =false;
-input double weekly_loss_limit_prcentage=10;
+input double weekly_loss_limit_prcentage_low=10;
+input double weekly_loss_limit_prcentage_mid=10;
+input double weekly_loss_limit_prcentage_high=10;
 input bool monthly_loss_limit        =false;
-input double monthly_loss_limit_prcentage=10;
+input double monthly_loss_limit_prcentage_low=10;
+input double monthly_loss_limit_prcentage_mid=10;
+input double monthly_loss_limit_prcentage_high=10;
 input string set71 = "======================== Closing with time =========================";
 input bool CloseAllWitTime=false;
 input DYS_WEEK DayToCloseAll=Friday;
@@ -606,7 +618,9 @@ bool monthly_limit=false;
 datetime daily_limit_date=0;
 datetime weekly_limit_date=0;
 datetime monthly_limit_date=0;
-
+double daily_loss_limit_prcentage,daily_gain_limit_prcentage,
+weekly_gain_limit_prcentage,weekly_loss_limit_prcentage,
+monthly_loss_limit_prcentage,monthly_gain_limit_prcentage;
 bool limit_loss=false;
 bool daily_limit_loss=false;
 bool weekly_limit_loss=false;
@@ -1366,6 +1380,12 @@ void OnTick()
    Max_Positive_All_daily    =Risk==HighRisk?Max_Positive_All_daily_high:Risk==MidRisk?Max_Positive_All_daily_mid:Max_Positive_All_daily_low;
    Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high:Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
    Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high:Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
+   daily_gain_limit_prcentage=Risk==HighRisk?daily_gain_limit_prcentage_high:Risk==MidRisk?daily_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+  daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+  weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+  weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
+  monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
+  monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
 //+------------------------------------------------------------------+
 //|
 //---
