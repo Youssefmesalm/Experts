@@ -1,4 +1,10 @@
 //+------------------------------------------------------------------+
+//|                                                      ProjectName |
+//|                                      Copyright 2020, CompanyName |
+//|                                       http://www.companyname.net |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
 //|                                   Copyright 2022, Yousuf Mesalm. |
 //|                                    https://www.Yousuf-mesalm.com |
 //+------------------------------------------------------------------+
@@ -395,14 +401,14 @@ void Manual()
                SellReady2=false;
                BEOPb2=0.0;
                BEOPs2=0.0;
-                    BEtpb=0;
-         BEtpb2=0;
-         BEtps2=0;
-         BEtps=0;
-         BEsls2=0;
-         BEslb2=0;
-         BEsls=0;
-         BEslb=0;
+               BEtpb=0;
+               BEtpb2=0;
+               BEtps2=0;
+               BEtps=0;
+               BEsls2=0;
+               BEslb2=0;
+               BEsls=0;
+               BEslb=0;
                OPb=0.0;
                OPb2=0.0;
                OPs=0.0;
@@ -443,14 +449,14 @@ void Manual()
                SellReady2=false;
                BEOPb2=0.0;
                BEOPs2=0.0;
-                   BEtpb=0;
-         BEtpb2=0;
-         BEtps2=0;
-         BEtps=0;
-         BEsls2=0;
-         BEslb2=0;
-         BEsls=0;
-         BEslb=0;
+               BEtpb=0;
+               BEtpb2=0;
+               BEtps2=0;
+               BEtps=0;
+               BEsls2=0;
+               BEslb2=0;
+               BEsls=0;
+               BEslb=0;
                OPb=0.0;
                OPb2=0.0;
                OPs=0.0;
@@ -682,7 +688,7 @@ void SetOrder()
       if(NewBuy)
         {
          if((SymbolInfoDouble(_Symbol,SYMBOL_ASK)<=BEOPb-BreakEven_To_Close_P1*pips && BEOPb!=0.0)
-||(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs+xpip_Positive*pips && BEOPs!=0.0))
+            ||(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPb+xpip_Positive*pips && BEOPs!=0.0))
            {
             Y=CountPosition(MagicNumber);
             int x=CountPosition1(MagicNumber);
@@ -711,8 +717,8 @@ void SetOrder()
       if(NewSell)
         {
          if((SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs+BreakEven_To_Close_P1*pips && BEOPs!=0.0)
-||(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs-xpip_Positive*pips && BEOPs!=0.0))
-           
+            ||(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs-xpip_Positive*pips && BEOPs!=0.0))
+
            {
             int x=CountPosition1(MagicNumber);
             Y=CountPosition(MagicNumber);
@@ -778,7 +784,7 @@ void SetOrder2()
       if(NewBuy2)
         {
          if((SymbolInfoDouble(_Symbol,SYMBOL_ASK)<=BEOPb2-BreakEven_To_Close_P2*pips && BEOPb2!=0.0)
-||(SymbolInfoDouble(_Symbol,SYMBOL_ASK)<=BEOPb2+xpip_Positive*pips && BEOPb2!=0.0))
+            ||(SymbolInfoDouble(_Symbol,SYMBOL_ASK)>=BEOPb2+xpip_Positive*pips && BEOPb2!=0.0))
            {
             Y=CountPosition(MagicNumber);
             int x=CountPosition1(MagicNumber);
@@ -806,8 +812,8 @@ void SetOrder2()
       if(NewSell2)
         {
          if((SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs2+BreakEven_To_Close_P2*pips && BEOPs2!=0.0)
-||(SymbolInfoDouble(_Symbol,SYMBOL_BID)>=BEOPs2-xpip_Positive*pips && BEOPs2!=0.0))
-           
+            ||(SymbolInfoDouble(_Symbol,SYMBOL_BID)<=BEOPs2-xpip_Positive*pips && BEOPs2!=0.0))
+
            {
             int x=CountPosition1(MagicNumber);
 
