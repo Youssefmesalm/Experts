@@ -251,14 +251,17 @@ input bool Use_Max_Trade_weekly    =false; // Use Max trades Weekly for Each sym
 input int Max_Trade_weekly    =10; // Max trades Weekly for Each symbol
 input bool Use_Max_negative_symbol_daily  =false;  //Use Max negative orders daily for each symbol
 input bool Use_Max_negative_All_daily     =false;  //Use Max negative orders daily for All symbol
-input bool Use_Max_negative_symbol_weekly =false;  //Use Max negative orders weekly for each symbol 
+input bool Use_Max_negative_symbol_weekly =false;  //Use Max negative orders weekly for each symbol
 input bool  Use_Max_negative_All_weekly    =false;  //Use Max negative orders weekly for All symbol
- 
+
 input bool Use_Max_positive_symbol_daily  =false;  //Use Max Positive orders daily for each symbol
 input bool Use_Max_positive_All_daily     =false;  //Use Max Positive orders daily for All symbol
-input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol 
-input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol 
+input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol
+input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 input int Max_negative_symbol_daily_low  =10;  //Max negative orders daily for each symbol (Low)
 input int Max_negative_All_daily_low     =10;  //Max negative orders daily for All symbol (Low)
 input int Max_negative_symbol_weekly_low =10;  //Max negative orders weekly for each symbol (Low)
@@ -372,8 +375,8 @@ input double weekly_gain_limit_prcentage_mid=10;
 input double weekly_gain_limit_prcentage_high=10;
 input bool monthly_gain_limit        =false;
 input double monthly_gain_limit_prcentage_low=10;
-input double monthly_gain_limit_prcentage_mid=10
-input double monthly_gain_limit_prcentage_high=10
+input double monthly_gain_limit_prcentage_mid=10;
+input double monthly_gain_limit_prcentage_high=10;
 input bool daily_loss_limit          =false;
 input double daily_loss_limit_prcentage_low=10;
 input double daily_loss_limit_prcentage_mid=10;
@@ -656,8 +659,8 @@ datetime daily_limit_date=0;
 datetime weekly_limit_date=0;
 datetime monthly_limit_date=0;
 double daily_loss_limit_prcentage,daily_gain_limit_prcentage,
-weekly_gain_limit_prcentage,weekly_loss_limit_prcentage,
-monthly_loss_limit_prcentage,monthly_gain_limit_prcentage;
+       weekly_gain_limit_prcentage,weekly_loss_limit_prcentage,
+       monthly_loss_limit_prcentage,monthly_gain_limit_prcentage;
 bool limit_loss=false;
 bool daily_limit_loss=false;
 bool weekly_limit_loss=false;
@@ -1418,11 +1421,11 @@ void OnTick()
    Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high:Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
    Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high:Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
    daily_gain_limit_prcentage=Risk==HighRisk?daily_gain_limit_prcentage_high:Risk==MidRisk?daily_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
-  monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
-  monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
+   daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+   weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+   weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
+   monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
+   monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
 //+------------------------------------------------------------------+
 //|
 //---
@@ -2622,6 +2625,7 @@ void CreateSymbGUI(int i, int Y)
    bool close = false;
    bool CSMBuy=false;
    bool CSMSell=false;
+   bool nonFX=false;
 
    bool Aclose=false;
    bool  CcloseBuy=false;
@@ -2675,6 +2679,7 @@ void CreateSymbGUI(int i, int Y)
          xx+=10;
       if(!b_found||!q_found)
         {
+         nonFX=true;
          if(!b_found)
             xx+=50;
          if(!q_found)
@@ -3010,7 +3015,7 @@ void CreateSymbGUI(int i, int Y)
             if(D_Max_N[ss]>=Max_Negative_trade_JPY&&Use_Max_Negative_trade_JPY)
               {
                T_Allow=false;
-              Comment("Max negative Trades for JPY Reached for today");
+               Comment("Max negative Trades for JPY Reached for today");
               }
             if(D_Max_P[ss]>=Max_Positive_trade_JPY&&Use_Max_Positive_trade_JPY)
               {
@@ -3164,7 +3169,7 @@ void CreateSymbGUI(int i, int Y)
 
 
 //+------------------------------------------------------------------+
-   if((((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
+   if((((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy&&!nonFX)||(use_CMS_Filters&&buy&&nonFX))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
@@ -3291,7 +3296,7 @@ void CreateSymbGUI(int i, int Y)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   if((((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
+   if((((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell&&!nonFX)||(use_CMS_Filters&&sell&&nonFX))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
@@ -5140,7 +5145,7 @@ void Max_order_Day()
          else
             if(s>=Max_Trade_daily&&Use_Max_Trade_daily)
               {
-              Comment("("+pair+")Your Trades reach the Maximum for this Day");
+               Comment("("+pair+")Your Trades reach the Maximum for this Day");
                TradeAllow_Day[z]=false;
               }
             else
@@ -5257,7 +5262,7 @@ void Max_order_Weekly()
         {
          TradeAllow_Week_ALl=true;
         }
-        
+
   }
 
 //+------------------------------------------------------------------+
