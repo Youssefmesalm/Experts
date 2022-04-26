@@ -1452,9 +1452,10 @@ void OnTick()
       if(d1>daily_limit_date&&daily_limit)
         {
          daily_limit=false;
-         Daily_BalanceAccountInfoDouble(ACCOUNT_BALANCE);
+         Daily_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(daily_gain_limit_prcentage/100)<=Profit)
+      double Daily_profit=Balance-Daily_Balance+Profit;
+      if(Daily_Balance*(daily_gain_limit_prcentage/100)<=Daily_profit)
         {
          Alert(" Daily gain limit reached");
          daily_limit=true;
@@ -1472,7 +1473,8 @@ void OnTick()
          daily_limit_loss=false;
          Daily_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+ double Daily_profit=Balance-Daily_Balance+Profit;
+      if(Daily_Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Daily_profit)&&Daily_profit<0)
         {
          Alert(" Daily loss limit reached");
          daily_limit_loss=true;
@@ -1483,6 +1485,7 @@ void OnTick()
            }
         }
      }
+ double Weekly_profit=Balance-Weekly_Balance+Profit;
    if(weekly_gain_limit)
      {
       if(w1>weekly_limit_date&&weekly_limit)
@@ -1490,7 +1493,7 @@ void OnTick()
          weekly_limit=false;
          Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(weekly_gain_limit_prcentage/100)<=Profit)
+      if(Weekly_Balance*(weekly_gain_limit_prcentage/100)<=Weekly_profit)
         {
          Alert(" weekly gain limit reached");
          weekly_limit=true;
@@ -1508,7 +1511,7 @@ void OnTick()
          weekly_limit=false;
          Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+      if(Weekly_Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Weekly_Profit)&&Weekly_profit<0)
         {
          Alert(" weekly loss limit reached");
          weekly_limit_loss=true;
@@ -1519,6 +1522,7 @@ void OnTick()
            }
         }
      }
+ double Monthly_profit=Balance-Monthly_Balance+Profit;
    if(monthly_gain_limit)
      {
       if(m1>monthly_limit_date&&monthly_limit)
@@ -1526,7 +1530,7 @@ void OnTick()
          monthly_limit=false;
          Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(monthly_gain_limit_prcentage/100)<=Profit)
+      if(Monthly_Balance*(monthly_gain_limit_prcentage/100)<=Monthly_profit)
         {
          Alert(" Monthly gain limit reached");
          monthly_limit=true;
@@ -1544,7 +1548,7 @@ void OnTick()
          monthly_limit_loss=false;
          Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+      if(Monthly_Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Monthly_Profit)&&Monthly_Profit<0)
         {
          Alert(" Monthly loss limit reached");
          monthly_limit_loss=true;
