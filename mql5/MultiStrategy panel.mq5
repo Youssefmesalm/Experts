@@ -643,7 +643,7 @@ string PriceRowRightArr[] =
    "Pivot"
   };
 
-
+double Daily_Balance,Weekly_Balance,Monthly_Balance;
 /////////////
 datetime lastweek=0;
 datetime lastDay=0;
@@ -808,6 +808,9 @@ int OnInit()
      }
 
 //---
+   Daily_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   Weekly_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   Monthly_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
    if(LastReason == 0)
      {
 
@@ -1421,8 +1424,8 @@ void OnTick()
    Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high:Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
    Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high:Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
    daily_gain_limit_prcentage=Risk==HighRisk?daily_gain_limit_prcentage_high:Risk==MidRisk?daily_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-   daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-   weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
+   daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_loss_limit_prcentage_low;
+   weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:weekly_gain_limit_prcentage_low;
    weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
    monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
    monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
@@ -1449,6 +1452,7 @@ void OnTick()
       if(d1>daily_limit_date&&daily_limit)
         {
          daily_limit=false;
+         Daily_BalanceAccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(daily_gain_limit_prcentage/100)<=Profit)
         {
@@ -1463,9 +1467,10 @@ void OnTick()
      }
    if(daily_loss_limit)
      {
-      if(d1>daily_limit_date_loss&&daily_limit_loss)
+      if(d1>daily_limit_date_loss)
         {
          daily_limit_loss=false;
+         Daily_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
         {
@@ -1483,6 +1488,7 @@ void OnTick()
       if(w1>weekly_limit_date&&weekly_limit)
         {
          weekly_limit=false;
+         Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(weekly_gain_limit_prcentage/100)<=Profit)
         {
@@ -1500,6 +1506,7 @@ void OnTick()
       if(w1>weekly_limit_date_loss&&weekly_limit_loss)
         {
          weekly_limit=false;
+         Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
         {
@@ -1517,6 +1524,7 @@ void OnTick()
       if(m1>monthly_limit_date&&monthly_limit)
         {
          monthly_limit=false;
+         Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(monthly_gain_limit_prcentage/100)<=Profit)
         {
@@ -1534,6 +1542,7 @@ void OnTick()
       if(m1>monthly_limit_date_loss&&monthly_limit_loss)
         {
          monthly_limit_loss=false;
+         Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
       if(Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
         {
