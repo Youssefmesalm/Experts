@@ -1511,7 +1511,7 @@ void OnTick()
          weekly_limit=false;
          Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Weekly_Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Weekly_Profit)&&Weekly_profit<0)
+      if(Weekly_Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Weekly_profit)&&Weekly_profit<0)
         {
          Alert(" weekly loss limit reached");
          weekly_limit_loss=true;
@@ -1548,7 +1548,7 @@ void OnTick()
          monthly_limit_loss=false;
          Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Monthly_Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Monthly_Profit)&&Monthly_Profit<0)
+      if(Monthly_Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Monthly_profit)&&Monthly_profit<0)
         {
          Alert(" Monthly loss limit reached");
          monthly_limit_loss=true;
