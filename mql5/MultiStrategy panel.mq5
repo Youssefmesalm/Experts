@@ -251,14 +251,17 @@ input bool Use_Max_Trade_weekly    =false; // Use Max trades Weekly for Each sym
 input int Max_Trade_weekly    =10; // Max trades Weekly for Each symbol
 input bool Use_Max_negative_symbol_daily  =false;  //Use Max negative orders daily for each symbol
 input bool Use_Max_negative_All_daily     =false;  //Use Max negative orders daily for All symbol
-input bool Use_Max_negative_symbol_weekly =false;  //Use Max negative orders weekly for each symbol 
+input bool Use_Max_negative_symbol_weekly =false;  //Use Max negative orders weekly for each symbol
 input bool  Use_Max_negative_All_weekly    =false;  //Use Max negative orders weekly for All symbol
- 
+
 input bool Use_Max_positive_symbol_daily  =false;  //Use Max Positive orders daily for each symbol
 input bool Use_Max_positive_All_daily     =false;  //Use Max Positive orders daily for All symbol
-input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol 
-input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol 
+input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol
+input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 input int Max_negative_symbol_daily_low  =10;  //Max negative orders daily for each symbol (Low)
 input int Max_negative_All_daily_low     =10;  //Max negative orders daily for All symbol (Low)
 input int Max_negative_symbol_weekly_low =10;  //Max negative orders weekly for each symbol (Low)
@@ -283,37 +286,74 @@ input int Max_Positive_symbol_daily_high  =10;     //Max positive orders daily f
 input int Max_Positive_All_daily_high     =10;//Max positive orders daily for All symbol (High)
 input int Max_Positive_symbol_weekly_high  =10;//Max positive orders weekly for each symbol (High)
 input int Max_Positive_All_weekly_high     =10;//Max positive orders weekly for All symbol (Low)
+input bool  Use_Max_Positive_trade_AUD     =false;  // Use Max Positive Trades For AUD daily
 input int Max_Positive_trade_AUD     =10;  // Max Positive Trades For AUD daily
+input bool  Use_Max_negative_trade_AUD     =false;  // Use Max Negative Trades For AUD daily
 input int Max_Negative_trade_AUD     =10;  // Max Negative Trades For AUD daily
+input bool  Use_Max_Positive_trade_EUR     =false;  // Use Max Positive Trades For EUR daily
 input int Max_Positive_trade_EUR     =10;  // Max Positive Trades For EUR daily
+input bool  Use_Max_Negative_trade_EUR     =false;  // Use Max Negative Trades For EUR daily
 input int Max_Negative_trade_EUR     =10;  // Max Negative Trades For EUR daily
+input bool  Use_Max_Positive_trade_USD     =false;  // Use Max Positive Trades For USD daily
 input int Max_Positive_trade_USD     =10;  // Max Positive Trades For USD daily
+input bool  Use_Max_Negative_trade_USD     =false;  // Use Max Negative Trades For USD daily
 input int Max_Negative_trade_USD     =10;  // Max Negative Trades For USD daily
+input bool  Use_Max_Positive_trade_GBP     =false;  // Use Max Positive Trades For GBP daily
 input int Max_Positive_trade_GBP     =10;  // Max Positive Trades For GBP daily
+input bool  Use_Max_Negative_trade_GBP     =false;  // Use Max Negative Trades For GBP daily
 input int Max_Negative_trade_GBP     =10;  // Max Negative Trades For GBP daily
+input bool  Use_Max_Positive_trade_JPY     =false;  // Use Max Positive Trades For JPY daily
 input int Max_Positive_trade_JPY     =10;  // Max Positive Trades For JPY daily
+input bool  Use_Max_Negative_trade_JPY     =false;  // Use Max Negative Trades For JPY daily
 input int Max_Negative_trade_JPY     =10;  // Max Negative Trades For JPY daily
+input bool  Use_Max_Positive_trade_CAD     =false;  // Use Max Positive Trades For CAD daily
 input int Max_Positive_trade_CAD     =10;  // Max Positive Trades For CAD daily
+input bool  Use_Max_Negative_trade_CAD     =false;  // Use Max Negative Trades For CAD daily
 input int Max_Negative_trade_CAD     =10;  // Max Negative Trades For CAD daily
+input bool  Use_Max_Positive_trade_NZD     =false;  // Use Max Positive Trades For NZD daily
 input int Max_Positive_trade_NZD     =10;  // Max Positive Trades For NZD daily
+input bool  Use_Max_Negative_trade_NZD     =false;  // Use Max Negative Trades For NZD daily
 input int Max_Negative_trade_NZD     =10;  // Max Negative Trades For NZD daily
+input bool  Use_Max_Positive_trade_CHF     =false;  // Use Max Positive Trades For CHF daily
 input int Max_Positive_trade_CHF     =10;  // Max Positive Trades For CHF daily
+input bool  Use_Max_Negative_trade_CHF     =false;  // Use Max Negative Trades For CHF daily
 input int Max_Negative_trade_CHF     =10;  // Max Negative Trades For CHF daily
+input bool  Use_weekly_Max_Positive_trade_AUD     =false;  // Use Max Positive Trades For AUD weekly
 input int weekly_Max_Positive_trade_AUD     =10;  // Max Positive Trades For AUD weekly
-input int weekly_Max_Negative_trade_AUD     =10;  // Max Negative Trades For AUD weekly
+input bool  Use_weekly_Max_Negative_trade_AUD     =false;  // Use Max Negative Trades For AUD weekly
+input int weekly_Max_Negative_trade_AUD     =10;  // Max Negative Trades For EUR weekly
+input bool  Use_weekly_Max_Positive_trade_EUR     =false;  // Use Max Positive Trades For EUR weekly
 input int weekly_Max_Positive_trade_EUR     =10;  // Max Positive Trades For EUR weekly
+input bool  Use_weekly_Max_Negative_trade_EUR     =false;  // Use Max Negative Trades For EUR weekly
+
 input int weekly_Max_Negative_trade_EUR     =10;  // Max Negative Trades For EUR weekly
+input bool  Use_weekly_Max_Positive_trade_USD     =false;  // Use Max Positive Trades For USD weekly
 input int weekly_Max_Positive_trade_USD     =10;  // Max Positive Trades For USD weekly
+input bool  Use_weekly_Max_Negative_trade_USD     =false;  // Use Max Negative Trades For USD weekly
+
 input int weekly_Max_Negative_trade_USD     =10;  // Max Negative Trades For USD weekly
+input bool  Use_weekly_Max_Positive_trade_GBP     =false;  // Use Max Positive Trades For GBP weekly
 input int weekly_Max_Positive_trade_GBP     =10;  // Max Positive Trades For GBP weekly
+input bool  Use_weekly_Max_Negative_trade_GBP     =false;  // Use Max Negative Trades For GBP weekly
+
 input int weekly_Max_Negative_trade_GBP     =10;  // Max Negative Trades For GBP weekly
+input bool  Use_weekly_Max_Positive_trade_JPY     =false;  // Use Max Positive Trades For JPY weekly
 input int weekly_Max_Positive_trade_JPY     =10;  // Max Positive Trades For JPY weekly
+input bool  Use_weekly_Max_Negative_trade_JPY     =false;  // Use Max Negative Trades For JPY weekly
+
 input int weekly_Max_Negative_trade_JPY     =10;  // Max Negative Trades For JPY weekly
+input bool  Use_weekly_Max_Positive_trade_CAD     =false;  // Use Max Positive Trades For CAD weekly
 input int weekly_Max_Positive_trade_CAD     =10;  // Max Positive Trades For CAD weekly
+input bool  Use_weekly_Max_Negative_trade_CAD     =false;  // Use Max Negative Trades For CAD weekly
+
 input int weekly_Max_Negative_trade_CAD     =10;  // Max Negative Trades For CAD weekly
+input bool  Use_weekly_Max_Positive_trade_NZD     =false;  // Use Max Positive Trades For NZD weekly
 input int weekly_Max_Positive_trade_NZD     =10;  // Max Positive Trades For NZD weekly
+input bool  Use_weekly_Max_Negative_trade_NZD     =false;  // Use Max Negative Trades For NZD weekly
 input int weekly_Max_Negative_trade_NZD     =10;  // Max Negative Trades For NZD weekly
+input bool  Use_weekly_Max_Positive_trade_CHF     =false;  // Use Max Positive Trades For CHF weekly
 input int weekly_Max_Positive_trade_CHF     =10;  // Max Positive Trades For CHF weekly
+input bool  Use_weekly_Max_Negative_trade_CHF     =false;  // Use Max Negative Trades For CHF weekly
 input int weekly_Max_Negative_trade_CHF     =10;  // Max Negative Trades For CHF weekly
 input double Max_DrawDown             =40;
 input bool close_Drawdown             =true;  // Close All when reach Max DrawDown
@@ -335,8 +375,8 @@ input double weekly_gain_limit_prcentage_mid=10;
 input double weekly_gain_limit_prcentage_high=10;
 input bool monthly_gain_limit        =false;
 input double monthly_gain_limit_prcentage_low=10;
-input double monthly_gain_limit_prcentage_mid=10
-input double monthly_gain_limit_prcentage_high=10
+input double monthly_gain_limit_prcentage_mid=10;
+input double monthly_gain_limit_prcentage_high=10;
 input bool daily_loss_limit          =false;
 input double daily_loss_limit_prcentage_low=10;
 input double daily_loss_limit_prcentage_mid=10;
@@ -603,7 +643,7 @@ string PriceRowRightArr[] =
    "Pivot"
   };
 
-
+double Daily_Balance,Weekly_Balance,Monthly_Balance;
 /////////////
 datetime lastweek=0;
 datetime lastDay=0;
@@ -619,8 +659,8 @@ datetime daily_limit_date=0;
 datetime weekly_limit_date=0;
 datetime monthly_limit_date=0;
 double daily_loss_limit_prcentage,daily_gain_limit_prcentage,
-weekly_gain_limit_prcentage,weekly_loss_limit_prcentage,
-monthly_loss_limit_prcentage,monthly_gain_limit_prcentage;
+       weekly_gain_limit_prcentage,weekly_loss_limit_prcentage,
+       monthly_loss_limit_prcentage,monthly_gain_limit_prcentage;
 bool limit_loss=false;
 bool daily_limit_loss=false;
 bool weekly_limit_loss=false;
@@ -768,6 +808,9 @@ int OnInit()
      }
 
 //---
+   Daily_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   Weekly_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   Monthly_Balance = AccountInfoDouble(ACCOUNT_BALANCE);
    if(LastReason == 0)
      {
 
@@ -1381,11 +1424,11 @@ void OnTick()
    Max_Positive_symbol_weekly=Risk==HighRisk?Max_Positive_symbol_weekly_high:Risk==MidRisk?Max_Positive_symbol_weekly_mid:Max_Positive_symbol_weekly_low;
    Max_Positive_All_weekly=Risk==HighRisk?Max_Positive_All_weekly_high:Risk==MidRisk?Max_Positive_All_weekly_mid:Max_Positive_All_weekly_low;
    daily_gain_limit_prcentage=Risk==HighRisk?daily_gain_limit_prcentage_high:Risk==MidRisk?daily_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:daily_gain_limit_prcentage_low;
-  weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
-  monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
-  monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
+   daily_loss_limit_prcentage=Risk==HighRisk?daily_loss_limit_prcentage_high:Risk==MidRisk?daily_loss_limit_prcentage_mid:daily_loss_limit_prcentage_low;
+   weekly_gain_limit_prcentage=Risk==HighRisk?weekly_gain_limit_prcentage_high:Risk==MidRisk?weekly_gain_limit_prcentage_mid:weekly_gain_limit_prcentage_low;
+   weekly_loss_limit_prcentage=Risk==HighRisk?weekly_loss_limit_prcentage_high:Risk==MidRisk?weekly_loss_limit_prcentage_mid:weekly_loss_limit_prcentage_low;
+   monthly_gain_limit_prcentage=Risk==HighRisk?monthly_gain_limit_prcentage_high:Risk==MidRisk?monthly_gain_limit_prcentage_mid:monthly_gain_limit_prcentage_low;
+   monthly_loss_limit_prcentage=Risk==HighRisk?monthly_loss_limit_prcentage_high:Risk==MidRisk?monthly_loss_limit_prcentage_mid:monthly_loss_limit_prcentage_low;
 //+------------------------------------------------------------------+
 //|
 //---
@@ -1409,8 +1452,10 @@ void OnTick()
       if(d1>daily_limit_date&&daily_limit)
         {
          daily_limit=false;
+         Daily_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(daily_gain_limit_prcentage/100)<=Profit)
+      double Daily_profit=Balance-Daily_Balance+Profit;
+      if(Daily_Balance*(daily_gain_limit_prcentage/100)<=Daily_profit)
         {
          Alert(" Daily gain limit reached");
          daily_limit=true;
@@ -1423,11 +1468,13 @@ void OnTick()
      }
    if(daily_loss_limit)
      {
-      if(d1>daily_limit_date_loss&&daily_limit_loss)
+      if(d1>daily_limit_date_loss)
         {
          daily_limit_loss=false;
+         Daily_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+ double Daily_profit=Balance-Daily_Balance+Profit;
+      if(Daily_Balance*(daily_loss_limit_prcentage/100)<=MathAbs(Daily_profit)&&Daily_profit<0)
         {
          Alert(" Daily loss limit reached");
          daily_limit_loss=true;
@@ -1438,13 +1485,15 @@ void OnTick()
            }
         }
      }
+ double Weekly_profit=Balance-Weekly_Balance+Profit;
    if(weekly_gain_limit)
      {
       if(w1>weekly_limit_date&&weekly_limit)
         {
          weekly_limit=false;
+         Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(weekly_gain_limit_prcentage/100)<=Profit)
+      if(Weekly_Balance*(weekly_gain_limit_prcentage/100)<=Weekly_profit)
         {
          Alert(" weekly gain limit reached");
          weekly_limit=true;
@@ -1460,8 +1509,9 @@ void OnTick()
       if(w1>weekly_limit_date_loss&&weekly_limit_loss)
         {
          weekly_limit=false;
+         Weekly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+      if(Weekly_Balance*(weekly_loss_limit_prcentage/100)<=MathAbs(Weekly_Profit)&&Weekly_profit<0)
         {
          Alert(" weekly loss limit reached");
          weekly_limit_loss=true;
@@ -1472,13 +1522,15 @@ void OnTick()
            }
         }
      }
+ double Monthly_profit=Balance-Monthly_Balance+Profit;
    if(monthly_gain_limit)
      {
       if(m1>monthly_limit_date&&monthly_limit)
         {
          monthly_limit=false;
+         Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(monthly_gain_limit_prcentage/100)<=Profit)
+      if(Monthly_Balance*(monthly_gain_limit_prcentage/100)<=Monthly_profit)
         {
          Alert(" Monthly gain limit reached");
          monthly_limit=true;
@@ -1494,8 +1546,9 @@ void OnTick()
       if(m1>monthly_limit_date_loss&&monthly_limit_loss)
         {
          monthly_limit_loss=false;
+         Monthly_Balance=AccountInfoDouble(ACCOUNT_BALANCE);
         }
-      if(Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Profit)&&Profit<0)
+      if(Monthly_Balance*(monthly_loss_limit_prcentage/100)<=MathAbs(Monthly_Profit)&&Monthly_Profit<0)
         {
          Alert(" Monthly loss limit reached");
          monthly_limit_loss=true;
@@ -2585,6 +2638,7 @@ void CreateSymbGUI(int i, int Y)
    bool close = false;
    bool CSMBuy=false;
    bool CSMSell=false;
+   bool nonFX=false;
 
    bool Aclose=false;
    bool  CcloseBuy=false;
@@ -2638,6 +2692,7 @@ void CreateSymbGUI(int i, int Y)
          xx+=10;
       if(!b_found||!q_found)
         {
+         nonFX=true;
          if(!b_found)
             xx+=50;
          if(!q_found)
@@ -2850,24 +2905,24 @@ void CreateSymbGUI(int i, int Y)
 
          if(g_symbols[ss]=="EUR")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_EUR)
+            if(D_Max_N[ss]>=Max_Negative_trade_EUR&&Use_Max_Negative_trade_EUR)
               {
                T_Allow=false;
                Comment("Max -ve Trades for EUR Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_EUR)
+            if(D_Max_P[ss]>=Max_Positive_trade_EUR&&Use_Max_Positive_trade_EUR)
               {
                T_Allow=false;
                Comment("Max +ve Trades for EUR Reached for today");
 
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_EUR)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_EUR&&Use_weekly_Max_Negative_trade_EUR)
               {
                T_Allow=false;
                Comment("Max -ve Trades for EUR Reached for week");
 
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_EUR)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_EUR&&Use_weekly_Max_Positive_trade_EUR)
               {
                T_Allow=false;
                Comment("Max +ve Trades for EUR Reached for week");
@@ -2877,23 +2932,23 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="USD")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_USD)
+            if(D_Max_N[ss]>=Max_Negative_trade_USD&&Use_Max_Negative_trade_USD)
               {
                T_Allow=false;
                Comment("Max -ve Trades for USD Reached for today");
 
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_USD)
+            if(D_Max_P[ss]>=Max_Positive_trade_USD&&Use_Max_Positive_trade_USD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for USD Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_USD)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_USD&&Use_weekly_Max_Negative_trade_USD)
               {
                T_Allow=false;
                Comment("Max -ve Trades for USD Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_USD)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_USD&&Use_weekly_Max_Positive_trade_USD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for USD Reached for week");
@@ -2901,22 +2956,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="AUD")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_AUD)
+            if(D_Max_N[ss]>=Max_Negative_trade_AUD&&Use_Max_negative_trade_AUD)
               {
                T_Allow=false;
                Comment("Max -ve Trades for AUD Reached for Today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_AUD)
+            if(D_Max_P[ss]>=Max_Positive_trade_AUD&&Use_Max_Positive_trade_AUD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for AUD Reached for Today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_AUD)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_AUD&&Use_weekly_Max_Negative_trade_AUD)
               {
                T_Allow=false;
                Comment("Max -ve Trades for AUD Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_AUD)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_AUD&&Use_weekly_Max_Positive_trade_AUD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for AUD Reached for week");
@@ -2924,22 +2979,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="CAD")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_CAD)
+            if(D_Max_N[ss]>=Max_Negative_trade_CAD&&Use_Max_Negative_trade_CAD)
               {
                T_Allow=false;
                Comment("Max Negative Trades for CAD Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_CAD)
+            if(D_Max_P[ss]>=Max_Positive_trade_CAD&&Use_Max_Positive_trade_CAD)
               {
                T_Allow=false;
                Comment("Max Positive Trades for CAD Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CAD)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CAD&&Use_weekly_Max_Negative_trade_CAD)
               {
                T_Allow=false;
                Comment("Max Negative Trades for CAD Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CAD)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CAD&&Use_weekly_Max_Positive_trade_CAD)
               {
                T_Allow=false;
                Comment("Max Positive Trades for CAD Reached for week");
@@ -2947,22 +3002,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="GBP")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_GBP)
+            if(D_Max_N[ss]>=Max_Negative_trade_GBP&&Use_Max_Negative_trade_GBP)
               {
                T_Allow=false;
                Comment("Max Negative Trades for GBP Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_GBP)
+            if(D_Max_P[ss]>=Max_Positive_trade_GBP&&Use_Max_Positive_trade_GBP)
               {
                T_Allow=false;
                Comment("Max Positive Trades for GBP Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_GBP)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_GBP&&Use_weekly_Max_Negative_trade_GBP)
               {
                T_Allow=false;
                Comment("Max Negative Trades for GBP Reached for Week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_GBP)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_GBP&&Use_weekly_Max_Positive_trade_GBP)
               {
                T_Allow=false;
                Comment("Max Positive Trades for GBP Reached for Week");
@@ -2970,22 +3025,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="JPY")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_JPY)
+            if(D_Max_N[ss]>=Max_Negative_trade_JPY&&Use_Max_Negative_trade_JPY)
               {
                T_Allow=false;
-              Comment("Max negative Trades for JPY Reached for today");
+               Comment("Max negative Trades for JPY Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_JPY)
+            if(D_Max_P[ss]>=Max_Positive_trade_JPY&&Use_Max_Positive_trade_JPY)
               {
                T_Allow=false;
                Comment("Max Positive Trades for JPY Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_JPY)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_JPY&&Use_weekly_Max_Negative_trade_JPY)
               {
                T_Allow=false;
                Comment("Max negative Trades for JPY Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_JPY)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_JPY&&Use_weekly_Max_Positive_trade_JPY)
               {
                T_Allow=false;
                Comment("Max Positive Trades for JPY Reached for week");
@@ -2993,22 +3048,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="CHF")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_CHF)
+            if(D_Max_N[ss]>=Max_Negative_trade_CHF&&Use_Max_Negative_trade_CHF)
               {
                T_Allow=false;
                Comment("Max negative Trades for CHF Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_CHF)
+            if(D_Max_P[ss]>=Max_Positive_trade_CHF&&Use_Max_Positive_trade_CHF)
               {
                T_Allow=false;
                Comment("Max Positive Trades for CHF Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CHF)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_CHF&&Use_weekly_Max_Negative_trade_CHF)
               {
                T_Allow=false;
                Comment("Max negative Trades for CHF Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CHF)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_CHF&&Use_weekly_Max_Positive_trade_CHF)
               {
                T_Allow=false;
                Comment("Max Positive Trades for CHF Reached for week");
@@ -3016,22 +3071,22 @@ void CreateSymbGUI(int i, int Y)
            }
          if(g_symbols[ss]=="NZD")
            {
-            if(D_Max_N[ss]>=Max_Negative_trade_NZD)
+            if(D_Max_N[ss]>=Max_Negative_trade_NZD&&Use_Max_Negative_trade_NZD)
               {
                T_Allow=false;
                Comment("Max negative Trades for NZD Reached for today");
               }
-            if(D_Max_P[ss]>=Max_Positive_trade_NZD)
+            if(D_Max_P[ss]>=Max_Positive_trade_NZD&&Use_Max_Positive_trade_NZD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for NZD Reached for today");
               }
-            if(W_Max_N[ss]>=weekly_Max_Negative_trade_NZD)
+            if(W_Max_N[ss]>=weekly_Max_Negative_trade_NZD&&Use_weekly_Max_Negative_trade_NZD)
               {
                T_Allow=false;
                Comment("Max negative Trades for NZD Reached for week");
               }
-            if(W_Max_P[ss]>=weekly_Max_Positive_trade_NZD)
+            if(W_Max_P[ss]>=weekly_Max_Positive_trade_NZD&&Use_weekly_Max_Positive_trade_NZD)
               {
                T_Allow=false;
                Comment("Max +ve Trades for NZD Reached for week");
@@ -3127,7 +3182,7 @@ void CreateSymbGUI(int i, int Y)
 
 
 //+------------------------------------------------------------------+
-   if((((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
+   if((((!use_CMS_Filters&&buy)||(use_CMS_Filters&&buy&&CSMBuy&&!nonFX)||(use_CMS_Filters&&buy&&nonFX))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
@@ -3254,7 +3309,7 @@ void CreateSymbGUI(int i, int Y)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   if((((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
+   if((((!use_CMS_Filters&&sell)||(use_CMS_Filters&&sell&&CSMSell&&!nonFX)||(use_CMS_Filters&&sell&&nonFX))&&trade_Allow)&&(Trade_Immediatly||(!Trade_Immediatly&&time1[i]!=iTime(_Symb,TF_Interval,0))))
      {
       double temp[],
              temp1[];
@@ -5103,7 +5158,7 @@ void Max_order_Day()
          else
             if(s>=Max_Trade_daily&&Use_Max_Trade_daily)
               {
-              Comment("("+pair+")Your Trades reach the Maximum for this Day");
+               Comment("("+pair+")Your Trades reach the Maximum for this Day");
                TradeAllow_Day[z]=false;
               }
             else
@@ -5220,7 +5275,7 @@ void Max_order_Weekly()
         {
          TradeAllow_Week_ALl=true;
         }
-        
+
   }
 
 //+------------------------------------------------------------------+

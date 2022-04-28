@@ -24,13 +24,14 @@ bool input MovingClose = false;
 int input BreakEventPoint = 175;
 int input TrailingStopPoint = 400;
 input double HedgeMultipiler = 4;
-CUtilities tools;
-CExecute trade(Symbol(), MagicNumber);
-CPosition SellPos(Symbol(), MagicNumber, GROUP_POSITIONS_SELLS);
-CPosition BuyPos(Symbol(), MagicNumber, GROUP_POSITIONS_BUYS);
-CPosition Pos(Symbol(), MagicNumber, GROUP_POSITIONS_ALL);
-CHistoryPosition BuyHistory(Symbol(), MagicNumber, GROUP_HISTORY_POSITIONS_BUY);
-CHistoryPosition SellHistory(Symbol(), MagicNumber, GROUP_HISTORY_POSITIONS_SELL);
+CUtilities *tools=new CUtilities(Symbol());
+CExecute *trade=new CExecute(Symbol(), MagicNumber);
+CPosition *SellPos=new CPosition(Symbol(), MagicNumber, GROUP_POSITIONS_SELLS);
+CPosition *BuyPos=new CPosition(Symbol(), MagicNumber, GROUP_POSITIONS_BUYS);
+CPosition *Pos=new CPosition(Symbol(), MagicNumber, GROUP_POSITIONS_ALL);
+CHistoryPosition *History=new CHistoryPosition(Symbol(), MagicNumber, GROUP_HISTORY_POSITIONS_ALL);
+CHistoryPosition *BuyHistory=new CHistoryPosition(Symbol(), MagicNumber, GROUP_HISTORY_POSITIONS_BUY);
+CHistoryPosition *SellHistory=new CHistoryPosition(Symbol(), MagicNumber, GROUP_HISTORY_POSITIONS_SELL);
 CiMA MA7;
 CiMA MA3;
 long LastBuyTicket = -1;
@@ -57,6 +58,8 @@ double lot;
 bool update = true, crossed = false, first = true;
 int MySignal = -1, oldMySignal, lowerIndex, upperIndex;
 double Upper, Lower;
+datetime LastOrderClose_time=0;
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -271,6 +274,7 @@ void OnTick()
         }
       crossed = false;
      }
+
    CloseHedge();
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -481,7 +485,7 @@ double LotsMM()
 //+------------------------------------------------------------------+
 bool Hedging()
   {
-  
+
    bool result = false;
    totalPos = Pos.GroupTotal();
    HedgeTotal = ArraySize(HedgeArray);
@@ -696,7 +700,7 @@ bool Hedging()
                   if(Pos[i].GetType() == ORDER_TYPE_BUY)
                     {
                      if(
-                        Pos[i].GetPriceOpen() > rational_Arr[upperIndex - 1])
+                        Pos[i].GetPriceOpen() > rational_Arr[upperIndex - 1]&&!checkIfPositinInSameChannel(Upper,Lower,ORDER_TYPE_SELL))
                        {
                         double LastLot = Pos[i].GetVolume();
                         HedgeTicket = Pos[i].GetTicket();
@@ -714,7 +718,7 @@ bool Hedging()
                   if(Pos[i].GetType() == ORDER_TYPE_SELL)
                     {
                      if(
-                        Pos[i].GetPriceOpen() < rational_Arr[lowerIndex + 1])
+                        Pos[i].GetPriceOpen() < rational_Arr[lowerIndex + 1]&&!checkIfPositinInSameChannel(Upper,Lower,ORDER_TYPE_BUY))
                        {
                         double LastLot = Pos[i].GetVolume();
                         HedgeTicket = Pos[i].GetTicket();
@@ -733,7 +737,22 @@ bool Hedging()
      }
    return result;
   }
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool checkIfPositinInSameChannel(double up,double dn,ENUM_ORDER_TYPE type)
+  {
+   int total=Pos.GroupTotal();
+   for(int i=0; i<total; i++)
+     {
+      double PriceOpen=Pos[i].GetPriceOpen();
+      if(PriceOpen>dn&&PriceOpen<up&&Pos[i].GetType()==type)
+        {
+         return true;
+        }
+     }
+   return false;
+  }
 //+------------------------------------------------------------------+
 void CloseHedge()
   {
@@ -879,4 +898,25 @@ void ClearHedgeArray()
   }
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+void checkOrderClose()
+  {
+   History.SetHistoryRange(LastOrderClose_time,TimeCurrent());
+   int size=History.GroupTotal();
+   long ticket=0;
+   datetime time=0;
+   for(int i=0;i<size; i++)
+     {
+      if(History[i].GetTimeClose()>time)
+        {
+         time=History[i].GetTimeClose();
+        }
+     }
+   if(time>LastOrderClose_time)
+     {
+      double Price_open=History[ticket].GetPriceOpen();
+      string comment=History[ticket].GetComment();
+
+     }
+  }
 //+------------------------------------------------------------------+
