@@ -27,9 +27,10 @@ input SNR_Mode snr=Auto; // Type To Detect High and low
 input double Manual_High= 1.5000;
 input double Manual_Low=  1.2000;
 input long MagicNumber=2020;
+input ENUM_TIMEFRAMES Entry_TimeFrame=PERIOD_M15;
 input double Lot=0.1;
 input double TpRR=2;
-input int Max_Open_Trades= 1;
+input int Max_Open_Trades= 10;
 input string comment=" Yousuf Mesalm";
 datetime lasttime=0;
 
@@ -88,28 +89,40 @@ void OnTick()
       Last_Low =Manual_Low;
       lasttime_time= iTime(Symbol(),PERIOD_D1,1);
      }
-   double current_High=iHigh(Symbol(),PERIOD_M15,1);
-   double current_Low=iLow(Symbol(),PERIOD_M15,1);
-   double current_Open=iOpen(Symbol(),PERIOD_M15,1);
-   double current_Close=iClose(Symbol(),PERIOD_M15,1);
-   datetime current_time= iTime(Symbol(),PERIOD_M15,1);
+   double current_High=iHigh(Symbol(),Entry_TimeFrame,1);
+   double current_Low=iLow(Symbol(),Entry_TimeFrame,1);
+   double current_Open=iOpen(Symbol(),Entry_TimeFrame,1);
+   double current_Close=iClose(Symbol(),Entry_TimeFrame,1);
+   datetime current_time= iTime(Symbol(),Entry_TimeFrame,1);
+   ObjectDelete(0,"High");
+   ObjectDelete(0,"Low");
    TrendCreate(0,"High",0,lasttime_time,Last_High,TimeCurrent(),Last_High);
    TrendCreate(0,"Low",0,lasttime_time,Last_Low,TimeCurrent(),Last_Low);
-   if(current_Low<Last_Low&&current_Close>Last_Low&&tools.IsNewBar(PERIOD_M15))
+   if(current_Low<Last_Low&&current_Close>Last_Low&&current_Open>Last_Low&&lasttime<current_time)
      {
-      lasttime=current_time;
+
       double sl=iLow(Symbol(),PERIOD_D1,0);
       double tp=((tools.Bid()-sl)*TpRR)+tools.Bid();
+      int total=Pos.GroupTotal();
+
       if(Pos.GroupTotal()<Max_Open_Trades)
+        {
          trade.Position(TYPE_POSITION_BUY,Lot,sl,tp,SLTP_PRICE,30,comment);
+         if(Pos.GroupTotal()>total)
+            lasttime=current_time;
+        }
      }
-   if(current_High>Last_High&&current_Close<Last_High&&tools.IsNewBar(PERIOD_M15))
+   if(current_High>Last_High&&current_Close<Last_High&&current_Open<Last_High&&lasttime<current_time)
      {
-      lasttime=current_time;
-      double sl=iLow(Symbol(),PERIOD_D1,0);
+      double sl=iHigh(Symbol(),PERIOD_D1,0);
       double tp=tools.Bid()-((sl-tools.Bid())*TpRR);
+      int total=Pos.GroupTotal();
       if(Pos.GroupTotal()<Max_Open_Trades)
+        {
          trade.Position(TYPE_POSITION_SELL,Lot,sl,tp,SLTP_PRICE,30,comment);
+         if(Pos.GroupTotal()>total)
+            lasttime=current_time;
+        }
      }
   }
 //+------------------------------------------------------------------+
@@ -132,17 +145,10 @@ bool TrendCreate(const long            chart_ID=0,        // chart's ID
                  const bool            hidden=true,       // hidden in the object list
                  const long            z_order=0)         // priority for mouse click
   {
-//--- set anchor points' coordinates if they are not set
-   ChangeTrendEmptyPoints(time1,price1,time2,price2);
-//--- reset the error value
-   ResetLastError();
-//--- create a trend line by the given coordinates
-   if(!ObjectCreate(chart_ID,name,OBJ_TREND,sub_window,time1,price1,time2,price2))
-     {
-      Print(__FUNCTION__,
-            ": failed to create a trend line! Error code = ",GetLastError());
-      return(false);
-     }
+
+   ObjectCreate(chart_ID,name,OBJ_TREND,sub_window,time1,price1,time2,price2);
+
+
 //--- set line color
    ObjectSetInteger(chart_ID,name,OBJPROP_COLOR,clr);
 //--- set line display style
