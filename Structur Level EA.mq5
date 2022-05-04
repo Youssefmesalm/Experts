@@ -190,24 +190,33 @@ void OnTick()
 
    if(Last_LH1>Last_LH2)
      {
+      ObjectDelete(0,"LH");
       TextCreate(0,"LH",0,iTime(Symbol(),Lowest_TF,Last_LH1_idx),Last_LH1,"HH");
+      ObjectDelete(0,"LH-Line");
       TrendCreate(0,"LH-Line",0,iTime(Symbol(),Lowest_TF,Last_LH1_idx),Last_LH1,TimeCurrent(),Last_LH1);
      }
    else
      {
+      ObjectDelete(0,"LH");
+
       TextCreate(0,"LH",0,iTime(Symbol(),Lowest_TF,Last_LH1_idx),Last_LH1,"LH");
+      ObjectDelete(0,"LH-Line");
       TrendCreate(0,"LH-Line",0,iTime(Symbol(),Lowest_TF,Last_LH1_idx),Last_LH1,TimeCurrent(),Last_LH1);
 
      }
    if(Last_LL1>Last_LL2)
      {
+      ObjectDelete(0,"LL");
       TextCreate(0,"LL",0,iTime(Symbol(),Lowest_TF,Last_LL1_idx),Last_LL1,"HL");
+      ObjectDelete(0,"LL-Line");
       TrendCreate(0,"LL-Line",0,iTime(Symbol(),Lowest_TF,Last_LL1_idx),Last_LL1,TimeCurrent(),Last_LL1);
 
      }
    else
      {
+      ObjectDelete(0,"LL");
       TextCreate(0,"LL",0,iTime(Symbol(),Lowest_TF,Last_LL1_idx),Last_LL1,"LL");
+      ObjectDelete(0,"LL-Line");
       TrendCreate(0,"LL-Line",0,iTime(Symbol(),Lowest_TF,Last_LL1_idx),Last_LL1,TimeCurrent(),Last_LL1);
 
      }
