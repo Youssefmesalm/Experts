@@ -10,9 +10,7 @@
 #property description      "https://www.mql5.com/en/users/20163440"
 #property version   "1.00"
 
-#include  <YM\Execute\Execute.mqh>
-#include  <YM\Position\Position.mqh>
-#include  <YM\Order\Order.mqh>
+#include  <YM\YM.mqh>
 #include <Arrays\ArrayDouble.mqh>
 enum close
   {
