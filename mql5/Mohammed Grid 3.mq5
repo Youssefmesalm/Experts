@@ -27,7 +27,7 @@ enum Entry
 sinput string set1 = "<-------------- Currency Pairs Settings-------------->";
 input string Suffix="";
 input string Perfix="";
-input string CustomPairs = "EURUSD,USDCHF,USDCAD,USDJPY,GBPUSD";
+input string CustomPairs = "EURUSD";
 sinput string set2 = "<----------------Trading Settings-------------------->";
 input Entry OrderType=Buy;
 input double lotStarter = 0.1;
@@ -207,9 +207,9 @@ void OnTick()
          UpdateLot(Positions[i],Pendings[i],trades[i],tools[i],Highest[i],lowest[i],openDirection[i]);
         }
       Repending(Positions[i],BuyPositions[i],SellPositions[i],trades[i],tools[i],Pendings[i],BuyPendings[i],SellPendings[i],WhichClos[i],Levelprices[i],Total[i],TotalBuy[i],TotalSell[i],openDirection[i]);
-      Traliling(BuyPositions[i],SellPositions[i],tools[i],Levelprices[i]);
+      Traliling(BuyPositions[i],SellPositions[i],tools[i],Levelprices[i],Pendings[i],Highest[i],lowest[i]);
       Closing(BuyPositions[i],SellPositions[i],tools[i],Pendings[i],upPrice[i],dnPrice[i],Levelprices[i]);
-      if(Positions[i].GroupTotal()==0&&Pendings[i].GroupTotal()<TradingLevelsNumbers*4)
+      if(Positions[i].GroupTotal()==0&&Pendings[i].GroupTotal()<TradingLevelsNumbers*2)
         {
          Pendings[i].GroupCloseAll(20);
         }
@@ -260,7 +260,7 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         }
      }
    int totalPending=Pending.GroupTotal();
-   if(direction>0&&L==0&&H==0&&D>0)
+   if(direction>0&&L==0&&H==0)
      {
       for(int x=0; x<totalPending; x++)
         {
@@ -275,7 +275,6 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
             tickets[tsize]=ticket;
 
            }
-
         }
       int ttotal=ArraySize(tickets);
       for(int z=0; z<ttotal; z++)
@@ -287,9 +286,10 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          double sl=Pending[x].GetStopLoss();
          double NewLot=0;
          ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
+
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
-            NewLot = Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
+            NewLot = lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
@@ -300,7 +300,7 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
         }
 
      }
-   if(direction<0&&L==0&&H==0&&D<0)
+   if(direction<0&&L==0&&H==0)
      {
       for(int x=0; x<totalPending; x++)
         {
@@ -327,7 +327,7 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          if(MathAbs(comment)<TradingLevelsNumbers-1)
            {
 
-            NewLot=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
+            NewLot=lots[MathAbs(comment)+1];
            }
          Pending[x].Close();
          if(MathAbs(comment)<TradingLevelsNumbers-1)
@@ -339,85 +339,82 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
      }
 
 
-   if(direction<0&&L<0&&D<0)
-     {
-      for(int x=0; x<totalPending; x++)
-        {
-         int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
-         if(comment>=0&&c!="-0")
-           {
-            long ticket=Pending[x].GetTicket();
-            int tsize=ArraySize(tickets);
-            ArrayResize(tickets,tsize+1);
-            tickets[tsize]=ticket;
+// if(direction<0&&L<0&&D<0)
+//   {
+//     for(int x=0; x<totalPending; x++)
+//       {
+//       int comment=(int)Pending[x].GetComment();
+//       string c=Pending[x].GetComment();
+//       if(comment>=0&&c!="-0")
+//         {
+//           long ticket=Pending[x].GetTicket();
+//           int tsize=ArraySize(tickets);
+//           ArrayResize(tickets,tsize+1);
+//           tickets[tsize]=ticket;
 
-           }
-        }
-      int ttotal=ArraySize(tickets);
-      for(int z=0; z<ttotal; z++)
-        {
-         long x=tickets[z];
-         int comment=(int)Pending[x].GetComment();
-         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
-         double openPrice=Pending[x].GetPriceOpen();
-         double sl=Pending[x].GetStopLoss();
-         double NewLot=0;
-         ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
-         if(MathAbs(comment)<TradingLevelsNumbers-1)
-           {
+//         }
+//       }
+//     int ttotal=ArraySize(tickets);
+//     for(int z=0; z<ttotal; z++)
+//       {
+//       long x=tickets[z];
+//       int comment=(int)Pending[x].GetComment();
+//       string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
+//       double openPrice=Pending[x].GetPriceOpen();
+//       double sl=Pending[x].GetStopLoss();
+//       double NewLot=0;
+//       ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_BUY_STOP?TYPE_ORDER_BUYSTOP:TYPE_ORDER_SELLLIMIT;
+//       if(MathAbs(comment)<TradingLevelsNumbers-1)
+//         {
+//           NewLot=lots[MathAbs(comment)+1];
+//         }
+//       Pending[x].Close();
+//       if(MathAbs(comment)<TradingLevelsNumbers-1)
+//         {
+//           open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
+//           D=0;
+//         }
+//       }
+//   }
+// if(direction>0&&H>0&&D>0)
+//   {
+//     for(int x=0; x<totalPending; x++)
+//       {
+//       int comment=(int)Pending[x].GetComment();
+//       string c=Pending[x].GetComment();
 
-            NewLot= Pending[x].GetType()==ORDER_TYPE_BUY_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
+//       if(comment<=0&&c!="0")
+//         {
+//           long ticket=Pending[x].GetTicket();
+//           int tsize=ArraySize(tickets);
+//           ArrayResize(tickets,tsize+1);
+//           tickets[tsize]=ticket;
+//         }
+//       }
+//     int ttotal=ArraySize(tickets);
+//     for(int z=0; z<ttotal; z++)
+//       {
+//       long x=tickets[z];
+//       int comment=(int)Pending[x].GetComment();
+//       string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
+//       double openPrice=Pending[x].GetPriceOpen();
+//       double sl=Pending[x].GetStopLoss();
+//       double NewLot=0;
 
-           }
-         Pending[x].Close();
+//       ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
+//       if(MathAbs(comment)<TradingLevelsNumbers-1)
+//         {
 
-         if(MathAbs(comment)<TradingLevelsNumbers-1)
-           {
-            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
-            D=0;
-           }
-        }
-     }
-   if(direction>0&&H>0&&D>0)
-     {
-      for(int x=0; x<totalPending; x++)
-        {
-         int comment=(int)Pending[x].GetComment();
-         string c=Pending[x].GetComment();
-
-         if(comment<=0&&c!="0")
-           {
-            long ticket=Pending[x].GetTicket();
-            int tsize=ArraySize(tickets);
-            ArrayResize(tickets,tsize+1);
-            tickets[tsize]=ticket;
-           }
-        }
-      int ttotal=ArraySize(tickets);
-      for(int z=0; z<ttotal; z++)
-        {
-         long x=tickets[z];
-         int comment=(int)Pending[x].GetComment();
-         string c=comment>0?IntegerToString(comment+1):IntegerToString(comment-1);
-         double openPrice=Pending[x].GetPriceOpen();
-         double sl=Pending[x].GetStopLoss();
-         double NewLot=0;
-
-         ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
-         if(MathAbs(comment)<TradingLevelsNumbers-1)
-           {
-
-            NewLot=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?l_lots[MathAbs(comment)+1]:p_lots[MathAbs(comment)+1];
-           }
-         Pending[x].Close();
-         if(MathAbs(comment)<TradingLevelsNumbers-1)
-           {
-            open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
-            D=0;
-           }
-        }
-     }
+//           NewLot=lots[MathAbs(comment)+1];
+//         }
+//       Pending[x].Close();
+//       if(MathAbs(comment)<TradingLevelsNumbers-1)
+//         {
+//           open.Order(type,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
+//           D=0;
+//         }
+//       }
+//   }
   }
 //+------------------------------------------------------------------+
 
@@ -473,7 +470,7 @@ void CheckNewOpen(CPosition & Pos, CPosition & BuyPos,CPosition & SellPos,int & 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayDouble & Levels)
+void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayDouble & Levels,COrder & Pending,int & H,int & L)
   {
 // Positions numbers
    int totalBuy = BuyPos.GroupTotal();
@@ -527,7 +524,14 @@ void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayD
             if(BuyPos.SelectByIndex(i))
               {
                BuyPos.Modify(sl,BuyPos.GetTakeProfit(),SLTP_PRICE);
-
+               int s=Pending.GroupTotal();
+               for(int x=0; x<s; x++)
+                 {
+                  if((int)Pending[x].GetComment()<L)
+                    {
+                     Pending[x].Close(30);
+                    }
+                 }
               }
            }
         }
@@ -577,7 +581,14 @@ void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayD
               {
 
                SellPos.Modify(sl,SellPos.GetTakeProfit(),SLTP_PRICE);
-
+               int s=Pending.GroupTotal();
+               for(int x=0; x<s; x++)
+                 {
+                  if((int)Pending[x].GetComment()>H)
+                    {
+                     Pending[x].Close(30);
+                    }
+                 }
               }
            }
         }
