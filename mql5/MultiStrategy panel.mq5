@@ -259,9 +259,6 @@ input bool Use_Max_positive_All_daily     =false;  //Use Max Positive orders dai
 input bool Use_Max_positive_symbol_weekly =false;  //Use Max Positive orders weekly for each symbol
 input bool  Use_Max_positive_All_weekly    =false;  //Use Max Positive orders weekly for All symbol
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 input int Max_negative_symbol_daily_low  =10;  //Max negative orders daily for each symbol (Low)
 input int Max_negative_All_daily_low     =10;  //Max negative orders daily for All symbol (Low)
 input int Max_negative_symbol_weekly_low =10;  //Max negative orders weekly for each symbol (Low)

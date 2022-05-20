@@ -1,0 +1,143 @@
+Thank you for taking on this project to fix some of the bugs in my expert advisor In the specifications below I will lay out the things that I will need completed in order for 
+the job to be done. Note I will be sending screenshots and videos for things that may seem confusing or so if you have a question refer to the videos as well as communicating
+with me about any issues. Anything that says NEW ADDON or UPDATE would need to be place in by you. 
+
+How this expert advisor works:
+
+This is an independent entry system which will trade one way in a trending market and another in a consolidated market, With both styles of trading they have 3 strategies that are used when the
+entry is triggered 
+
+Strategy 1: 1 entry, 1 stop loss and 1 take profit location (typically support or resistance 1 of the day that the trade was entered) *THIS INDICATOR IS ALREADY IN THE CODE*
+
+Strategy 2: 2 entries, the stop loss is the same as strategy 1 and 2 different take profit levels trade 1 (support/resistance 1) and trade 2 take profit level is (support/resistance 2) 
+
+Strategy 3: 3 entries, the stop loss is the same as strategy 2 and 3 different tp levels trade 1 (sup/res1) , trade 2 (sup/res2) and trade 3 (sup/res3)
+
+
+Trail Stop (Moving Average Crossover Trades / TRENDING TRADES)
+
+- When a crossover trade is entered all three trades will have the same stop loss (as stated before) but the trail stop goes as follows:
+
+Take profit 1 has been hit, trade #2 & #3 will move to breakeven price 
+
+Take profit 2 has been hit, trade #3 will move its stop loss to the price of take profit #1
+
+Once Take profit 3 is hit all trades are closed out waiting for the next entry
+
+
+Trail Stop (Consoldation Hedge Trading) 
+
+- A BUY and SELL entries will be be made at the same price which is the mid point price of the consolidation range. (IN THE CODE IT ALREADY IDENTIFIES CONSOLIDATION AND WILL CREATE A BOX 
+AROUND THAT RANGE) 
+
+Once the market breaks out in a direction either bullish or bearish then the remaining trades stop loss would move to the breakeven  
+
+Once take profit 1 is hit the trail stop would not move 
+
+Once take profit 2 is hit, trade #3 will move its stop loss to the price of take profit #1
+
+Once take profit 3 is hit all trades are closed out waiting for the next entry
+
+
+Trail Stop (Consolidation BREAKOUT Trading) PLEASE NOTE IN THE PARAMETERS I WANT THE OPTION TO BE ABLE TO CHOOSE BETWEEN THESE TO OPTIONS 
+
+When consolidation is identified then pending orders will be placed outside of the consolidation range area and will not be traded until price has broken out of the consolidation range
+after this happens the pending orders in opposite direction will close automatically.
+
+OPTION 1: "AGGRESSIVE BREAKOUT TRAIL" ======= (NEW ADDON) =========
+
+Once breakout in a direction has triggered either a buy or sell trade then the stop loss of would need to move to the midpoint price of the range (example: if the range was 100 points then 
+the stop loss over be move to 50 points 
+
+-Once price has reached a certain amount of points (WHICH WOULD NEED TO BE A INPUT IN THE PARAMETERS SO IT CAN BE ADJUSTED) then the stop loss would need to move to the breakeven plus the 
+trade allowance points (already in the code).  
+
+Once take profit 1 is hit the trail stop would not move 
+
+Once take profit 2 is hit, trade #3 will move its stop loss to the price of take profit #1
+
+Once take profit 3 is hit all trades are closed out waiting for the next entry 
+
+*NOTE THIS WAS IN A PREVIOUS CODE THAT I WILL SEND YOU SO YOU CAN USE THAT AS A FOUNDATION TO ONLY THING THAT WOULD BE DIFFERENT IN THAT CODE IS HOW MANY POINTS IT WOULD NEED TO BE UP 
+BEFORE MOVING THE STOP LOSS TO BREAKEVEN FOR REMAINING TRADES 
+
+OPTION 2: "CONSERVATIVE BREAKOUT TRAIL" =====(NOTE IN THE CODE THIS IS ALREADY IN PLACE AND DOES NOT NEED TO BE CHANGED)======
+
+Once the market breaks out in a direction either bullish or bearish then the remaining trades stop loss would not change 
+
+When take profit 1 has been hit, trade #2 & #3 will move to breakeven price 
+
+When take profit 2 has been hit, trade #3 will move its stop loss to the price of take profit #1
+
+Once Take profit 3 is hit all trades are closed out waiting for the next entry
+
+ALL BREAKOUT PENDING ORDERS THAT HAS NOT BEEN FULFILLED AND ARE OUTSIDE OF THE CONSOLIDATION RANGE WILL BE CANCELLED BEFORE THE TRADING DAY IS OVER 
+
+
+THINGS THAT WOULD NEEDED TO BE ADDED INTO THE CODE =====(ADDONS)=======
+
+1. Trading Times (24 hour clock) 
+ - I want to regulate the timeframe when new trades can be entered and cancel trades new trades if they are entered outside of that timeframe in the parameter please make it to where
+it has a From and Till Time example if I wanted to only have trade entries from 9pm (21:00) to 3pm (15:00) and that is set to "TRUE" then it will only look at entering trades during that time
+if it is set to "FALSE" then trades call be allowed all 24 hours
+
+2. SEPERATE LOT SIZE AND STRATEGY CUSTOMIZATION FOR HEDGE TRADING 
+- In the code you will see that (Trending -Crossover & Consolidation -Breakout) trades have seperate entry strategy that I can customize to take advantage and protect myself in each market
+I would like to do the same for Hedge trading as well. This means that I would like to be all to declare what startegy I want to use, change the lot sizes and take profit locations for hedge trades 
+
+In this portion of the parameter please make move the hedge trail portion to or false statement in that area so it is grouped together. 
+
+3. SOLVE ISSUE OF WHY SOME TRADES HAVE A 0.00 TAKE PROFIT WHEN ENTERED
+- Sometimes when the consolidation hedge and breakout trades are being triggered I am noticing that it is not reading the take profit values of the indicator and making the tp 0.00 
+
+this has been happening when the price is past take profit 2 sometimes or the value of the mid point (during hedge trading) is not a whole number then that effects the entry price. 
+
+4. REGULATE HOW MANY HEDGE TRADES CAN BE TAKEN
+
+- In the code you will notice that I have it set to where I can specify what trades can be considered (crossover, breakout, breakout retest, etc) and I have the ability to ALLOW MULTIPLE TRADES if 
+that same style to be entered while one or more trades are still running of that style. 
+
+I would like to have a parameter added into that section where I can "ALLOW HEDGE TRADES" (1 TRADE WITH THAT STRATEGY) buy until that trade is fully closed it will not allow anymore trades to 
+be a TRUE/FALSE STATEMENT and a ALLOW MULTIPLE HEDGE TRADES TRUE/FALSE statement where if there is a hedging opportunity it will take that trade as well while the previous trade is still running
+
+5. FIX THE COMMENT SECTION OF ENTERED TRADES SO I CAN KNOW WHICH TRADE HAS BEEN ENTERED 
+
+- Because of the possibility of multiple trades being entered that would be varying styles I would like the comment section to specify what trade is being entered 
+
+Example: Crossover Trades would need to say Crossover Buy/Sell Trade #1, #2, and #3, Breakout Buy/Sell Trade #1, #2, and #3 and Hedge Buy/Sell #1, #2 and #3 
+
+6. "AGGRESSIVE BREAKOUT TRAIL" ======= (NEW ADDON) =========
+
+Once breakout in a direction has triggered either a buy or sell trade then the stop loss of would need to move to the midpoint price of the range (example: if the range was 100 points then 
+the stop loss over be move to 50 points 
+
+-Once price has reached a certain amount of points (WHICH WOULD NEED TO BE A INPUT IN THE PARAMETERS SO IT CAN BE ADJUSTED) then the stop loss would need to move to the breakeven plus the 
+trade allowance points (already in the code).  
+
+Once take profit 1 is hit the trail stop would not move 
+
+Once take profit 2 is hit, trade #3 will move its stop loss to the price of take profit #1
+
+Once take profit 3 is hit all trades are closed out waiting for the next entry 
+
+*NOTE THIS WAS IN A PREVIOUS CODE THAT I WILL SEND YOU SO YOU CAN USE THAT AS A FOUNDATION TO ONLY THING THAT WOULD BE DIFFERENT IN THAT CODE IS HOW MANY POINTS IT WOULD NEED TO BE UP 
+BEFORE MOVING THE STOP LOSS TO BREAKEVEN FOR REMAINING TRADES 
+  
+
+Deliverables
+
+-Updated Source Code MT5
+
+-Description of findings during coding that would benefit me if I was to add or adjust   
+
+By agreeing to complete this job you are saying that you will be able to complete the job 100% correct on time if developer is not able to complete the job on time you will 
+forfiet a portion of the agreed budget cost and still commplete and submit all source file work, no exceptions 
+
+1 day late $5 
+2-3 days late $15 or 25% of budget cost which ever is the lowest 
+3-5 days late 40% of budget cost 
+6+ days 50% of budget cost 
+
+================
+
+
