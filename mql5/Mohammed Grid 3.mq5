@@ -21,7 +21,7 @@ enum close
   };
 enum Entry
   {
-   Buy,Sell
+   Buy,Sell,Both
   };
 // inputs
 sinput string set1 = "<-------------- Currency Pairs Settings-------------->";
@@ -191,12 +191,12 @@ void OnTick()
             lots[x]=lot;
             upPrice[i] =first?(upPrice[i]+(GapBetweenLevels/2)*tools[i].Pip()):upPrice[i]+(GapBetweenLevels*tools[i].Pip());
             dnPrice[i] =first?(dnPrice[i]-(GapBetweenLevels/2)*tools[i].Pip()):dnPrice[i]-(GapBetweenLevels*tools[i].Pip());
-            if(OrderType==Buy)
+            if(OrderType==Buy||OrderType==Both)
               {
                trades[i].Order(TYPE_ORDER_BUYSTOP,lot,upPrice[i],bsl,0,SLTP_PRICE,0,30,(string)x);
                trades[i].Order(TYPE_ORDER_BUYLIMIT,lot,dnPrice[i],bsl,0,SLTP_PRICE,0,30,"-"+(string)x);
               }
-            if(OrderType==Sell)
+            if(OrderType==Sell||OrderType==Both)
               {
                trades[i].Order(TYPE_ORDER_SELLLIMIT,lot,upPrice[i],ssl,0,SLTP_PRICE,0,30,(string)x);
                trades[i].Order(TYPE_ORDER_SELLSTOP,lot,dnPrice[i],ssl,0,SLTP_PRICE,0,30,"-"+(string)x);
