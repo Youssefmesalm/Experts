@@ -70,10 +70,12 @@ input bool TradeHedge = true;        //Trade Hedge
 input bool TradeCrossovers = true;   //Trade Crossovers
 input bool TradeBreakout = true;     //Trade Breakouts
 input bool TradeRetests = true;      //Trade Retests/Retracements
+//ALLOW HEDGE TRADES
 input bool   Allow_Multi_Trade = false;//Allow Multiple Crossover Trades
 input bool   Allow_Multi_Cons_Trade = false;//Allow Multiple Consolidation (Breakout+Retest) Trades
 input bool   Allow_Multi_X_Trade = false;//Allow Multiple Crossover & Consolidation(Breakout+Retest) Trades
-
+input bool   Allow_Multi_hedge=false;//Allow Multiple Hedging Trades
+//ALLOW MULTIPLE HEDGE
 input string dt;//.
 input buysl  Buy_SL_Mode  = SupLevel3;//Buy SL Mode
 input sellsl Sell_SL_Mode = ResLevel3;//Sell SL Mode
@@ -95,6 +97,27 @@ input bool   Close_By_Reverse_Signal = false;//Close By Reverse Signal
 input string ee = "-----Hedge Settings------";//==Hedge Settings===
 input double distance_from_consolidation=50;//SL Distance from consolidation box (in Points)
 input double use_trail_hedge=true;
+input string hint1= "-----Hedge Trading Setting------";//
+input buysl  Hedge_Buy_SL_Mode  = SupLevel3;//Buy SL Mode
+input sellsl Hedge_Sell_SL_Mode = ResLevel3;//Sell SL Mode
+input int    Hedge_StopLoss   = 0;//Fix Stop Loss(0 means disable)
+input int    Hedge_TakeProfit = 100;//Fix Take Profit(0 means disable)
+input lpmode Hedge_StrategyType    = Strategy3;//Strategy Type
+input double Hedge_LotSize1 = 0.01;//1st Trade Lot Size
+input tpmode Hedge_TakeProfitMode1 = TPMode1;//1st Trade Take Profit
+//...
+input double Hedge_LotSize2 = 0.01;//2nd Trade Lot Size
+input tpmode Hedge_TakeProfitMode2 = TPMode2;//2nd Trade Take Profit
+//...
+input double Hedge_LotSize3 = 0.01;//3th Trade Lot Size
+input tpmode Hedge_TakeProfitMode3 = TPMode3;//3th Trade Take Profit
+input string Hedge_TrailSet = "-----Hedge Trailing Setting------";//==Hedge Trailing Settings===
+input bool Hedge_trail_stop = true;//Use Trail Stop
+input choosetrail Hedge_TrailMode = Original; //Trail Mode
+
+input int Hedge_ExtTrailingStep = 50;//Trail Step
+input double Hedge_TrailPercentage = 50; //3rd trade Trail percentage
+input int Hedge_AllowancePoints = 1; //Breakeven Allowance Points
 
 input string TrailSet = "-----Crossover Trailing Setting------";//==Crossover Trailing Settings===
 input bool trail_stop = true;//Use Trail Stop
@@ -112,7 +135,7 @@ input color Consolidation_Color = clrOrangeRed; //Range Color
 input bool Consolidation_Fill = true; //Range Fill
 
 input string dtx= "-----Consolidation Trading Setting------";//
-                  input buysl  Con_Buy_SL_Mode  = SupLevel3;//Buy SL Mode
+input buysl  Con_Buy_SL_Mode  = SupLevel3;//Buy SL Mode
 input sellsl Con_Sell_SL_Mode = ResLevel3;//Sell SL Mode
 input int    Con_StopLoss   = 0;//Fix Stop Loss(0 means disable)
 input int    Con_TakeProfit = 100;//Fix Take Profit(0 means disable)
@@ -157,8 +180,8 @@ input color FontColor       = clrGray;
 
 input string                               Time_SetUP = "------Trading Time Regulation------";
 input bool                                 UseTimeFilter=false;
-input string                               TimeStart="12:00";
-input string                               TimeStop="14:00";
+input string                               TimeStart="12:00"; //Time Start
+input string                               TimeStop="14:00"; //Time End
 input string dtz2;//.
 input string FilterSet = "-----MA Filter Setting------";//==MA Filter Settings===
 input bool UseMAFilter = true; //Use MA Filter
@@ -277,7 +300,7 @@ void OnTick()
    DoTrail1();
    DoTrail2();
 
-   TrailHedge();
+   Conservative_TrailHedge();
    DeleteOppositeOrder();
 
 //---
@@ -370,34 +393,49 @@ int GetOrder(string sym,double lot)
                TP2 = TP;
             if(TP3>200000)
                TP3 = TP;
+
+            int Number_trades=N_Trade("C:");
+            string  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
             //...
             if(Validity(sym,LotValidity(sym,lot),OP_BUY,Ask,SL,TP)==true)
               {
+
                if(StrategyType==Strategy1)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
                   if(Ask<TP1)
-                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,Num_trades+"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
                   else
                      Print("No trade. Buy Entry is above the TP 1");
                  }
                if(StrategyType==Strategy2)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
                   if(Ask<TP1)
-                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,Num_trades+"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
                   else
                      Print("No trade. Buy Entry is above the TP 1");
 
-                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize2),Ask,0,SL,TP2,"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize2),Ask,0,SL,TP2,Num_trades+"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
                  }
                if(StrategyType==Strategy3)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
                   if(Ask<TP1)
-                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                     Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize1),Ask,0,SL,TP1,Num_trades+"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
                   else
                      Print("No trade. Buy Entry is above the TP 1");
-
-                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize2),Ask,0,SL,TP2,"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
-                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize3),Ask,0,SL,TP3,"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize2),Ask,0,SL,TP2,Num_trades+"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Buy #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_BUY,LotValidity(sym,LotSize3),Ask,0,SL,TP3,Num_trades+"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrBlue);
                  }
               }
            }
@@ -450,34 +488,46 @@ int GetOrder(string sym,double lot)
             if(TP3>200000)
                TP3 = TP;
             //...
+            int Number_trades=N_Trade("C:");
+            string  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
             if(Validity(sym,LotValidity(sym,lot),OP_SELL,Bid,SL,TP)==true)
               {
                if(StrategyType==Strategy1)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
                   Print(TP1);
                   if(Bid>TP1)
-                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,Num_trades+"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
                   else
                      Print("No trade. Sell Entry is above the TP 1");
                  }
                if(StrategyType==Strategy2)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
                   if(Bid>TP1)
-                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,Num_trades+"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
                   else
                      Print("No trade. Sell Entry is above the TP 1");
-
-                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize2),Bid,0,SL,TP2,"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize2),Bid,0,SL,TP2,Num_trades+"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
                  }
                if(StrategyType==Strategy3)
                  {
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
                   if(Bid>TP1)
-                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                     Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize1),Bid,0,SL,TP1,Num_trades+"_1C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
                   else
                      Print("No trade. Sell Entry is above the TP 1");
-
-                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize2),Bid,0,SL,TP2,"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
-                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize3),Bid,0,SL,TP3,"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize2),Bid,0,SL,TP2,Num_trades+"_2C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
+                  Number_trades=N_Trade("C:");
+                  Num_trades="CrossOver Sell #"+IntegerToString(Number_trades);
+                  Ticket=Trade(sym,OP_SELL,LotValidity(sym,LotSize3),Bid,0,SL,TP3,Num_trades+"_3C:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,0,clrRed);
                  }
               }
            }
@@ -592,38 +642,49 @@ void BreakoutTrade(int shift=2)
                   if(TP3>200000)
                      TP3 = TP;
                   //...
+                  int Number_trades=N_Trade("R:");
+                  string  Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                   if(Validity(sym,LotValidity(sym,lot),OP_BUYLIMIT,BuyPrice,SL,TP)==true)
                     {
                      if(Con_StrategyType==Strategy1)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                         if(BuyPrice<TP1)
-                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                         else
                            Print("No trade 1. Buy Entry is above the TP 1");
                        }
                      if(Con_StrategyType==Strategy2)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                         if(BuyPrice<TP1)
-                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                         else
                            Print("No trade 1. Buy Entry is above the TP 1");
-
-                        Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,CreateTime+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
+                        Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,Num_trades+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                        }
                      if(Con_StrategyType==Strategy3)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                         if(BuyPrice<TP1)
-                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                         else
                            Print("No trade 1. Buy Entry is above the TP 1");
-
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                         if(BuyPrice<TP2)
-                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,CreateTime+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,Num_trades+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                         else
                            Print("No trade 2. Buy Entry is above the TP 2");
-
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Buy #"+IntegerToString(Number_trades);
                         if(BuyPrice<TP3)
-                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize3),BuyPrice,0,SL,TP3,CreateTime+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                           Ticket=Trade(sym,OP_BUYLIMIT,LotValidity(sym,Con_LotSize3),BuyPrice,0,SL,TP3,Num_trades+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                         else
                            Print("No trade 3. Buy Entry is above the TP 3");
                        }
@@ -686,43 +747,54 @@ void BreakoutTrade(int shift=2)
                      TP2 = TP;
                   if(TP3>200000)
                      TP3 = TP;
+                  int Number_trades=N_Trade("R:");
+                  string Num_trades="Retest BuySell#"+IntegerToString(Number_trades);
                   //...
                   if(Validity(sym,LotValidity(sym,lot),OP_SELLLIMIT,SellPrice,SL,TP)==true)
                     {
                      if(Con_StrategyType==Strategy1)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         if(SellPrice>TP1)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 1. Sell Entry is below the TP 1");
                        }
                      if(Con_StrategyType==Strategy2)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         if(SellPrice>TP1)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 1. Sell Entry is below the TP 1");
-
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         if(SellPrice>TP2)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,CreateTime+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,Num_trades+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 2. Sell Entry is below the TP 2");
                        }
                      if(Con_StrategyType==Strategy3)
                        {
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         Print("Going for the sell");
                         if(SellPrice>TP1)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_1R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 1. Sell Entry is below the TP 1");
-
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         if(SellPrice>TP2)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,CreateTime+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,Num_trades+"_2R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 2. Sell Entry is below the TP 2");
-
+                        Number_trades=N_Trade("R:");
+                        Num_trades="Retest Sell #"+IntegerToString(Number_trades);
                         if(SellPrice>TP3)
-                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize3),SellPrice,0,SL,TP3,CreateTime+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                           Ticket=Trade(sym,OP_SELLLIMIT,LotValidity(sym,Con_LotSize3),SellPrice,0,SL,TP3,Num_trades+"_3R:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                         else
                            Print("No trade 3. Sell Entry is below the TP 3");
                        }
@@ -793,39 +865,50 @@ void BreakoutTrade(int shift=2)
                   TP2 = TP;
                if(TP3>200000)
                   TP3 = TP;
+               int Number_trades=N_Trade("B:");
+               string Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                //...
                if(Validity(sym,LotValidity(sym,lot),OP_BUYSTOP,BuyPrice,SL,TP)==true)
                  {
                   if(Con_StrategyType==Strategy1)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                      if(BuyPrice<TP1)
-                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                      else
                         Print("No trade 1. Buy Entry is above the TP 1");
                     }
                   if(Con_StrategyType==Strategy2)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                      if(BuyPrice<TP1)
-                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                      else
                         Print("No trade 1. Buy Entry is above the TP 1");
-
-                     Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,CreateTime+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
+                     Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,Num_trades+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                     }
                   if(Con_StrategyType==Strategy3)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                      if(BuyPrice<TP1)
-                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,CreateTime+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize1),BuyPrice,0,SL,TP1,Num_trades+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                      else
                         Print("No trade 1. Buy Entry is above the TP 1");
-
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                      if(BuyPrice<TP2)
-                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,CreateTime+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize2),BuyPrice,0,SL,TP2,Num_trades+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                      else
                         Print("No trade 2. Buy Entry is above the TP 2");
-
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Buy #"+IntegerToString(Number_trades);
                      if(BuyPrice<TP3)
-                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize3),BuyPrice,0,SL,TP3,CreateTime+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
+                        Ticket=Trade(sym,OP_BUYSTOP,LotValidity(sym,Con_LotSize3),BuyPrice,0,SL,TP3,Num_trades+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrBlue);
                      else
                         Print("No trade 3. Buy Entry is above the TP 3");
                     }
@@ -885,43 +968,54 @@ void BreakoutTrade(int shift=2)
                   TP2 = TP;
                if(TP3>200000)
                   TP3 = TP;
+               int Number_trades=N_Trade("B:");
+               string Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                //...
                if(Validity(sym,LotValidity(sym,lot),OP_SELLSTOP,SellPrice,SL,TP)==true)
                  {
                   if(Con_StrategyType==Strategy1)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      if(SellPrice>TP1)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 1. Sell Entry is below the TP 1");
                     }
                   if(Con_StrategyType==Strategy2)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      if(SellPrice>TP1)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 1. Sell Entry is below the TP 1");
-
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      if(SellPrice>TP2)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,CreateTime+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,Num_trades+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 2. Sell Entry is below the TP 2");
                     }
                   if(Con_StrategyType==Strategy3)
                     {
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      Print("Going for the sell");
                      if(SellPrice>TP1)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,CreateTime+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize1),SellPrice,0,SL,TP1,Num_trades+"_1B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 1. Sell Entry is below the TP 1");
-
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      if(SellPrice>TP2)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,CreateTime+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize2),SellPrice,0,SL,TP2,Num_trades+"_2B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 2. Sell Entry is below the TP 2");
-
+                     Number_trades=N_Trade("B:");
+                     Num_trades="Breakout Sell #"+IntegerToString(Number_trades)+" ";
                      if(SellPrice>TP3)
-                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize3),SellPrice,0,SL,TP3,CreateTime+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
+                        Ticket=Trade(sym,OP_SELLSTOP,LotValidity(sym,Con_LotSize3),SellPrice,0,SL,TP3,Num_trades+"_3B:"+DoubleToString(TP1,_Digits)+":"+DoubleToString(TP2,_Digits),MagicNumber,ExpireTime,clrRed);
                      else
                         Print("No trade 3. Sell Entry is below the TP 3");
                     }
@@ -985,8 +1079,19 @@ bool Consolidation(int shift=1)
          //Print("new consolidation");
          datetime Time2 = BarHighTime>BarLowTime?BarLowTime:BarHighTime;
          datetime Time1 = Time2==BarLowTime?BarHighTime:BarLowTime;
+         bool can_trade=true;
+         bool active_trade=(search_by_comment("BUYSTOP")||search_by_comment("BUYLIMIT")
+                            ||search_by_comment("SELLLIMIT")||search_by_comment("SELLSTOP"));
 
-         if(TradeHedge)
+
+         if(!Allow_Multi_hedge&&active_trade)
+            can_trade=false;
+
+
+
+         Print("consolidation ",can_trade);
+
+         if(TradeHedge&&can_trade)
            {
 
             double middle_price=BarHigh-(BarHigh-BarLow)/2;
@@ -1007,78 +1112,93 @@ bool Consolidation(int shift=1)
             int ticket=-1;
             double TPs[3],TPs_sell[3];
 
-            calculate_TP_buy(middle_price,TPs);
-            calculate_TP_sell(middle_price,TPs_sell);
-
+            calculate_TP_buy_Hedge(middle_price,TPs);
+            calculate_TP_sell_Hedge(middle_price,TPs_sell);
+            int Number_trades=N_Trade("Hedge");
+            string  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
             //first for the buy direction
             if(Ask<middle_price)
               {
-
                //price is above line, buystop to the middle price
-               if(StrategyType==Strategy1)
+               if(Hedge_StrategyType==Strategy1)
                  {
                   Print("strat 1 hedging");
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
                   Print("[BUYSTOP+SELLLIMIT]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize1),middle_price,5,BuySL,TPs[0],Num_trades+"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
 
                   if(ticket==-1)
                      Print("error while sending buystop");
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize1),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
 
                   if(ticket==-1)
                      Print("error while sending sellimit");
                  }
 
 
-               if(StrategyType==Strategy2)
+               if(Hedge_StrategyType==Strategy2)
                  {
                   Print("strat 2 hedging");
                   Print("[BUYSTOP+SELLLIMIT]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,BuySL,TPs[0],Num_trades+"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending buystop1");
-
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[1],"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,BuySL,TPs[1],Num_trades+"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending buystop2");
 
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending sellimit1");
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[1],"SELLLIMIT_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,SellSL,TPs_sell[1],Num_trades+"SELLLIMIT_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending sellimit2");
                  }
 
-               if(StrategyType==Strategy3)
+               if(Hedge_StrategyType==Strategy3)
                  {
                   Print("strat 3 hedging");
                   Print("[BUYSTOP+SELLLIMIT]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[0],Num_trades+"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending buystop1");
-
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[1],"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[1],Num_trades+"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending buystop2");
-
-                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[2],"BUYSTOP_3;"+(string)TPs[0],MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_BUYSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[2],Num_trades+"BUYSTOP_3;"+(string)TPs[0],MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending buystop3");
 
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending sellimit1");
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[1],"SELLLIMIT_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[1],Num_trades+"SELLLIMIT_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending sellimit2");
-
-                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[2],"SELLLIMIT_3;"+(string)TPs_sell[0],MagicNumber,ExpireTime,clrRed,false);
+                  Number_trades=N_Trade("Hedge");
+                  Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                  ticket=Trade(_Symbol,OP_SELLLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[2],Num_trades+"SELLLIMIT_3;"+(string)TPs_sell[0],MagicNumber,ExpireTime,clrRed,false);
                   if(ticket==-1)
                      Print("error while sending sellimit3");
                  }
@@ -1088,71 +1208,87 @@ bool Consolidation(int shift=1)
             else
                if(Ask>middle_price)
                  {
-                  if(StrategyType==Strategy1)
+
+                  if(Hedge_StrategyType==Strategy1)
                     {
                      Print("[BUYLIMIT+SELLSTOP]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
 
-
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize1),middle_price,5,BuySL,TPs[0],Num_trades+"BUYLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
 
                      if(ticket==-1)
                         Print("error while sending BUYLIMIT_1");
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize1),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
 
 
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_1");
                     }
 
-                  if(StrategyType==Strategy2)
+                  if(Hedge_StrategyType==Strategy2)
                     {
                      Print("strat 2 hedging");
                      Print("[BUYSTOP+SELLLIMIT]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,BuySL,TPs[0],Num_trades+"BUYLIMIT_1",MagicNumber,ExpireTime,clrRed,false);
+
                      if(ticket==-1)
                         Print("error while sending BUYLIMIT_1");
-
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[1],"BUYLIMIT_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,BuySL,TPs[1],Num_trades+"BUYLIMIT_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending BUYLIMIT_2");
 
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_1");
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[1],"SELLSTOP_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize2),middle_price,5,SellSL,TPs_sell[1],Num_trades+"SELLSTOP_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_2");
                     }
 
-                  if(StrategyType==Strategy3)
+                  if(Hedge_StrategyType==Strategy3)
                     {
                      Print("strat 2 hedging");
                      Print("[BUYSTOP+SELLLIMIT]    TP : ",TPs[0]," TP_SELL : ",TPs_sell[0]);
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[0],"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[0],Num_trades+"BUYSTOP_1",MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending BUYSTOP_1");
-
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[1],"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[1],Num_trades+"BUYSTOP_2;"+(string)SellSL,MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending BUYSTOP_2");
-
-                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,LotSize1),middle_price,5,BuySL,TPs[2],"BUYSTOP_3;"+(string)TPs[0],MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Buy #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_BUYLIMIT,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,BuySL,TPs[2],Num_trades+"BUYSTOP_3;"+(string)TPs[0],MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending BUYSTOP_3");
 
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[0],"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[0],Num_trades+"SELLSTOP_1",MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_1");
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[1],"SELLSTOP_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[1],Num_trades+"SELLSTOP_2;"+(string)BuySL,MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_2");
-
-                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,LotSize1),middle_price,5,SellSL,TPs_sell[2],"SELLSTOP_3;"+(string)TPs_sell[0],MagicNumber,ExpireTime,clrRed,false);
+                     Number_trades=N_Trade("Hedge");
+                     Num_trades="Hedge Sell #"+IntegerToString(Number_trades)+"_";
+                     ticket=Trade(_Symbol,OP_SELLSTOP,LotValidity(_Symbol,Hedge_LotSize3),middle_price,5,SellSL,TPs_sell[2],Num_trades+"SELLSTOP_3;"+(string)TPs_sell[0],MagicNumber,ExpireTime,clrRed,false);
                      if(ticket==-1)
                         Print("error while sending SELLSTOP_3");
                     }
@@ -1203,7 +1339,7 @@ bool Consolidation(int shift=1)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void TrailHedge()
+void Conservative_TrailHedge()
   {
    if(!use_trail_hedge)
       return;
@@ -1258,7 +1394,12 @@ void TrailHedge()
                              &&search_by_comment("BUYSTOP_2")
                              &&StringFind(m_position.Comment(),"BUYSTOP_2")!=-1;
 
-               double tp_val=(double)StringSubstr(m_position.Comment(),StringLen("BUYSTOP_2;"));
+               string cmnt[];
+               string sep=";";
+               ushort u_sep;
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val=(double)cmnt[ArraySize(cmnt)-1];
                tp_val=NormalizeDouble(tp_val,_Digits);
                //si c pour un limit order, chercher limit orders
                if(!condition_buy)
@@ -1267,7 +1408,10 @@ void TrailHedge()
                                 &&!search_by_comment("BUYLIMIT_1")
                                 &&search_by_comment("BUYLIMIT_2")
                                 &&StringFind(m_position.Comment(),"BUYLIMIT_2")!=-1;
-                  tp_val=(double)StringSubstr(m_position.Comment(),StringLen("BUYLIMIT_2;"));
+                  sep=";";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
                   tp_val=NormalizeDouble(tp_val,_Digits);
                  }
 
@@ -1283,7 +1427,12 @@ void TrailHedge()
                               &&search_by_comment("SELLSTOP_2")
                               &&StringFind(m_position.Comment(),"SELLSTOP_2")!=-1;
 
-               double tp_val_sell=(double)StringSubstr(m_position.Comment(),StringLen("SELLSTOP_2;"));
+
+               sep=";";
+
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
                tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
 
                //si c pour un limit order, chercher limit orders
@@ -1293,7 +1442,297 @@ void TrailHedge()
                                  &&!search_by_comment("SELLLIMIT_1")
                                  &&search_by_comment("SELLLIMIT_2")
                                  &&StringFind(m_position.Comment(),"SELLLIMIT_2")!=-1;
-                  tp_val_sell=(double)StringSubstr(m_position.Comment(),StringLen("SELLLIMIT_2;"));
+                  sep=";";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+                  tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+                 }
+
+
+               if(condition_sell)
+                  m_trade.PositionModify(m_position.Ticket(),
+                                         NormalizeDouble(tp_val_sell,_Digits),
+                                         m_position.TakeProfit());
+              }
+
+            if(StrategyType==Strategy3)
+              {
+               //condition buy when the first order closed
+               condition_buy=m_position.StopLoss()==m_position.PriceOpen()
+                             &&!search_by_comment("BUYSTOP_1")
+                             &&search_by_comment("BUYSTOP_2")
+                             &&(StringFind(m_position.Comment(),"BUYSTOP_2")!=-1||StringFind(m_position.Comment(),"BUYSTOP_3")==-1);
+
+               string cmnt[];
+               string sep=";";
+               ushort u_sep;
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val=NormalizeDouble(tp_val,_Digits);
+
+
+               //si c pour un limit order, chercher limit orders
+               if(!condition_buy)
+                 {
+                  condition_buy=m_position.StopLoss()==m_position.PriceOpen()
+                                &&!search_by_comment("BUYLIMIT_1")
+                                &&search_by_comment("BUYLIMIT_2")
+                                &&(StringFind(m_position.Comment(),"BUYLIMIT_2")!=-1||StringFind(m_position.Comment(),"BUYLIMIT_3")==-1);
+
+                  sep=";";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
+                  tp_val=NormalizeDouble(tp_val,_Digits);
+
+                 }
+
+               //OLBATAR ENUKEUOLKDND
+               m_position.SelectByIndex(i);
+
+               if(condition_buy)
+                  m_trade.PositionModify(m_position.Ticket(),
+                                         NormalizeDouble(tp_val,_Digits),
+                                         m_position.TakeProfit());
+
+               //SECOND ORDER CLOSES FOR BUY
+
+               sep=";";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               tp_val=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val=NormalizeDouble(tp_val,_Digits);
+
+
+               condition_buy=m_position.StopLoss()!=tp_val
+                             &&!search_by_comment("BUYSTOP_1")
+                             &&!search_by_comment("BUYSTOP_2")
+                             &&StringFind(m_position.Comment(),"BUYSTOP_3")!=-1;
+
+
+               //si c pour un limit order, chercher limit orders
+               if(!condition_buy)
+                 {
+                  sep=";";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
+                  tp_val=NormalizeDouble(tp_val,_Digits);
+                  condition_buy=m_position.StopLoss()!=tp_val
+                                &&!search_by_comment("BUYLIMIT_1")
+                                &&!search_by_comment("BUYLIMIT_2")
+                                &&StringFind(m_position.Comment(),"BUYLIMIT_3")!=-1;
+
+                 }
+
+               //OLBATAR ENUKEUOLKDND
+               m_position.SelectByIndex(i);
+
+               if(condition_buy)
+                  m_trade.PositionModify(m_position.Ticket(),
+                                         NormalizeDouble(tp_val,_Digits),
+                                         m_position.TakeProfit());
+
+
+
+
+
+               //condition SELL when the first order closed
+               condition_sell=m_position.StopLoss()==m_position.PriceOpen()
+                              &&!search_by_comment("SELLSTOP_1")
+                              &&search_by_comment("SELLSTOP_2")
+                              &&(StringFind(m_position.Comment(),"SELLSTOP_2")!=-1||StringFind(m_position.Comment(),"SELLSTOP_3")==-1);
+
+
+               sep=";";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+
+
+               //si c pour un limit order, chercher limit orders
+               if(!condition_sell)
+                 {
+
+                  condition_sell=m_position.StopLoss()==m_position.PriceOpen()
+                                 &&!search_by_comment("SELLLIMIT_1")
+                                 &&search_by_comment("SELLLIMIT_2")
+                                 &&(StringFind(m_position.Comment(),"SELLLIMIT_2")!=-1||StringFind(m_position.Comment(),"SELLLIMIT_3")==-1);
+
+
+                  sep=";";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+                  tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+                 }
+
+               m_position.SelectByIndex(i);
+
+               if(condition_sell)
+                  m_trade.PositionModify(m_position.Ticket(),
+                                         NormalizeDouble(tp_val_sell,_Digits),
+                                         m_position.TakeProfit());
+              }
+
+            //CONDITION SELL WHEN SECOND ORDER CLOSES
+            string cmnt[];
+            string sep=";";
+            ushort u_sep=StringGetCharacter(sep,0);
+            StringSplit(m_position.Comment(),u_sep,cmnt);
+
+            double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+            tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+            condition_sell=m_position.StopLoss()!=tp_val_sell
+                           &&!search_by_comment("SELLSTOP_1")
+                           &&!search_by_comment("SELLSTOP_2")
+                           &&StringFind(m_position.Comment(),"SELLSTOP_3")!=-1;
+
+            string c=cmnt[0];
+
+
+            //si c pour un limit order, chercher limit orders
+            if(!condition_sell)
+              {
+
+               sep=";";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+               condition_sell=m_position.StopLoss()!=tp_val_sell
+                              &&!search_by_comment("SELLLIMIT_1")
+                              &&!search_by_comment("SELLLIMIT_2")
+                              &&StringFind(m_position.Comment(),"SELLLIMIT_3")!=-1;
+
+
+              }
+            c=cmnt[0];
+            m_position.SelectByIndex(i);
+
+            if(condition_sell)
+               m_trade.PositionModify(m_position.Ticket(),
+                                      NormalizeDouble(tp_val_sell,_Digits),
+                                      m_position.TakeProfit());
+           }
+         else
+            Print("error selecting trade :",i);
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Aggressive_TrailHedge()
+  {
+   if(!use_trail_hedge)
+      return;
+
+
+   for(int i=0; i<PositionsTotal(); i++)
+     {
+      double Bid = SymbolInfoDouble(_Symbol,SYMBOL_BID);
+      double Ask = SymbolInfoDouble(_Symbol,SYMBOL_ASK);
+
+      if(m_position.SelectByIndex(i))
+         if(m_position.Symbol()==_Symbol && m_position.Magic()==MagicNumber)
+           {
+            //BUY ORDER WAS FOUND, SELL IS CLOSED SO GET SL TO ENTRY PRICE
+            double price_box_high=m_position.PriceOpen()+(distance_from_consolidation+Consolidation_Points/2)*_Point;
+            double price_box_low=m_position.PriceOpen()-(distance_from_consolidation+Consolidation_Points/2)*_Point;
+
+            //Print("price box high : ",price_box_high);
+            //Print("price box low : ",price_box_low);
+
+            bool condition_buy=((StringFind(m_position.Comment(),"BUYSTOP")!=-1&&StringFind(m_position.Comment(),"SELLLIMIT")==-1)
+                                ||(StringFind(m_position.Comment(),"BUYLIMIT")!=-1&&StringFind(m_position.Comment(),"SELLSTOP")==-1))
+                               &&m_position.StopLoss()<m_position.PriceOpen()&&Ask>=price_box_high;
+
+            if(condition_buy)
+              {
+               Print("trailing buy orders");
+               m_trade.PositionModify(m_position.Ticket(),
+                                      NormalizeDouble(m_position.PriceOpen(),_Digits),
+                                      m_position.TakeProfit());
+              }
+
+            bool condition_sell=((StringFind(m_position.Comment(),"BUYSTOP")==-1&&StringFind(m_position.Comment(),"SELLLIMIT")!=-1)
+                                 ||(StringFind(m_position.Comment(),"BUYLIMIT")==-1&&StringFind(m_position.Comment(),"SELLSTOP")!=-1))
+                                &&m_position.StopLoss()>m_position.PriceOpen()&&Bid<=price_box_low;
+
+            if(condition_sell)
+              {
+               Print("trailing sells");
+               m_trade.PositionModify(m_position.Ticket(),
+                                      NormalizeDouble(m_position.PriceOpen(),_Digits),
+                                      m_position.TakeProfit());
+              }
+            //FURTHER STEPS DEPENDING ON THE STRATEGY
+
+            if(StrategyType==Strategy2)
+              {
+
+               //condition buy when the first order closed
+               condition_buy=m_position.StopLoss()==m_position.PriceOpen()
+                             &&!search_by_comment("BUYSTOP_1")
+                             &&search_by_comment("BUYSTOP_2")
+                             &&StringFind(m_position.Comment(),"BUYSTOP_2")!=-1;
+
+               string cmnt[];
+               string sep="_2;";
+               ushort u_sep;
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val=NormalizeDouble(tp_val,_Digits);
+               //si c pour un limit order, chercher limit orders
+               if(!condition_buy)
+                 {
+                  condition_buy=m_position.StopLoss()==m_position.PriceOpen()
+                                &&!search_by_comment("BUYLIMIT_1")
+                                &&search_by_comment("BUYLIMIT_2")
+                                &&StringFind(m_position.Comment(),"BUYLIMIT_2")!=-1;
+                  sep="_2;";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
+                  tp_val=NormalizeDouble(tp_val,_Digits);
+                 }
+
+
+               if(condition_buy)
+                  m_trade.PositionModify(m_position.Ticket(),
+                                         NormalizeDouble(tp_val,_Digits),
+                                         m_position.TakeProfit());
+
+               //condition SELL when the first order closed
+               condition_sell=m_position.StopLoss()==m_position.PriceOpen()
+                              &&!search_by_comment("SELLSTOP_1")
+                              &&search_by_comment("SELLSTOP_2")
+                              &&StringFind(m_position.Comment(),"SELLSTOP_2")!=-1;
+
+
+               sep="_2;";
+
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+
+               //si c pour un limit order, chercher limit orders
+               if(!condition_sell)
+                 {
+                  condition_sell=m_position.StopLoss()==m_position.PriceOpen()
+                                 &&!search_by_comment("SELLLIMIT_1")
+                                 &&search_by_comment("SELLLIMIT_2")
+                                 &&StringFind(m_position.Comment(),"SELLLIMIT_2")!=-1;
+                  sep="_2;";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
                   tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
                  }
 
@@ -1312,8 +1751,14 @@ void TrailHedge()
                              &&search_by_comment("BUYSTOP_2")
                              &&(StringFind(m_position.Comment(),"BUYSTOP_2")!=-1||StringFind(m_position.Comment(),"BUYSTOP_3")!=-1);
 
-               double tp_val=(double)StringSubstr(search_by_comment_("BUYSTOP_2"),StringLen("BUYSTOP_2;"));
+               string cmnt[];
+               string sep="_2;";
+               ushort u_sep;
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val=(double)cmnt[ArraySize(cmnt)-1];
                tp_val=NormalizeDouble(tp_val,_Digits);
+
 
                //si c pour un limit order, chercher limit orders
                if(!condition_buy)
@@ -1322,8 +1767,13 @@ void TrailHedge()
                                 &&!search_by_comment("BUYLIMIT_1")
                                 &&search_by_comment("BUYLIMIT_2")
                                 &&(StringFind(m_position.Comment(),"BUYLIMIT_2")!=-1||StringFind(m_position.Comment(),"BUYLIMIT_3")!=-1);
-                  tp_val=(double)StringSubstr(search_by_comment_("BUYLIMIT_2"),StringLen("BUYLIMIT_2;"));
+
+                  sep="_2;";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
                   tp_val=NormalizeDouble(tp_val,_Digits);
+
                  }
 
                //OLBATAR ENUKEUOLKDND
@@ -1335,8 +1785,14 @@ void TrailHedge()
                                          m_position.TakeProfit());
 
                //SECOND ORDER CLOSES FOR BUY
-               tp_val=(double)StringSubstr(search_by_comment_("BUYSTOP_3"),StringLen("BUYSTOP_3;"));
+
+               sep="_3;";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               tp_val=(double)cmnt[ArraySize(cmnt)-1];
                tp_val=NormalizeDouble(tp_val,_Digits);
+
+
                condition_buy=m_position.StopLoss()!=tp_val
                              &&!search_by_comment("BUYSTOP_1")
                              &&!search_by_comment("BUYSTOP_2")
@@ -1346,7 +1802,10 @@ void TrailHedge()
                //si c pour un limit order, chercher limit orders
                if(!condition_buy)
                  {
-                  tp_val=(double)StringSubstr(search_by_comment_("BUYLIMIT_3"),StringLen("BUYLIMIT_3;"));
+                  sep="_3;";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val=(double)cmnt[ArraySize(cmnt)-1];
                   tp_val=NormalizeDouble(tp_val,_Digits);
                   condition_buy=m_position.StopLoss()!=tp_val
                                 &&!search_by_comment("BUYLIMIT_1")
@@ -1373,9 +1832,13 @@ void TrailHedge()
                               &&search_by_comment("SELLSTOP_2")
                               &&(StringFind(m_position.Comment(),"SELLSTOP_2")!=-1||StringFind(m_position.Comment(),"SELLSTOP_3")!=-1);
 
-               double tp_val_sell=(double)StringSubstr(search_by_comment_("SELLSTOP_2;"),StringLen("SELLSTOP_2;"));
 
+               sep="_2;";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
                tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
+
 
                //si c pour un limit order, chercher limit orders
                if(!condition_sell)
@@ -1386,7 +1849,11 @@ void TrailHedge()
                                  &&search_by_comment("SELLLIMIT_2")
                                  &&(StringFind(m_position.Comment(),"SELLLIMIT_2")!=-1||StringFind(m_position.Comment(),"SELLLIMIT_3")!=-1);
 
-                  tp_val_sell=(double)StringSubstr(search_by_comment_("SELLLIMIT_2;"),StringLen("SELLLIMIT_2;"));
+
+                  sep="_2;";
+                  u_sep=StringGetCharacter(sep,0);
+                  StringSplit(m_position.Comment(),u_sep,cmnt);
+                  tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
                   tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
                  }
 
@@ -1399,10 +1866,13 @@ void TrailHedge()
               }
 
             //CONDITION SELL WHEN SECOND ORDER CLOSES
+            string cmnt[];
+            string sep="_3;";
 
-            double tp_val_sell=(double)StringSubstr(search_by_comment_("SELLSTOP_3;"),StringLen("SELLSTOP_3;"));
+            ushort u_sep=StringGetCharacter(sep,0);
+            StringSplit(m_position.Comment(),u_sep,cmnt);
+            double tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
             tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
-
             condition_sell=m_position.StopLoss()!=tp_val_sell
                            &&!search_by_comment("SELLSTOP_1")
                            &&!search_by_comment("SELLSTOP_2")
@@ -1413,9 +1883,12 @@ void TrailHedge()
             //si c pour un limit order, chercher limit orders
             if(!condition_sell)
               {
-               tp_val_sell=(double)StringSubstr(search_by_comment_("SELLLIMIT_3;"),StringLen("SELLLIMIT_3;"));
-               tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
 
+               sep="_3;";
+               u_sep=StringGetCharacter(sep,0);
+               StringSplit(m_position.Comment(),u_sep,cmnt);
+               tp_val_sell=(double)cmnt[ArraySize(cmnt)-1];
+               tp_val_sell=NormalizeDouble(tp_val_sell,_Digits);
                condition_sell=m_position.StopLoss()!=tp_val_sell
                               &&!search_by_comment("SELLLIMIT_1")
                               &&!search_by_comment("SELLLIMIT_2")
@@ -1435,7 +1908,6 @@ void TrailHedge()
             Print("error selecting trade :",i);
      }
   }
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1623,6 +2095,143 @@ double calculate_TP_buy(double price,double &tps[])
      }
    return 1;
   }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double calculate_TP_sell_Hedge(double price,double &tps[])
+  {
+   double TP=0,SL=0;
+   if(Hedge_Sell_SL_Mode==SPointSL)
+      if(Hedge_StopLoss>0)
+         SL=price+Hedge_StopLoss*_Point;
+//...
+   if(Hedge_Sell_SL_Mode==ResLevel1)
+      SL = BuyFirstTP;
+   if(Hedge_Sell_SL_Mode==ResLevel2)
+      SL = BuySecondTP;
+   if(Hedge_Sell_SL_Mode==ResLevel3)
+      SL = BuyThirdTP;
+//...
+   if(Hedge_TakeProfit>0)
+      TP=price-Hedge_TakeProfit*_Point;
+//...
+//TP = SellFirstTP;
+   double TP1=0;
+   double TP2=0;
+   double TP3=0;
+   if(Hedge_TakeProfitMode1==TPMode1)
+      TP1 = SellFirstTP;
+//ADDED OPTION FOR THE SELL
+   if(Hedge_TakeProfitMode1==TPMode2)
+      TP1 = SellSecondTP;
+   if(Hedge_TakeProfitMode1==TPMode3)
+      TP1 = SellThirdTP;
+
+   if(Hedge_TakeProfitMode2==TPMode2)
+      TP2 = SellSecondTP;
+   if(Hedge_TakeProfitMode3==TPMode3)
+      TP3 = SellThirdTP;
+//...
+   if(Hedge_TakeProfitMode1==FixTP)
+      TP1 = TP;
+   if(Hedge_TakeProfitMode2==FixTP)
+      TP2 = TP;
+   if(Hedge_TakeProfitMode3==FixTP)
+      TP3 = TP;
+//...
+   if(TP1>200000)
+      TP1 = TP;
+   if(TP2>200000)
+      TP2 = TP;
+   if(TP3>200000)
+      TP3 = TP;
+
+   if(ArraySize(tps)>2)
+     {
+      tps[0]=TP1;
+      tps[1]=TP2;
+      tps[2]=TP3;
+     }
+   else
+     {
+      return 0;
+     }
+   return 1;
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double calculate_TP_buy_Hedge(double price,double &tps[])
+  {
+   double TP=0,SL=0;
+
+   if(Hedge_Buy_SL_Mode==BPointSL)
+      if(Hedge_StopLoss>0)
+         SL = price-Hedge_StopLoss*_Point;
+//...
+   if(Hedge_Buy_SL_Mode==SupLevel1)
+      SL = SellFirstTP;
+   if(Hedge_Buy_SL_Mode==SupLevel2)
+      SL = SellSecondTP;
+   if(Hedge_Buy_SL_Mode==SupLevel3)
+      SL = SellThirdTP;
+//...
+   if(Hedge_TakeProfit>0)
+      TP=price+Hedge_TakeProfit*_Point;
+//...
+//TP = BuyFirstTP;
+   double TP1=0;
+   double TP2=0;
+   double TP3=0;
+//...
+   if(Hedge_TakeProfitMode1==TPMode1)
+     {
+      TP1 = BuyFirstTP;
+     }
+//ADDED OPTION
+   if(Hedge_TakeProfitMode1==TPMode2)
+     {
+      TP1 = BuySecondTP;
+     }
+
+   if(Hedge_TakeProfitMode1==TPMode3)
+     {
+      TP1 = BuyThirdTP;
+     }
+//END ADDED OPTION
+
+   if(Hedge_TakeProfitMode2==TPMode2)
+      TP2 = BuySecondTP;
+   if(Hedge_TakeProfitMode3==TPMode3)
+      TP3 = BuyThirdTP;
+//...
+   if(Hedge_TakeProfitMode1==FixTP)
+      TP1 = TP;
+   if(Hedge_TakeProfitMode2==FixTP)
+      TP2 = TP;
+   if(Hedge_TakeProfitMode3==FixTP)
+      TP3 = TP;
+//...
+   if(TP1>200000)
+      TP1 = TP;
+   if(TP2>200000)
+      TP2 = TP;
+   if(TP3>200000)
+      TP3 = TP;
+
+   if(ArraySize(tps)>2)
+     {
+      tps[0]=TP1;
+      tps[1]=TP2;
+      tps[2]=TP3;
+     }
+   else
+     {
+      return 0;
+     }
+   return 1;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -1646,7 +2255,7 @@ int Trade(string TheSymbol,ENUM_ORDER_TYPE TYPE,double Lot,double EntryPrice,int
    if(TYPE==OP_BUY || TYPE==OP_SELL)
       if(UseMAFilter && !CheckMAFilter(TYPE))
          return 0;
-   bool TradeAlow=(sTimeFilter(TimeStart,TimeStop)&&UseTimeFilter)||!UseTimeFilter;
+   bool TradeAlow=(!sTimeFilter(TimeStart,TimeStop)&&UseTimeFilter)||!UseTimeFilter;
 
    if(!TradeAlow)
       return 0;
@@ -1794,6 +2403,35 @@ bool NoTrade(ENUM_ORDER_TYPE TYPE,string Find="")
    return true;
   }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int N_Trade(string Find="")
+  {
+   int n=0;
+   for(int i=0; i<OrdersTotal(); i++) // returns the number of open positions
+     {
+      if(m_order.SelectByIndex(i))
+        {
+         if(m_order.Magic()==MagicNumber && m_order.Symbol()==_Symbol && (Find=="" || StringFind(m_order.Comment(),Find)!=-1))
+           {
+            n++;
+           }
+        }
+     }
+   for(int i=0; i<PositionsTotal(); i++) // returns the number of open positions
+     {
+      if(m_position.SelectByIndex(i))
+        {
+         if(m_position.Magic()==MagicNumber && m_position.Symbol()==_Symbol && (Find=="" || StringFind(m_position.Comment(),Find)!=-1))
+           {
+            n++;
+           }
+        }
+     }
+
+   return n;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -3083,14 +3721,7 @@ void DoPivot()
          Sup2[i] = Pivot[i] - Range;                           // S2
          Sup3[i] = Sup1[i] - Range;                            // S3
 
-         // Don't draw the transition between levels
-         Res3[i+1] = EMPTY_VALUE;
-         Res2[i+1] = EMPTY_VALUE;
-         Res1[i+1] = EMPTY_VALUE;
-         Pivot[i+1]= EMPTY_VALUE;
-         Sup1[i+1] = EMPTY_VALUE;
-         Sup2[i+1] = EMPTY_VALUE;
-         Sup3[i+1] = EMPTY_VALUE;
+
 
          // Remember when the Day changed over
          PivotDayStartTime=iTime(_Symbol,PERIOD_CURRENT,i);
