@@ -281,7 +281,7 @@ void OnTick()
    int H_idx=iBarShift(Symbol(),PERIOD_CURRENT,last_High);
    int L_idx=iBarShift(Symbol(),PERIOD_CURRENT,Last_Low);
 
-   if(L_trend > 0&&(OrderType==Buy_only||OrderType==Both))
+   if(L_trend > 0&&Last_LL1 > Last_LL2&&(OrderType==Buy_only||OrderType==Both))
       for(int x=H_idx; x>0; x--)
         {
          double Close=iClose(Symbol(),PERIOD_CURRENT,x);
@@ -320,12 +320,12 @@ void OnTick()
            }
 
         }
-   if(L_trend < 0&&(OrderType==Sell_only||OrderType==Both))
+   if(L_trend < 0&&Last_LH1 < Last_LH2&&(OrderType==Sell_only||OrderType==Both))
      {
       for(int x=L_idx; x>0; x--)
         {
          double Close=iClose(Symbol(),PERIOD_CURRENT,x);
-         if(Close < Last_L-xpip_breakout*tools.Pip()&& Last != Last_L && TradeAllow&Sell==false)
+         if(Close < Last_L-xpip_breakout*tools.Pip()&& Last != Last_L && TradeAllow&&Sell==false)
            {
             Sell=true;
             Buy=false;

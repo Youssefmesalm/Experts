@@ -62,6 +62,8 @@ CPosition *BuyPositions[];
 COrder *Pendings[];
 COrder *SellPendings[];
 COrder *BuyPendings[];
+COrder *SellLimitPendings[];
+COrder *BuyLimitPendings[];
 CUtilities *tools[];
 int openDirection[];
 CArrayDouble *Levelprices[];
@@ -86,6 +88,8 @@ int OnInit()
    ArrayResize(BuyPositions,size,size);
    ArrayResize(Pendings,size,size);
    ArrayResize(BuyPendings,size,size);
+   ArrayResize(SellLimitPendings,size,size);
+   ArrayResize(BuyLimitPendings,size,size);
    ArrayResize(SellPendings,size,size);
    ArrayResize(tools,size,size);
    ArrayResize(upPrice,size,size);
@@ -121,6 +125,8 @@ int OnInit()
       Pendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_ALL);
       BuyPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_BUY_STOP);
       SellPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_SELL_STOP);
+      BuyLimitPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_BUY_LIMIT);
+      SellLimitPendings[i]=new COrder(Symbols[i],magic_Number,GROUP_ORDERS_SELL_LIMIT);
       tools[i] = new CUtilities(Symbols[i]);
       Levelprices[i]= new CArrayDouble;
       Levelprices[i].Resize((1+TradingLevelsNumbers)*2);
@@ -219,8 +225,8 @@ void OnTick()
         }
       Traliling(BuyPositions[i],SellPositions[i],tools[i],Levelprices[i],Pendings[i],Highest[i],lowest[i]);
 
-      UpdateProfitLot(Positions[i],Pendings[i],trades[i],tools[i],Highest[i],lowest[i]);
-      Closing(BuyPositions[i],SellPositions[i],tools[i],Pendings[i],upPrice[i],dnPrice[i],Levelprices[i]);
+      UpdateProfitLot(Positions[i],BuyPositions[i],SellPositions[i],Pendings[i],trades[i],tools[i],Highest[i],lowest[i]);
+      Closing(BuyPositions[i],SellPositions[i],tools[i],Pendings[i],BuyLimitPendings[i],BuyPendings[i],SellLimitPendings[i],SellPendings[i],upPrice[i],dnPrice[i],Levelprices[i]);
       if(Positions[i].GroupTotal()==0&&Pendings[i].GroupTotal()<TradingLevelsNumbers*2)
         {
          Pendings[i].GroupCloseAll(20);
@@ -283,10 +289,14 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
 
          if(comment<=0&&c!="0")
            {
-            long ticket=Pending[x].GetTicket();
-            int tsize=ArraySize(tickets);
-            ArrayResize(tickets,tsize+1);
-            tickets[tsize]=ticket;
+            if(Pending[x].GetType()==ORDER_TYPE_SELL_STOP)
+              {
+
+               long ticket=Pending[x].GetTicket();
+               int tsize=ArraySize(tickets);
+               ArrayResize(tickets,tsize+1);
+               tickets[tsize]=ticket;
+              }
            }
         }
       int ttotal=ArraySize(tickets);
@@ -321,10 +331,13 @@ void UpdateLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & too
          string c=Pending[x].GetComment();
          if(comment>=0&&c!="-0")
            {
-            long ticket=Pending[x].GetTicket();
-            int tsize=ArraySize(tickets);
-            ArrayResize(tickets,tsize+1);
-            tickets[tsize]=ticket;
+            if(Pending[x].GetType()==ORDER_TYPE_BUY_STOP)
+              {
+               long ticket=Pending[x].GetTicket();
+               int tsize=ArraySize(tickets);
+               ArrayResize(tickets,tsize+1);
+               tickets[tsize]=ticket;
+              }
            }
         }
       int ttotal=ArraySize(tickets);
@@ -456,7 +469,7 @@ void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayD
                   for(int x=0; x<s; x++)
                     {
                      int c=(int)Pending[x].GetComment();
-                     if(c<L)
+                     if(c<L&&Pending[x].GetType()==ORDER_TYPE_BUY_LIMIT)
                        {
                         long ticket=Pending[x].GetTicket();
                         int tsize=ArraySize(tickets);
@@ -514,7 +527,7 @@ void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayD
                   for(int x=0; x<s; x++)
                     {
                      int c=(int)Pending[x].GetComment();
-                     if(c>H)
+                     if(c>H&&Pending[x].GetType()==ORDER_TYPE_SELL_LIMIT)
                        {
                         long ticket=Pending[x].GetTicket();
                         int tsize=ArraySize(tickets);
@@ -534,7 +547,7 @@ void Traliling(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,CArrayD
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void UpdateProfitLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities & tool,int & H,int & L)
+void UpdateProfitLot(CPosition & Pos,CPosition & BuyPos,CPosition & SellPos,COrder & Pending,CExecute & open,CUtilities & tool,int & H,int & L)
   {
    bool found=false;
    long tickets[];
@@ -549,8 +562,8 @@ void UpdateProfitLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities
          if(Pos[i].GetComment()=="0")
             HighestTicket=Pos[i].GetTicket();
          else
-         if(Pos[i].GetComment()=="-0")
-            lowestTicket=Pos[i].GetTicket();
+            if(Pos[i].GetComment()=="-0")
+               lowestTicket=Pos[i].GetTicket();
         }
       if(comment>0&&comment>=H)
         {
@@ -567,25 +580,29 @@ void UpdateProfitLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities
          lotindex=MathAbs(L);
         }
      }
-   if(OrderType==Buy&&Pos.GroupTotal()>0&&!profitUpdate)
+   if((OrderType==Buy||OrderType==Both)&&BuyPos.GroupTotal()>0&&!profitUpdate)
      {
-      for(int i=0; i<Pos.GroupTotal(); i++)
+      for(int i=0; i<BuyPos.GroupTotal(); i++)
         {
-         double po=Pos[lowestTicket].GetPriceOpen();
-         if(Pos[i].GetStopLoss()>po&&lowestTicket>0)
+         double po=BuyPos[lowestTicket].GetPriceOpen();
+         if(BuyPos[i].GetStopLoss()>po&&lowestTicket>0)
            {
             found=true;
            }
         }
 
-      if(found&&Pos.GroupTotalProfit()>0)
+      if(found&&BuyPos.GroupTotalProfit()>0)
         {
          for(int i=0; i<Pending.GroupTotal(); i++)
            {
-            long ticket=Pending[i].GetTicket();
-            int tsize=ArraySize(tickets);
-            ArrayResize(tickets,tsize+1);
-            tickets[tsize]=ticket;
+            if(Pending[i].GetType()==ORDER_TYPE_BUY_STOP)
+              {
+               long ticket=Pending[i].GetTicket();
+               int tsize=ArraySize(tickets);
+               ArrayResize(tickets,tsize+1);
+               tickets[tsize]=ticket;
+
+              }
            }
          for(int z=0; z<ArraySize(tickets); z++)
            {
@@ -594,6 +611,7 @@ void UpdateProfitLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities
             string c=Pending[x].GetComment();
             double openPrice=Pending[x].GetPriceOpen();
             double sl=Pending[x].GetStopLoss();
+
             double NewLot=0;
             profitUpdate=true;
             NewLot=Profitlots[MathAbs(comment)];
@@ -602,47 +620,52 @@ void UpdateProfitLot(CPosition & Pos,COrder & Pending,CExecute & open,CUtilities
            }
         }
      }
-   else
-      if(OrderType==Sell&&Pos.GroupTotalProfit()>0&&!profitUpdate)
-        {
-         for(int i=0; i<Pos.GroupTotal(); i++)
-           {
-            double po=Pos[HighestTicket].GetPriceOpen();
-            if(Pos[i].GetStopLoss()<po&&HighestTicket>0)
-              {
-               found=true;
-              }
 
-           }
-         if(found&&Pos.GroupTotalProfit()>0)
+   if((OrderType==Sell||OrderType==Both)&&SellPos.GroupTotalProfit()>0&&!profitUpdate)
+     {
+      for(int i=0; i<SellPos.GroupTotal(); i++)
+        {
+         double po=SellPos[HighestTicket].GetPriceOpen();
+         if(SellPos[i].GetStopLoss()<po&&HighestTicket>0)
            {
-            for(int i=0; i<Pending.GroupTotal(); i++)
+            found=true;
+           }
+
+        }
+      if(found&&SellPos.GroupTotalProfit()>0)
+        {
+         for(int i=0; i<Pending.GroupTotal(); i++)
+           {
+            if(Pending[i].GetType()==ORDER_TYPE_SELL_LIMIT)
               {
                long ticket=Pending[i].GetTicket();
                int tsize=ArraySize(tickets);
                ArrayResize(tickets,tsize+1);
                tickets[tsize]=ticket;
               }
-            for(int z=0; z<ArraySize(tickets); z++)
-              {
-               long x=tickets[z];
-               int comment=(int)Pending[x].GetComment();
-               string c=Pending[x].GetComment();
-               double openPrice=Pending[x].GetPriceOpen();
-               double sl=Pending[x].GetStopLoss();
-               double NewLot=0;
-               NewLot=Profitlots[MathAbs(comment)];
-               Pending[x].Close();
-               profitUpdate=true;
-               open.Order(TYPE_ORDER_SELLSTOP,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
-              }
+           }
+         for(int z=0; z<ArraySize(tickets); z++)
+           {
+            long x=tickets[z];
+            int comment=(int)Pending[x].GetComment();
+            string c=Pending[x].GetComment();
+            double openPrice=Pending[x].GetPriceOpen();
+            double sl=Pending[x].GetStopLoss();
+            ENUM_TYPE_ORDER type=Pending[x].GetType()==ORDER_TYPE_SELL_STOP?TYPE_ORDER_SELLSTOP:TYPE_ORDER_BUYLIMIT;
+
+            double NewLot=0;
+            NewLot=Profitlots[MathAbs(comment)];
+            Pending[x].Close();
+            profitUpdate=true;
+            open.Order(TYPE_ORDER_SELLSTOP,tool.NormalizeVolume(NewLot),openPrice,sl,0,SLTP_PRICE,0,30,c);
            }
         }
+     }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Closing(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,COrder & Pending,double up,double dn,CArrayDouble & Levels)
+void Closing(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,COrder & Pending,COrder & buylimit,COrder & buystop,COrder & selllimit,COrder & sellstop,double up,double dn,CArrayDouble & Levels)
   {
 // Positions numbers
    int totalBuy = BuyPos.GroupTotal();
@@ -730,5 +753,17 @@ void Closing(CPosition & BuyPos,CPosition & SellPos, CUtilities & tool,COrder & 
       Pending.GroupCloseAll(20);
       BuyPos.GroupCloseAll(30);
      }
+   if(BuyPos.GroupTotal()==0&&SellPos.GroupTotal()>=2)
+     {
+      buylimit.GroupCloseAll();
+      buystop.GroupCloseAll();
+     }
+   if(BuyPos.GroupTotal()>=2&&SellPos.GroupTotal()==0)
+     {
+      selllimit.GroupCloseAll();
+      sellstop.GroupCloseAll();
+     }
   }
+//+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
